@@ -1,10 +1,7 @@
 package com.github.adamyork.socketgame.game
 
 import com.github.adamyork.socketgame.engine.Engine
-import com.github.adamyork.socketgame.game.data.ControlAction
-import com.github.adamyork.socketgame.game.data.ControlType
-import com.github.adamyork.socketgame.game.data.Direction
-import com.github.adamyork.socketgame.game.data.Player
+import com.github.adamyork.socketgame.game.data.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.web.reactive.socket.WebSocketMessage
@@ -22,13 +19,18 @@ class Game {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(Game::class.java)
+        const val VIEWPORT_WIDTH: Int = 1024
+        const val VIEWPORT_HEIGHT: Int = 768
     }
 
     val webSocketSession: WebSocketSession
     val assetService: AssetService
     val engine: Engine
 
+
     lateinit var player: Player
+    lateinit var gameMap: GameMap
+    lateinit var playerAsset: Asset
 
     constructor(
         webSocketSession: WebSocketSession,
@@ -41,8 +43,9 @@ class Game {
     }
 
     fun init() {
-        val floor = assetService.backgroundAsset.height - assetService.playerAsset.height
-        player = Player(0, floor, floor)
+        player = Player(400, 100)
+        gameMap = assetService.loadMap(1)
+        playerAsset = assetService.loadPlayer()
     }
 
     fun start(): Disposable {
@@ -51,16 +54,9 @@ class Game {
             .onBackpressureDrop()
             .concatMap(Function { foo: Long? ->
                 Mono.defer(Supplier {
-                    player = engine.tick(
-                        player, assetService.backgroundAsset,
-                        assetService.collisionAsset
-                    )
-                    val bytes: ByteArray = engine.paint(
-                        assetService.backgroundAsset.bufferedImage,
-                        assetService.playerAsset.bufferedImage,
-                        assetService.collisionAsset.bufferedImage,
-                        player
-                    )
+                    gameMap = engine.manageMap(player, gameMap)
+                    player = engine.managePlayer(player, gameMap, gameMap.collisionAsset)
+                    val bytes: ByteArray = engine.paint(gameMap, playerAsset, player)
                     val binaryMessage = webSocketSession.binaryMessage { session -> session.wrap(bytes) }
                     val messages: List<WebSocketMessage> = listOf(binaryMessage)
                     val messageFlux: Flux<WebSocketMessage> = Flux.fromIterable(messages)
@@ -79,7 +75,7 @@ class Game {
     }
 
     private fun startInput(controlAction: ControlAction) {
-        LOGGER.debug("start {}", controlAction)
+        //LOGGER.debug("start {}", controlAction)
         when (controlAction) {
             ControlAction.LEFT -> player.setPlayerState(
                 true,
@@ -107,7 +103,7 @@ class Game {
     }
 
     private fun stopInput(controlAction: ControlAction) {
-        LOGGER.debug("stop {}", controlAction)
+        //LOGGER.debug("stop {}", controlAction)
         when (controlAction) {
             ControlAction.LEFT -> player.setPlayerState(
                 false,

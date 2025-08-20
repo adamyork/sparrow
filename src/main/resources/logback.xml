@@ -7,7 +7,7 @@
 
     <logger name="com.github.adamyork.socketgame.socket.GameHandler" level="ERROR"/>
     <logger name="com.github.adamyork.socketgame.game.Game" level="DEBUG"/>
-    <logger name="com.github.adamyork.socketgame.engine.Engine" level="ERROR"/>
+    <logger name="com.github.adamyork.socketgame.engine.Engine" level="INFO"/>
     <logger name="com.github.adamyork.socketgame.engine.Physics" level="DEBUG"/>
 
     <root level="info">

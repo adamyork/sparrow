@@ -1,10 +1,11 @@
 package com.github.adamyork.socketgame.engine
 
-import com.github.adamyork.socketgame.engine.data.PhysicsResult
 import com.github.adamyork.socketgame.engine.data.PhysicsXResult
 import com.github.adamyork.socketgame.engine.data.PhysicsYResult
+import com.github.adamyork.socketgame.game.Game
 import com.github.adamyork.socketgame.game.data.Asset
 import com.github.adamyork.socketgame.game.data.Direction
+import com.github.adamyork.socketgame.game.data.GameMap
 import com.github.adamyork.socketgame.game.data.Player
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -18,7 +19,7 @@ class Physics {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(Physics::class.java)
-        const val GRAVITY: Double = 10.0
+        const val GRAVITY: Double = 20.0
         const val FRICTION: Double = 0.1
         const val X_EASING_COEFFICIENT: Double = 1.0
         const val Y_EASING_COEFFICIENT: Double = 0.1
@@ -26,254 +27,375 @@ class Physics {
         const val COLLISION_COLOR_VALUE: Int = -16711906
     }
 
-    fun applyPhysics(player: Player, backgroundAsset: Asset, collisionAsset: Asset): PhysicsResult {
-        val vx = applyXVelocity(player)
-        val vy = applyYVelocity(player)
-        val xPos = calculatePlayerX(player, vx)
-        val yState = calculatePlayerY(player, backgroundAsset, vy)
-        //val boundedPlayerX = adjustedPlayerX(player, vx, xPos, collisionAsset.bufferedImage)
-        val boundedPlayerY =
-            adjustedPlayerY(player, xPos, yState.y, yState.dy, yState.vy, yState.jumping, collisionAsset)
-//        return PhysicsResult(
-//            boundedPlayerX.x,
-//            yState.y,
-//            yState.dy,
-//            boundedPlayerX.vx,
-//            yState.vy,
-//            boundedPlayerX.moving,
-//            yState.jumping,
-//            player.direction,
-//            player.floor
-//        )
-        return PhysicsResult(
-            xPos,
-            boundedPlayerY.y,
-            boundedPlayerY.dy,
+    fun applyPlayerPhysics(player: Player, gameMap: GameMap, collisionAsset: Asset): Player {
+        val currentCollisionArea = collisionAsset.bufferedImage.getSubimage(gameMap.x, gameMap.y, 1024, 768)
+        var playerHeight = player.height.coerceAtMost(Game.VIEWPORT_HEIGHT - player.y)
+        if(playerHeight <= 0) {
+            playerHeight = 1
+        }
+        var playerX = player.x
+        var playerVx = player.vx
+        var playerY = player.y
+        var jumpReached = player.jumpReached
+        var jumpY = player.jumpY
+        if (gameMap.moved) {
+            LOGGER.info("player.x = ${player.x}, player.y = ${player.y} player.width = ${player.width} playerHeight = $playerHeight")
+            val collisionBitMap = currentCollisionArea.getRGB(
+                player.x,
+                player.y,
+                player.width,
+                playerHeight,
+                null,
+                0,
+                64
+            )
+            if (collisionBitMap.contains(COLLISION_COLOR_VALUE)) {
+                LOGGER.info("Mapped was moved a player is colliding now")
+                if(player.moving){
+                    playerX = findEdge(playerY, 1, playerHeight, currentCollisionArea, player.direction, playerX)
+                    playerVx = 0.0
+                }
+                if (player.jumping) {
+                    playerY =
+                        findCeilingDescending(playerX, player.width, 1, player.height, currentCollisionArea, player.y)
+                    jumpY = playerY
+                    jumpReached = true
+                    return Player(
+                        playerX,
+                        playerY,
+                        playerVx,
+                        player.vy,
+                        player.jumping,
+                        jumpY,
+                        jumpReached,
+                        player.moving,
+                        player.direction
+                    )
+                }
+                val boundaryY = (player.y + playerHeight).coerceAtMost(Game.VIEWPORT_HEIGHT - 1)
+                val playerY =
+                    findFloor(playerX, player.width, 1, player.height, currentCollisionArea, boundaryY)
+                return Player(
+                    playerX,
+                    playerY,
+                    playerVx,
+                    player.vy,
+                    player.jumping,
+                    player.jumpY,
+                    player.jumpReached,
+                    player.moving,
+                    player.direction
+                )
+            }
+        }
+        val vx = getXVelocity(player.vx, player.moving)
+        val vy = getYVelocity(player.y, player.jumpY, player.vy, player.jumping)
+        val xResult = movePlayerX(
+            player.width,
+            player.height.coerceAtMost(Game.VIEWPORT_HEIGHT - player.y),
+            player.x,
+            player.y,
             vx,
-            boundedPlayerY.vy,
             player.moving,
-            boundedPlayerY.jumping,
             player.direction,
-            boundedPlayerY.floor
+            currentCollisionArea
         )
-    }
-
-    private fun onFloor(player: Player): Boolean {
-        return player.y == player.floor
-    }
-
-    fun calculatePlayerX(player: Player, vx: Double): Int {
-        var x = player.x
-        if (player.moving || player.vx != 0.0) {
-            x = when (player.direction) {
-                Direction.LEFT -> player.x - ((X_EASING_COEFFICIENT * vx) + FRICTION).roundToInt()
-                Direction.RIGHT -> player.x + ((X_EASING_COEFFICIENT * vx) - FRICTION).roundToInt()
-            }
-        }
-        return x
-    }
-
-    fun calculatePlayerY(player: Player, backgroundAsset: Asset, vy: Double): PhysicsYResult {
-        var y = player.y
-        var vy = vy
-        var dy = player.dy
-        var jumping = player.jumping
-        val onFloor = onFloor(player)
-         if (jumping && onFloor) {
-            LOGGER.info("starting jump setting the dy y: $y player.jumping: $jumping vy: $vy dy: $dy onFloor: $onFloor floor: ${player.floor}")
-            dy = y - Player.JUMP_DISTANCE
-            y -= 20
-        } else if (jumping && y > dy) {
-            LOGGER.info("In the process of jumping y: $y player.jumping: $jumping vy: $vy dy: $dy onFloor: $onFloor floor: ${player.floor}")
-             y -= ((X_EASING_COEFFICIENT * vy) - GRAVITY).roundToInt()
-            if (y <= dy) {
-                LOGGER.info("Jump heigh reached y: $y player.jumping: $jumping vy: $vy dy: $dy onFloor: $onFloor floor: ${player.floor}")
-                y = dy
-                dy = player.floor
-            }
-        } else if (jumping && y < dy) {
-            LOGGER.info("In the process of falling y: $y player.jumping: $jumping vy: $vy dy: $dy onFloor: $onFloor floor: ${player.floor}")
-            y += ((X_EASING_COEFFICIENT * vy) - GRAVITY).roundToInt()
-            if (y >= player.floor) {
-                LOGGER.info("jump complete y: $y player.jumping: $jumping vy: $vy dy: $dy onFloor: $onFloor floor: ${player.floor}")
-                y = player.floor
-                jumping = false
-                vy = 0.0
-                dy = y
-            }
-        } else {
-            y = (y + GRAVITY.roundToInt()).coerceAtMost(backgroundAsset.height - player.height)
-            if(y == backgroundAsset.height - player.height){
-                PhysicsYResult(y, vy, dy, jumping, y)
-            }
-        }
-        return PhysicsYResult(y, vy, dy, jumping, player.floor)
-    }
-
-    fun applyXVelocity(player: Player): Double {
-        var vx: Double = player.vx
-        if (player.moving) {
-            //LOGGER.debug("incrementing player velocity $vx")
-            if (vx == 0.0) {
-                vx += VELOCITY_COEFFICIENT
-            } else if (vx < Player.Companion.MAX_X_VELOCITY) {
-                vx = vx + (VELOCITY_COEFFICIENT * vx)
-                if (vx > Player.Companion.MAX_X_VELOCITY) {
-                    vx = Player.Companion.MAX_X_VELOCITY
-                }
-            }
-        } else {
-            if (vx > 0.0) {
-                //LOGGER.debug("decrementing player velocity $vx")
-                vx = vx - (VELOCITY_COEFFICIENT * vx)
-                if (vx < VELOCITY_COEFFICIENT) {
-                    vx = 0.0
-                }
-            }
-        }
-        return vx
-    }
-
-    fun applyYVelocity(player: Player): Double {
-        val y = player.y
-        val dy = player.dy
-        var vy: Double = player.vy
-        if (player.jumping) {
-            //LOGGER.debug("incrementing player velocity $velocityY")
-            if (vy == 0.0) {
-                vy = vy + VELOCITY_COEFFICIENT
-            } else if (vy < Player.MAX_Y_VELOCITY) {
-                val distanceToTarget = y - dy
-                LOGGER.debug("incrementing player velocity $vy dist: $distanceToTarget")
-                vy = vy + (VELOCITY_COEFFICIENT * vy) + (distanceToTarget * Y_EASING_COEFFICIENT)
-                if (vy > Player.MAX_Y_VELOCITY) {
-                    vy = Player.MAX_Y_VELOCITY
-                }
-            }
-        } else {
-            vy = 0.0
-        }
-        return vy
-    }
-
-    fun adjustedPlayerX(player: Player, vx: Double, dx: Int, collisionImage: BufferedImage): PhysicsXResult {
-        var xBoundary = dx
-        if (player.direction == Direction.RIGHT) {
-            xBoundary = dx + player.width;
-        }
-        val rgb1 = collisionImage.getRGB(xBoundary, player.y, 1, player.height, null, 0, player.width + 1)
-        if (rgb1.contains(COLLISION_COLOR_VALUE)) {
-            LOGGER.info("Collision")
-            val safeX = findSafeX(player, dx, collisionImage)
-            return PhysicsXResult(
-                safeX,
-                0.0,
-                false
-            )
-        }
-        return PhysicsXResult(
-            dx,
-            vx,
-            player.moving
-        )
-    }
-
-    fun adjustedPlayerY(
-        player: Player,
-        dx: Int,
-        y: Int,
-        dy: Int,
-        vy: Double,
-        jumping: Boolean,
-        collisionAsset: Asset
-    ): PhysicsYResult {
-        var startX: Int
-        var startY: Int
-        var width: Int
-        var height: Int
-        var isFalling = false
-//        if (y == player.floor) {
-//            LOGGER.info("player is on the floor, bypass collision")
-//            return PhysicsYResult(
-//                y,
-//                vy,
-//                dy,
-//                jumping,
-//                player.floor
-//            )
-//        }
-        if (y > dy && player.y != player.floor) {
-            LOGGER.info("player is rising")
-            startX = dx + 1
-            startY = y - 1
-            width = player.width - 1
-            height = 1
-        } else {
-            LOGGER.info("player is falling")
-            startX = dx + 1
-            startY = (y + player.height + 1).coerceAtMost(collisionAsset.height - 1)
-            width = player.width - 1
-            height = 1
-            isFalling = true
-        }
-        val rgb1 = collisionAsset.bufferedImage.getRGB(startX, startY, width, height, null, 0, 64)
-        if (rgb1.contains(COLLISION_COLOR_VALUE)) {
-            LOGGER.info("Vertical Collision")
-            val safeY = findSafeY(startX, startY, width, height, isFalling, collisionAsset.bufferedImage)
-            return PhysicsYResult(
-                safeY,
-                0.0,
-                safeY,
-                false,
-                safeY
-            )
-        }
-        return PhysicsYResult(
-            y,
+        val yResult = movePlayerY(
+            player.width,
+            player.height,
+            xResult.x,
+            player.y,
             vy,
-            dy,
-            jumping,
-            player.floor
+            player.jumping,
+            player.jumpY,
+            player.jumpReached,
+            currentCollisionArea
+        )
+        return Player(
+            xResult.x,
+            yResult.y,
+            xResult.vx,
+            player.vy,
+            yResult.jumping,
+            yResult.jumpY,
+            yResult.jumpReached,
+            xResult.moving,
+            player.direction
         )
     }
 
-    private fun findSafeX(player: Player, dx: Int, collisionImage: BufferedImage): Int {
-        var nextDx = dx
-        if (player.direction == Direction.LEFT) {
-            nextDx += 1
-        } else {
-            nextDx -= 1
+    private fun movePlayerY(
+        playerWidth: Int,
+        playerHeight: Int,
+        playerX: Int,
+        playerY: Int,
+        vy: Double,
+        playerJumping: Boolean,
+        playerJumpY: Int,
+        playerJumpReached: Boolean,
+        collisionImage: BufferedImage
+    ): PhysicsYResult {
+        var destinationY = playerY + GRAVITY.roundToInt()
+        var jumping = playerJumping
+        var jumpY = playerJumpY
+        var jumpReached = playerJumpReached
+        var collisionBitMap: IntArray
+        val xBoundary: Int = playerX + 1
+        var yBoundary: Int
+        val boundaryWidth: Int = playerWidth - 2
+        val boundaryHeight = 1
+        //check for floor
+        if (jumping) {
+            if (jumpY == 0 && !jumpReached) {
+                LOGGER.info("Starting a jump")
+                jumpY = destinationY - Player.JUMP_DISTANCE
+                destinationY -= vy.roundToInt()
+                if (destinationY < 0) {
+                    LOGGER.info("destination y is less than 0")
+                    destinationY = 0
+                    jumpY = 0
+                    jumpReached = true
+                } else {
+                    LOGGER.info("stride checking")
+                    collisionBitMap =
+                        collisionImage.getRGB(
+                            xBoundary,
+                            destinationY,
+                            boundaryWidth,
+                            playerY - destinationY,
+                            null,
+                            0,
+                            64
+                        )
+                    if (collisionBitMap.contains(COLLISION_COLOR_VALUE)) {
+                        LOGGER.info("theres a vertical collision in the stride of the initial vx")
+                        val ceiling =
+                            findCeilingAscending(xBoundary, boundaryWidth, 1, playerHeight, collisionImage, playerY)
+                        val dist = ceiling - jumpY
+                        if (dist > vy.roundToInt()) {
+                            jumpY = ceiling + 1
+                            destinationY = ceiling + 1
+                            jumpReached = true
+                        }
+                    }
+                }
+            } else if (destinationY > jumpY && !jumpReached) {
+                destinationY -= vy.roundToInt()
+                if (destinationY <= 0) {
+                    destinationY = 0
+                    jumpY = 0
+                    jumpReached = true
+                    yBoundary = 0
+                } else {
+                    yBoundary = destinationY
+                }
+                collisionBitMap = collisionImage.getRGB(
+                    xBoundary,
+                    yBoundary,
+                    boundaryWidth,
+                    boundaryHeight,
+                    null,
+                    0,
+                    64
+                )
+                LOGGER.info("Player is going up rect is x=$xBoundary, y=$yBoundary boundaryWidth=$boundaryWidth, boundaryHeight=$boundaryHeight")
+                if (collisionBitMap.contains(COLLISION_COLOR_VALUE)) {
+                    LOGGER.info("collision while jumping")
+                    destinationY =
+                        findCeilingDescending(
+                            xBoundary,
+                            boundaryWidth,
+                            boundaryHeight,
+                            playerHeight,
+                            collisionImage,
+                            yBoundary
+                        )
+                    jumpY = destinationY
+                    jumpReached = true
+                }
+                //check for ceiling
+            } else if (destinationY <= jumpY && !jumpReached) {
+                LOGGER.info("The Jump Height has been reached")
+                jumpReached = true
+                jumpY = 0
+            }
         }
-        val rgb1 = collisionImage.getRGB(nextDx, player.y, player.width, player.height, null, 0, 64)
-        if (rgb1.contains(COLLISION_COLOR_VALUE)) {
-            return findSafeX(player, nextDx, collisionImage)
+        yBoundary = (destinationY + playerHeight).coerceAtMost(Game.VIEWPORT_HEIGHT - 1)
+        //LOGGER.info("floor checking Y Boundary: $yBoundary")
+        collisionBitMap =
+            collisionImage.getRGB(xBoundary, yBoundary, boundaryWidth, boundaryHeight, null, 0, 64)
+        if (collisionBitMap.contains(COLLISION_COLOR_VALUE)) {
+            //LOGGER.info("Vertical Collision Detected")
+            destinationY = findFloor(xBoundary, boundaryWidth, boundaryHeight, playerHeight, collisionImage, yBoundary)
+            if (jumping) {
+                LOGGER.info("Completed Jump")
+                jumpY = 0
+                jumping = false
+                jumpReached = false
+            }
         }
-        return nextDx
+        if(destinationY > Game.VIEWPORT_HEIGHT - playerHeight) {
+            destinationY = Game.VIEWPORT_HEIGHT - playerHeight
+        }
+        //LOGGER.info("no collision found")
+        return PhysicsYResult(destinationY, vy, jumping, jumpY, jumpReached)
     }
 
-    private fun findSafeY(
-        startX: Int,
-        startY: Int,
-        width: Int,
-        height: Int,
-        isFalling: Boolean,
-        collisionImage: BufferedImage
+    private fun findFloor(
+        xBoundary: Int,
+        boundaryWidth: Int,
+        boundaryHeight: Int,
+        playerHeight: Int,
+        collisionImage: BufferedImage,
+        lastY: Int
     ): Int {
-        //LOGGER.info("findSafeY $startY")
-        var nextY: Int = startY
-        nextY = if (isFalling) {
-            startY - 1
-        } else {
-            startY + 1
+        val nextY = lastY - 1
+        val collisionBitMap =
+            collisionImage.getRGB(xBoundary, nextY, boundaryWidth, boundaryHeight, null, 0, 64)
+        if (collisionBitMap.contains(COLLISION_COLOR_VALUE)) {
+            return findFloor(xBoundary, boundaryWidth, boundaryHeight, playerHeight, collisionImage, nextY)
         }
-        val rgb1 = collisionImage.getRGB(startX, nextY, width, height, null, 0, 64)
-        if (rgb1.contains(COLLISION_COLOR_VALUE)) {
-            return findSafeY(startX, nextY, width, height, isFalling, collisionImage)
-        }
-        if (isFalling) {
-            return nextY - 64
+        return nextY - playerHeight
+    }
+
+    private fun findCeilingDescending(
+        xBoundary: Int,
+        boundaryWidth: Int,
+        boundaryHeight: Int,
+        playerHeight: Int,
+        collisionImage: BufferedImage,
+        lastY: Int
+    ): Int {
+        val nextY = lastY + 1
+        LOGGER.info("xBoundary = $xBoundary lastY = $lastY boundaryWidth = $boundaryWidth boundaryHeight = $boundaryHeight nextY = $nextY")
+        val collisionBitMap =
+            collisionImage.getRGB(xBoundary, nextY, boundaryWidth, boundaryHeight, null, 0, 64)
+        if (collisionBitMap.contains(COLLISION_COLOR_VALUE)) {
+            return findCeilingDescending(xBoundary, boundaryWidth, boundaryHeight, playerHeight, collisionImage, nextY)
         }
         return nextY
+    }
+
+    private fun findCeilingAscending(
+        xBoundary: Int,
+        boundaryWidth: Int,
+        boundaryHeight: Int,
+        playerHeight: Int,
+        collisionImage: BufferedImage,
+        lastY: Int
+    ): Int {
+        val nextY = lastY - 1
+        val collisionBitMap =
+            collisionImage.getRGB(xBoundary, nextY, boundaryWidth, boundaryHeight, null, 0, 64)
+        if (collisionBitMap.contains(COLLISION_COLOR_VALUE)) {
+            return nextY
+        }
+        return findCeilingAscending(xBoundary, boundaryWidth, boundaryHeight, playerHeight, collisionImage, nextY)
+    }
+
+    fun movePlayerX(
+        playerWidth: Int,
+        playerHeight: Int,
+        playerX: Int,
+        playerY: Int,
+        playerVx: Double,
+        playerMoving: Boolean,
+        playerDirection: Direction,
+        collisionImage: BufferedImage
+    ): PhysicsXResult {
+        var targetX = playerX
+        var xBoundary = playerX
+        var nextVx = playerVx
+        if (playerMoving || playerVx != 0.0) {
+            if (playerDirection == Direction.LEFT) {
+                targetX -= ((X_EASING_COEFFICIENT * playerVx) + FRICTION).roundToInt()
+                if (targetX < 0) {
+                    targetX = 0
+                }
+            } else {
+                targetX += ((X_EASING_COEFFICIENT * playerVx) - FRICTION).roundToInt()
+                if (targetX >= Game.VIEWPORT_WIDTH - playerWidth) {
+                    targetX = Game.VIEWPORT_WIDTH - playerWidth - 1
+                }
+                xBoundary = targetX + playerWidth
+            }
+        }
+        //LOGGER.info("xBoundary = $xBoundary playerY = $playerY ")
+        val collisionBitMap =
+            collisionImage.getRGB(xBoundary, playerY, 1, playerHeight, null, 0, 64)
+        if (collisionBitMap.contains(COLLISION_COLOR_VALUE)) {
+            LOGGER.info("Horizontal Collision Detected")
+            targetX = findEdge(playerY, 1, playerHeight, collisionImage, playerDirection, targetX)
+            nextVx = 0.0
+        }
+        return PhysicsXResult(targetX, nextVx, playerMoving)
+    }
+
+    private fun findEdge(
+        yBoundary: Int,
+        boundaryWidth: Int,
+        boundaryHeight: Int,
+        collisionImage: BufferedImage,
+        playerDirection: Direction,
+        lastX: Int
+    ): Int {
+        var nextX = lastX
+        var xBoundary = nextX - 1
+        if (playerDirection == Direction.LEFT) {
+            nextX += 1
+        } else {
+            nextX -= 1
+            xBoundary = nextX + 64 + 1
+        }
+        //LOGGER.info("xBoundary = $xBoundary nextX = $nextX yBoundary = $yBoundary")
+        val collisionBitMap =
+            collisionImage.getRGB(xBoundary, yBoundary, boundaryWidth, boundaryHeight, null, 0, 64)
+        if (collisionBitMap.contains(COLLISION_COLOR_VALUE)) {
+            return findEdge(yBoundary, boundaryWidth, boundaryHeight, collisionImage, playerDirection, nextX)
+        }
+        return nextX
+    }
+
+    fun getXVelocity(playerVx: Double, playerMoving: Boolean): Double {
+        var nextVx: Double = playerVx
+        if (playerMoving) {
+            //LOGGER.debug("incrementing player velocity $vx")
+            if (nextVx == 0.0) {
+                nextVx += VELOCITY_COEFFICIENT
+            } else if (nextVx < Player.MAX_X_VELOCITY) {
+                nextVx += (VELOCITY_COEFFICIENT * playerVx)
+                if (nextVx > Player.MAX_X_VELOCITY) {
+                    nextVx = Player.MAX_X_VELOCITY
+                }
+            }
+        } else {
+            if (nextVx > 0.0) {
+                //LOGGER.debug("decrementing player velocity $vx")
+                nextVx -= (VELOCITY_COEFFICIENT * playerVx)
+                if (nextVx < VELOCITY_COEFFICIENT) {
+                    nextVx = 0.0
+                }
+            }
+        }
+        return nextVx
+    }
+
+    fun getYVelocity(playerY: Int, playerJumpY: Int, playerVy: Double, playerJumping: Boolean): Double {
+        var nextVy: Double = playerVy
+        if (playerJumping) {
+            if (nextVy == 0.0) {
+                nextVy += Player.JUMP_DISTANCE / 2
+            } else if (nextVy < Player.MAX_Y_VELOCITY) {
+                val distanceToTarget = playerY - playerJumpY
+                nextVy += (VELOCITY_COEFFICIENT * nextVy) + (distanceToTarget * Y_EASING_COEFFICIENT)
+                if (nextVy > Player.MAX_Y_VELOCITY) {
+                    nextVy = Player.MAX_Y_VELOCITY
+                }
+            }
+        } else {
+            nextVy = 0.0
+        }
+        return nextVy
     }
 
 }
