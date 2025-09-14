@@ -5,12 +5,13 @@
         </encoder>
     </appender>
 
-    <logger name="com.github.adamyork.socketgame.socket.GameHandler" level="ERROR"/>
-    <logger name="com.github.adamyork.socketgame.game.Game" level="DEBUG"/>
+    <logger name="com.github.adamyork.socketgame.socket.GameHandler" level="INFO"/>
+    <logger name="com.github.adamyork.socketgame.socket.FxHandler" level="INFO"/>
+    <logger name="com.github.adamyork.socketgame.game.Game" level="INFO"/>
     <logger name="com.github.adamyork.socketgame.engine.Engine" level="INFO"/>
-    <logger name="com.github.adamyork.socketgame.engine.Physics" level="DEBUG"/>
+    <logger name="com.github.adamyork.socketgame.engine.Physics" level="INFO"/>
 
     <root level="info">
-        <appender-ref ref="STDOUT" />
+        <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

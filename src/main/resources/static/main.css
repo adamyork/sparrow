@@ -1,5 +1,10 @@
 #game-window {
-    #width: 800px;
-    #height: 900px;
     background: blue;
+}
+
+.scoreContainer {
+    position: fixed;
+    top: 20px;
+    left: 900px;
+    background: white;
 }

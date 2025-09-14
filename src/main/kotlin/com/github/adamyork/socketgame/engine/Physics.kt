@@ -1,5 +1,6 @@
 package com.github.adamyork.socketgame.engine
 
+import com.github.adamyork.socketgame.engine.data.Particle
 import com.github.adamyork.socketgame.engine.data.PhysicsXResult
 import com.github.adamyork.socketgame.engine.data.PhysicsYResult
 import com.github.adamyork.socketgame.game.Game
@@ -10,8 +11,12 @@ import com.github.adamyork.socketgame.game.data.Player
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import reactor.util.function.Tuple2
+import reactor.util.function.Tuples
 import java.awt.image.BufferedImage
+import kotlin.math.cos
 import kotlin.math.roundToInt
+import kotlin.math.sin
 
 
 @Service
@@ -43,7 +48,8 @@ class Physics {
             vx,
             nextPlayer.moving,
             nextPlayer.direction,
-            currentCollisionArea
+            currentCollisionArea,
+            nextPlayer.colliding
         )
         val yResult = movePlayerY(
             nextPlayer.width,
@@ -65,7 +71,9 @@ class Physics {
             yResult.jumpY,
             yResult.jumpReached,
             xResult.moving,
-            nextPlayer.direction
+            nextPlayer.direction,
+            nextPlayer.frameMetadata,
+            nextPlayer.colliding,
         )
     }
 
@@ -89,19 +97,18 @@ class Physics {
         var yBoundary: Int
         val boundaryWidth: Int = playerWidth - 2
         val boundaryHeight = 1
-        //check for floor
         if (jumping) {
             if (jumpY == 0 && !jumpReached) {
-                LOGGER.info("Starting a jump")
+                LOGGER.info("starting a jump")
                 jumpY = destinationY - Player.JUMP_DISTANCE
                 destinationY -= vy.roundToInt()
                 if (destinationY < 0) {
-                    LOGGER.info("destination y is less than 0")
+                    LOGGER.info("the jump destination is beyond the top of the viewport")
                     destinationY = 0
                     jumpY = 0
                     jumpReached = true
                 } else {
-                    LOGGER.info("stride checking")
+                    LOGGER.info("scanning the entire vertical stride of the initial jump")
                     collisionBitMap =
                         collisionImage.getRGB(
                             xBoundary,
@@ -113,7 +120,7 @@ class Physics {
                             64
                         )
                     if (collisionBitMap.contains(COLLISION_COLOR_VALUE)) {
-                        LOGGER.info("theres a vertical collision in the stride of the initial vx")
+                        LOGGER.info("theres a vertical collision in the stride of the initial jump")
                         val ceiling =
                             findCeilingAscending(xBoundary, boundaryWidth, 1, playerHeight, collisionImage, playerY)
                         val dist = ceiling - jumpY
@@ -143,7 +150,7 @@ class Physics {
                     0,
                     64
                 )
-                LOGGER.info("Player is going up rect is x=$xBoundary, y=$yBoundary boundaryWidth=$boundaryWidth, boundaryHeight=$boundaryHeight")
+                LOGGER.info("player is jumping and rising rect is x=$xBoundary, y=$yBoundary boundaryWidth=$boundaryWidth, boundaryHeight=$boundaryHeight")
                 if (collisionBitMap.contains(COLLISION_COLOR_VALUE)) {
                     LOGGER.info("collision while jumping")
                     destinationY =
@@ -160,20 +167,20 @@ class Physics {
                 }
                 //check for ceiling
             } else if (destinationY <= jumpY && !jumpReached) {
-                LOGGER.info("The Jump Height has been reached")
+                LOGGER.info("the jump height has been reached")
                 jumpReached = true
                 jumpY = 0
             }
         }
         yBoundary = (destinationY + playerHeight).coerceAtMost(Game.VIEWPORT_HEIGHT - 1)
-        //LOGGER.info("floor checking Y Boundary: $yBoundary")
+        LOGGER.debug("checking for floor Y Boundary: $yBoundary")
         collisionBitMap =
             collisionImage.getRGB(xBoundary, yBoundary, boundaryWidth, boundaryHeight, null, 0, 64)
         if (collisionBitMap.contains(COLLISION_COLOR_VALUE)) {
-            //LOGGER.info("Vertical Collision Detected")
+            LOGGER.debug("Vertical Collision Detected")
             destinationY = findFloor(xBoundary, boundaryWidth, boundaryHeight, playerHeight, collisionImage, yBoundary)
             if (jumping) {
-                LOGGER.info("Completed Jump")
+                LOGGER.info("jump completed")
                 jumpY = 0
                 jumping = false
                 jumpReached = false
@@ -182,7 +189,6 @@ class Physics {
         if (destinationY > Game.VIEWPORT_HEIGHT - playerHeight) {
             destinationY = Game.VIEWPORT_HEIGHT - playerHeight
         }
-        //LOGGER.info("no collision found")
         return PhysicsYResult(destinationY, vy, jumping, jumpY, jumpReached)
     }
 
@@ -212,7 +218,6 @@ class Physics {
         lastY: Int
     ): Int {
         val nextY = lastY + 1
-        LOGGER.info("xBoundary = $xBoundary lastY = $lastY boundaryWidth = $boundaryWidth boundaryHeight = $boundaryHeight nextY = $nextY")
         val collisionBitMap =
             collisionImage.getRGB(xBoundary, nextY, boundaryWidth, boundaryHeight, null, 0, 64)
         if (collisionBitMap.contains(COLLISION_COLOR_VALUE)) {
@@ -246,11 +251,28 @@ class Physics {
         playerVx: Double,
         playerMoving: Boolean,
         playerDirection: Direction,
-        collisionImage: BufferedImage
+        collisionImage: BufferedImage,
+        colliding: Boolean
     ): PhysicsXResult {
         var targetX = playerX
         var xBoundary = playerX
         var nextVx = playerVx
+        var collisionRebound = 0
+        if (colliding) {
+            collisionRebound = playerWidth
+            if (playerDirection == Direction.LEFT) {
+                targetX += collisionRebound
+                if (targetX >= Game.VIEWPORT_WIDTH - playerWidth) {
+                    targetX = Game.VIEWPORT_WIDTH - playerWidth - 1
+                }
+            } else {
+                targetX -=  collisionRebound
+                if (targetX < 0) {
+                    targetX = 0
+                }
+            }
+            nextVx = 0.0
+        }
         if (playerMoving || playerVx != 0.0) {
             if (playerDirection == Direction.LEFT) {
                 targetX -= ((X_EASING_COEFFICIENT * playerVx) + FRICTION).roundToInt()
@@ -269,7 +291,6 @@ class Physics {
         val collisionBitMap =
             collisionImage.getRGB(xBoundary, playerY, 1, playerHeight, null, 0, 64)
         if (collisionBitMap.contains(COLLISION_COLOR_VALUE)) {
-            LOGGER.info("Horizontal Collision Detected")
             targetX = findEdge(playerY, 1, playerHeight, collisionImage, playerDirection, targetX)
             nextVx = 0.0
         }
@@ -292,9 +313,8 @@ class Physics {
             nextX -= 1
             xBoundary = nextX + 64 + 1
         }
-        LOGGER.info("xBoundary = $xBoundary nextX = $nextX yBoundary = $yBoundary")
         if (xBoundary == 0 || xBoundary == Game.VIEWPORT_WIDTH) {
-            LOGGER.info("Cant find an edge")
+            LOGGER.info("cant find an edge. giving up")
             return -1
         }
         val collisionBitMap =
@@ -356,7 +376,7 @@ class Physics {
         var playerVx = player.vx
         var playerY = player.y
         var jumpY = player.jumpY
-        LOGGER.info("player.x = ${player.x}, player.y = ${player.y} player.width = ${player.width} playerHeight = $playerHeight")
+        //LOGGER.info("player.x = ${player.x}, player.y = ${player.y} player.width = ${player.width} playerHeight = $playerHeight")
         val collisionBitMap = currentCollisionArea.getRGB(
             player.x,
             player.y,
@@ -388,7 +408,9 @@ class Physics {
                     jumpY,
                     true,
                     player.moving,
-                    player.direction
+                    player.direction,
+                    player.frameMetadata,
+                    player.colliding
                 )
             }
             val boundaryY = (player.y + playerHeight).coerceAtMost(Game.VIEWPORT_HEIGHT - 1)
@@ -403,10 +425,49 @@ class Physics {
                 jumpY,
                 player.jumpReached,
                 player.moving,
-                player.direction
+                player.direction,
+                player.frameMetadata,
+                player.colliding
             )
         }
         return player
+    }
+
+    fun applyParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle> {
+        return mapParticles.map { particle ->
+            val nextFrame = particle.frame + 1
+            var nextRadius = particle.radius
+            var position = Tuples.of(particle.x.toFloat(), particle.y.toFloat())
+            if (particle.radius < Particles.MAX_SQUARE_RADIAL_RADIUS) {
+                nextRadius = particle.radius + 10
+                position = getPosition(nextRadius.toFloat(), particle.id.toFloat(), particle.originX, particle.originY)
+            } else {
+                if (particle.frame <= particle.lifetime) {
+                    position = Tuples.of(particle.x.toFloat(), particle.y.toFloat() + GRAVITY.toFloat())
+                }
+            }
+            Particle(
+                particle.id,
+                position.t1.toInt() + particle.xJitter,
+                position.t2.toInt() + particle.yJitter,
+                particle.originX,
+                particle.originY,
+                particle.width,
+                particle.height,
+                particle.type,
+                nextFrame,
+                particle.lifetime,
+                particle.xJitter,
+                particle.yJitter,
+                nextRadius
+            )
+        }.toCollection(ArrayList())
+    }
+
+    fun getPosition(radius: Float, angleInDegrees: Float, originX: Int, originY: Int): Tuple2<Float, Float> {
+        val x: Float = (radius * cos(angleInDegrees * Math.PI / 180f)).toFloat() + originX
+        val y: Float = (radius * sin(angleInDegrees * Math.PI / 180f)).toFloat() + originY
+        return Tuples.of(x, y)
     }
 
 }

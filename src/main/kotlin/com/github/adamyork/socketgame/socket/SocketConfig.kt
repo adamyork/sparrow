@@ -2,6 +2,7 @@ package com.github.adamyork.socketgame.socket
 
 import com.github.adamyork.socketgame.engine.Engine
 import com.github.adamyork.socketgame.game.AssetService
+import com.github.adamyork.socketgame.game.ScoreService
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
@@ -15,14 +16,17 @@ import org.springframework.web.reactive.socket.server.upgrade.ReactorNettyReques
 
 
 @Configuration
-class SocketConfiguration {
+class SocketConfig {
+
 
     @Bean
-    fun handlerMapping(assetService: AssetService, engine: Engine): HandlerMapping {
+    fun handlerMapping(assetService: AssetService, engine: Engine, scoreService: ScoreService): HandlerMapping {
         val map: MutableMap<String?, WebSocketHandler?> = HashMap()
-        map.put("/input", InputHandler())
-        map.put("/game", GameHandler(assetService, engine))
-
+        val gameHandler = GameHandler(assetService, engine)
+        scoreService.gameHandler = gameHandler
+        map["/game"] = gameHandler
+        map["/audio"] = AudioHandler(assetService)
+        map["/fx"] = FxHandler(assetService, gameHandler)
         val mapping = SimpleUrlHandlerMapping()
         mapping.urlMap = map
         mapping.order = Ordered.HIGHEST_PRECEDENCE

@@ -5,12 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Socket Game</title>
     <script src="main.js" defer></script>
-    <link rel="stylesheet" href="main.css" />
+    <link rel="stylesheet" href="main.css"/>
 </head>
 <body>
-    <div>
-        <canvas id="game-window" width="1024" height="768"></canvas>
+<div>
+    <canvas id="game-window" width="1024" height="768"></canvas>
+    <div class="scoreContainer">
+        <table>
+            <thead>Score</thead>
+            <tbody>
+            <tr>
+                <td>Total</td>
+                <td id="total">0</td>
+            </tr>
+            <tr>
+                <td>Remaining</td>
+                <td id="remaining">0</td>
+            </tr>
+            </tbody>
+        </table>
     </div>
-    <button id="start">Start</button>
+</div>
+
+<button id="start">Start</button>
+<audio id="audio-player"></audio>
+<audio id="fx-player"></audio>
 </body>
 </html>

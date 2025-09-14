@@ -23,45 +23,52 @@ class Game {
         const val VIEWPORT_HEIGHT: Int = 768
     }
 
-    val webSocketSession: WebSocketSession
+    val gameWebSocketSession: WebSocketSession
     val assetService: AssetService
     val engine: Engine
+    var isInitialized: Boolean = false
 
 
     lateinit var player: Player
     lateinit var gameMap: GameMap
     lateinit var playerAsset: Asset
+    lateinit var mapItemAsset: Asset
+    lateinit var mapEnemyAsset: Asset
 
     constructor(
         webSocketSession: WebSocketSession,
         assetService: AssetService,
         engine: Engine
     ) {
-        this.webSocketSession = webSocketSession
+        this.gameWebSocketSession = webSocketSession
         this.assetService = assetService
         this.engine = engine
     }
 
     fun init() {
         player = Player(400, 100)
-        gameMap = assetService.loadMap(1)
+        gameMap = assetService.loadMap(0)
         playerAsset = assetService.loadPlayer()
+        mapItemAsset = assetService.loadItem(0)
+        mapEnemyAsset = assetService.loadEnemy(0)
+        gameMap.generateMapItems()
+        gameMap.generateMapEnemies()
+        isInitialized = true
     }
 
     fun start(): Disposable {
         return Flux.interval(Duration.ofMillis(80))
             .publishOn(Schedulers.boundedElastic())
             .onBackpressureDrop()
-            .concatMap(Function { foo: Long? ->
+            .concatMap(Function { _: Long? ->
                 Mono.defer(Supplier {
                     gameMap = engine.manageMap(player, gameMap)
                     player = engine.managePlayer(player, gameMap, gameMap.collisionAsset)
-                    val bytes: ByteArray = engine.paint(gameMap, playerAsset, player)
-                    val binaryMessage = webSocketSession.binaryMessage { session -> session.wrap(bytes) }
+                    val bytes: ByteArray = engine.paint(gameMap, playerAsset, player, mapItemAsset, mapEnemyAsset)
+                    val binaryMessage = gameWebSocketSession.binaryMessage { session -> session.wrap(bytes) }
                     val messages: List<WebSocketMessage> = listOf(binaryMessage)
                     val messageFlux: Flux<WebSocketMessage> = Flux.fromIterable(messages)
-                    webSocketSession.send(messageFlux)
-                    //Mono.just("completed")
+                    gameWebSocketSession.send(messageFlux)
                 })
             }, 0)
             .subscribe()

@@ -2,9 +2,9 @@ package com.github.adamyork.socketgame.socket
 
 import com.github.adamyork.socketgame.engine.Engine
 import com.github.adamyork.socketgame.game.AssetService
+import com.github.adamyork.socketgame.game.Game
 import com.github.adamyork.socketgame.game.data.ControlAction
 import com.github.adamyork.socketgame.game.data.ControlType
-import com.github.adamyork.socketgame.game.Game
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.web.reactive.socket.WebSocketHandler
@@ -17,7 +17,7 @@ class GameHandler : WebSocketHandler {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(GameHandler::class.java)
-        const val INPUT_TYPE: String = "START"
+        const val INPUT_START: String = "START"
         const val INPUT_KEY_STATE = "keydown"
         const val INPUT_KEY_RIGHT: String = "ArrowRight"
         const val INPUT_KEY_LEFT: String = "ArrowLeft"
@@ -42,7 +42,8 @@ class GameHandler : WebSocketHandler {
             .publishOn(Schedulers.boundedElastic())
             .map { message ->
                 val payloadAsText = message.payloadAsText
-                if (payloadAsText == INPUT_TYPE) {
+                if (payloadAsText == INPUT_START) {
+                    LOGGER.info("Game started")
                     game = Game(session, assetService, engine)
                     game?.init()
                     game?.start()
