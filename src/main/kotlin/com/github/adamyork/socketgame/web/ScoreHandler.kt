@@ -1,6 +1,6 @@
 package com.github.adamyork.socketgame.web
 
-import com.github.adamyork.socketgame.game.ScoreService
+import com.github.adamyork.socketgame.game.service.ScoreService
 import com.github.adamyork.socketgame.web.data.Score
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest

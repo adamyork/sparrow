@@ -1,4 +1,4 @@
-package com.github.adamyork.socketgame.game
+package com.github.adamyork.socketgame.game.service
 
 import com.github.adamyork.socketgame.game.data.MapItemState
 import com.github.adamyork.socketgame.socket.GameHandler

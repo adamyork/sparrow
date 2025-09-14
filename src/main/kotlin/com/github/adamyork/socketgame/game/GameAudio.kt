@@ -1,6 +1,6 @@
-package com.github.adamyork.socketgame.engine
+package com.github.adamyork.socketgame.game
 
-import com.github.adamyork.socketgame.game.AssetService
+import com.github.adamyork.socketgame.game.service.AssetService
 import com.github.adamyork.socketgame.socket.GameHandler
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -14,10 +14,10 @@ import java.time.Duration
 import java.util.function.Function
 import java.util.function.Supplier
 
-class SoundFx {
+class GameAudio {
 
     companion object {
-        val LOGGER: Logger = LoggerFactory.getLogger(SoundFx::class.java)
+        val LOGGER: Logger = LoggerFactory.getLogger(GameAudio::class.java)
     }
 
     val webSocketSession: WebSocketSession

@@ -1,8 +1,8 @@
 package com.github.adamyork.socketgame.socket
 
-import com.github.adamyork.socketgame.engine.Engine
-import com.github.adamyork.socketgame.game.AssetService
-import com.github.adamyork.socketgame.game.ScoreService
+import com.github.adamyork.socketgame.game.engine.Engine
+import com.github.adamyork.socketgame.game.service.AssetService
+import com.github.adamyork.socketgame.game.service.ScoreService
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
@@ -25,8 +25,8 @@ class SocketConfig {
         val gameHandler = GameHandler(assetService, engine)
         scoreService.gameHandler = gameHandler
         map["/game"] = gameHandler
-        map["/audio"] = AudioHandler(assetService)
-        map["/fx"] = FxHandler(assetService, gameHandler)
+        map["/input-audio"] = InputAudioHandler(assetService)
+        map["/game-audio"] = GameAudioHandler(assetService, gameHandler)
         val mapping = SimpleUrlHandlerMapping()
         mapping.urlMap = map
         mapping.order = Ordered.HIGHEST_PRECEDENCE

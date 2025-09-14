@@ -1,16 +1,16 @@
-package com.github.adamyork.socketgame.engine
+package com.github.adamyork.socketgame.game.engine
 
-import com.github.adamyork.socketgame.engine.data.Particle
-import com.github.adamyork.socketgame.engine.data.PhysicsXResult
-import com.github.adamyork.socketgame.engine.data.PhysicsYResult
 import com.github.adamyork.socketgame.game.Game
-import com.github.adamyork.socketgame.game.data.Asset
 import com.github.adamyork.socketgame.game.data.Direction
 import com.github.adamyork.socketgame.game.data.GameMap
 import com.github.adamyork.socketgame.game.data.Player
+import com.github.adamyork.socketgame.game.engine.data.Particle
+import com.github.adamyork.socketgame.game.engine.data.PhysicsXResult
+import com.github.adamyork.socketgame.game.engine.data.PhysicsYResult
+import com.github.adamyork.socketgame.game.service.data.Asset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 import reactor.util.function.Tuple2
 import reactor.util.function.Tuples
 import java.awt.image.BufferedImage
@@ -19,7 +19,7 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 
-@Service
+@Component
 class Physics {
 
     companion object {
@@ -266,7 +266,7 @@ class Physics {
                     targetX = Game.VIEWPORT_WIDTH - playerWidth - 1
                 }
             } else {
-                targetX -=  collisionRebound
+                targetX -= collisionRebound
                 if (targetX < 0) {
                     targetX = 0
                 }

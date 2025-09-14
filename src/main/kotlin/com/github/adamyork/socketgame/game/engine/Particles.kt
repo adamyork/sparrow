@@ -1,11 +1,11 @@
-package com.github.adamyork.socketgame.engine
+package com.github.adamyork.socketgame.game.engine
 
-import com.github.adamyork.socketgame.engine.data.Particle
-import com.github.adamyork.socketgame.engine.data.ParticleType
-import org.springframework.stereotype.Service
+import com.github.adamyork.socketgame.game.engine.data.Particle
+import com.github.adamyork.socketgame.game.engine.data.ParticleType
+import org.springframework.stereotype.Component
 import kotlin.random.Random
 
-@Service
+@Component
 class Particles {
 
     companion object {

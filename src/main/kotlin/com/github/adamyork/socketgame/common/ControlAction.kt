@@ -1,4 +1,4 @@
-package com.github.adamyork.socketgame.game.data
+package com.github.adamyork.socketgame.common
 
 enum class ControlAction {
 

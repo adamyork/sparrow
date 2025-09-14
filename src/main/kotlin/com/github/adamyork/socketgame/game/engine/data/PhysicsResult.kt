@@ -1,4 +1,4 @@
-package com.github.adamyork.socketgame.engine.data
+package com.github.adamyork.socketgame.game.engine.data
 
 import com.github.adamyork.socketgame.game.data.Direction
 

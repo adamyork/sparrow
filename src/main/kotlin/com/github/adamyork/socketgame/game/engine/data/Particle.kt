@@ -1,4 +1,4 @@
-package com.github.adamyork.socketgame.engine.data
+package com.github.adamyork.socketgame.game.engine.data
 
 class Particle {
     val id: Int

@@ -9,7 +9,7 @@ startButton.addEventListener("click", (event) => {
         document.game.socket.send(event.type + ":" + event.code);
     }
     document.game.socket = new WebSocket("ws://localhost:8080/game");
-    document.game.audioSocket = new WebSocket("ws://localhost:8080/audio");
+    document.game.audioSocket = new WebSocket("ws://localhost:8080/input-audio");
     document.game.socket.addEventListener("open", (event) => {
         document.game.socket.send("START");
     });
@@ -58,7 +58,7 @@ startButton.addEventListener("click", (event) => {
         player.src = audioURL;
         player.play();
     });
-    document.game.fxSocket = new WebSocket("ws://localhost:8080/fx");
+    document.game.fxSocket = new WebSocket("ws://localhost:8080/game-audio");
     document.game.fxSocket.addEventListener("open", (event) => {
         document.game.fxSocket.send("FX:FX");
     });

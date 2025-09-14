@@ -1,8 +1,10 @@
-package com.github.adamyork.socketgame.engine
+package com.github.adamyork.socketgame.game.engine
 
-import com.github.adamyork.socketgame.engine.data.Particle
+import com.github.adamyork.socketgame.common.Sounds
+import com.github.adamyork.socketgame.game.engine.data.Particle
 import com.github.adamyork.socketgame.game.Game
 import com.github.adamyork.socketgame.game.data.*
+import com.github.adamyork.socketgame.game.service.data.Asset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -267,7 +269,6 @@ class Engine {
             mapParticles = physics.applyParticlePhysics(mapParticles)
             mapParticles = mapParticles.filter { particle -> particle.frame <= particle.lifetime }
                 .toCollection(ArrayList())
-            LOGGER.info("map size = ${mapParticles.size}")
             MapEnemy(
                 enemy.width,
                 enemy.height,

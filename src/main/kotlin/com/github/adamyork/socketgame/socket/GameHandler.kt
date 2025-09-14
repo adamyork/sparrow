@@ -1,10 +1,10 @@
 package com.github.adamyork.socketgame.socket
 
-import com.github.adamyork.socketgame.engine.Engine
-import com.github.adamyork.socketgame.game.AssetService
+import com.github.adamyork.socketgame.game.engine.Engine
+import com.github.adamyork.socketgame.game.service.AssetService
 import com.github.adamyork.socketgame.game.Game
-import com.github.adamyork.socketgame.game.data.ControlAction
-import com.github.adamyork.socketgame.game.data.ControlType
+import com.github.adamyork.socketgame.common.ControlAction
+import com.github.adamyork.socketgame.common.ControlType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.web.reactive.socket.WebSocketHandler
