@@ -2,9 +2,12 @@ package com.github.adamyork.socketgame.game
 
 import com.github.adamyork.socketgame.common.ControlAction
 import com.github.adamyork.socketgame.common.ControlType
+import com.github.adamyork.socketgame.game.data.Direction
+import com.github.adamyork.socketgame.game.data.GameMap
+import com.github.adamyork.socketgame.game.data.Player
 import com.github.adamyork.socketgame.game.engine.Engine
-import com.github.adamyork.socketgame.game.data.*
 import com.github.adamyork.socketgame.game.service.AssetService
+import com.github.adamyork.socketgame.game.service.ScoreService
 import com.github.adamyork.socketgame.game.service.data.Asset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -30,6 +33,7 @@ class Game {
     val gameWebSocketSession: WebSocketSession
     val assetService: AssetService
     val engine: Engine
+    val scoreService: ScoreService
     var isInitialized: Boolean = false
 
 
@@ -42,11 +46,13 @@ class Game {
     constructor(
         webSocketSession: WebSocketSession,
         assetService: AssetService,
-        engine: Engine
+        engine: Engine,
+        scoreService: ScoreService
     ) {
         this.gameWebSocketSession = webSocketSession
         this.assetService = assetService
         this.engine = engine
+        this.scoreService = scoreService
     }
 
     fun init() {
@@ -67,6 +73,7 @@ class Game {
             .concatMap(Function { _: Long? ->
                 Mono.defer(Supplier {
                     gameMap = engine.manageMap(player, gameMap)
+                    scoreService.gameMapItem = gameMap.items
                     player = engine.managePlayer(player, gameMap, gameMap.collisionAsset)
                     val bytes: ByteArray = engine.paint(gameMap, playerAsset, player, mapItemAsset, mapEnemyAsset)
                     val binaryMessage = gameWebSocketSession.binaryMessage { session -> session.wrap(bytes) }

@@ -1,7 +1,7 @@
 package com.github.adamyork.socketgame.game
 
+import com.github.adamyork.socketgame.common.AudioQueue
 import com.github.adamyork.socketgame.game.service.AssetService
-import com.github.adamyork.socketgame.socket.GameHandler
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.web.reactive.socket.WebSocketMessage
@@ -22,11 +22,15 @@ class GameAudio {
 
     val webSocketSession: WebSocketSession
     val assetService: AssetService
-    val gameHandler: GameHandler
+    val audioQueue: AudioQueue
 
-    constructor(gameHandler: GameHandler, webSocketSession: WebSocketSession, assetService: AssetService) {
-        this.gameHandler = gameHandler
+    constructor(
+        webSocketSession: WebSocketSession,
+        assetService: AssetService,
+        audioQueue: AudioQueue
+    ) {
         this.assetService = assetService
+        this.audioQueue = audioQueue
         this.webSocketSession = webSocketSession
     }
 
@@ -34,19 +38,16 @@ class GameAudio {
         return Flux.interval(Duration.ofMillis(80))
             .publishOn(Schedulers.boundedElastic())
             .onBackpressureDrop()
-            .concatMap(Function { foo: Long? ->
+            .concatMap(Function { _: Long? ->
                 Mono.defer(Supplier {
                     val messages: ArrayList<WebSocketMessage> = ArrayList()
-                    if (this.gameHandler.game?.isInitialized == true) {
-                        val audio = this.gameHandler.game?.gameMap?.pendingAudio
-                        while (audio?.isNotEmpty() ?: false) {
-                            LOGGER.info("playing item collect")
-                            val sound = audio[0]
-                            audio.removeAt(0)
-                            val bytes = assetService.getSoundStream(sound)
-                            val binaryMessage = webSocketSession.binaryMessage { session -> session.wrap(bytes) }
-                            messages.add(binaryMessage)
-                        }
+                    if (audioQueue.queue.isNotEmpty()) {
+                        LOGGER.info("playing item collect")
+                        val sound = audioQueue.queue.element()
+                        val bytes = assetService.getSoundStream(sound)
+                        audioQueue.queue.remove()
+                        val binaryMessage = webSocketSession.binaryMessage { session -> session.wrap(bytes) }
+                        messages.add(binaryMessage)
                     }
                     val messageFlux = Flux.fromIterable(messages)
                     webSocketSession.send(messageFlux)

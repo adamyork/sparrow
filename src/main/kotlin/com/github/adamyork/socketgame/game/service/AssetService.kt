@@ -1,9 +1,9 @@
 package com.github.adamyork.socketgame.game.service
 
-import com.github.adamyork.socketgame.game.Game
-import com.github.adamyork.socketgame.game.service.data.Asset
-import com.github.adamyork.socketgame.game.data.GameMap
 import com.github.adamyork.socketgame.common.Sounds
+import com.github.adamyork.socketgame.game.Game
+import com.github.adamyork.socketgame.game.data.GameMap
+import com.github.adamyork.socketgame.game.service.data.Asset
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileInputStream
@@ -73,7 +73,6 @@ class AssetService {
             mapAssetMap[id + 3]!!.width,
             mapAssetMap[id + 3]!!.height,
             false,
-            ArrayList(),
             ArrayList(),
             ArrayList(),
             ArrayList(),

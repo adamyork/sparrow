@@ -1,21 +1,21 @@
 package com.github.adamyork.socketgame.game.service
 
+import com.github.adamyork.socketgame.game.data.MapItem
 import com.github.adamyork.socketgame.game.data.MapItemState
-import com.github.adamyork.socketgame.socket.GameHandler
 import org.springframework.stereotype.Service
 
 @Service
 class ScoreService {
 
-    lateinit var gameHandler: GameHandler
+    var gameMapItem: ArrayList<MapItem> = ArrayList()
 
     fun getTotal(): Int {
-        return gameHandler.game?.gameMap?.items?.size ?: 0
+        return gameMapItem.size
     }
 
     fun getRemaining(): Int {
-        return gameHandler.game?.gameMap?.items?.count { v ->
+        return gameMapItem.count { v ->
             v.state == MapItemState.ACTIVE
-        } ?: 0
+        }
     }
 }

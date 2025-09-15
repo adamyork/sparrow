@@ -1,14 +1,14 @@
 package com.github.adamyork.socketgame.game.engine
 
+import com.github.adamyork.socketgame.common.AudioQueue
 import com.github.adamyork.socketgame.common.Sounds
-import com.github.adamyork.socketgame.game.engine.data.Particle
 import com.github.adamyork.socketgame.game.Game
 import com.github.adamyork.socketgame.game.data.*
+import com.github.adamyork.socketgame.game.engine.data.Particle
 import com.github.adamyork.socketgame.game.service.data.Asset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import reactor.util.function.Tuple2
 import reactor.util.function.Tuple3
 import reactor.util.function.Tuples
 import java.awt.Color
@@ -29,10 +29,12 @@ class Engine {
 
     final val physics: Physics
     final val particles: Particles
+    final val audioQueue: AudioQueue
 
-    constructor(physics: Physics, particles: Particles) {
+    constructor(physics: Physics, particles: Particles, audioQueue: AudioQueue) {
         this.physics = physics
         this.particles = particles
+        this.audioQueue = audioQueue
     }
 
     fun managePlayer(player: Player, map: GameMap, collisionAsset: Asset): Player {
@@ -106,11 +108,7 @@ class Engine {
             }
             moved = true
         }
-        val managedMapResult = manageMapItems(gameMap, nextX, nextY, player)
-        val pendingAudio = ArrayList<Sounds>()
-        if (managedMapResult.t2) {
-            pendingAudio.add(Sounds.ITEM_COLLECT)
-        }
+        val managedMapItems = manageMapItems(gameMap, nextX, nextY, player)
         val managedMapEnemies = manageMapEnemies(gameMap, nextX, nextY, player)
         //LOGGER.info("player.x : ${player.x} nextX is ${nextX}")
         return GameMap(
@@ -123,10 +121,9 @@ class Engine {
             gameMap.width,
             gameMap.height,
             moved,
-            managedMapResult.t1,
+            managedMapItems,
             managedMapEnemies.t1,
             managedMapEnemies.t3,
-            pendingAudio,
             managedMapEnemies.t2
         )
     }
@@ -213,13 +210,12 @@ class Engine {
         nextX: Int,
         nextY: Int,
         player: Player
-    ): Tuple2<ArrayList<MapItem>, Boolean> {
+    ): ArrayList<MapItem> {
         val lastX = gameMap.x
         val lastY = gameMap.y
         val yDelta = lastY - nextY
         val xDelta = nextX - lastX
-        var collision = false
-        return Tuples.of(gameMap.items.map { item ->
+        return gameMap.items.map { item ->
             val itemX = item.x - xDelta
             val itemY = item.y + yDelta
             val itemRect = Rectangle(itemX, itemY, item.width, item.height)
@@ -227,8 +223,8 @@ class Engine {
             var itemState = item.state
             if (playerRect.intersects(itemRect) && itemState == MapItemState.ACTIVE) {
                 LOGGER.info("item collision !")
-                collision = true
                 itemState = MapItemState.DEACTIVATING
+                audioQueue.queue.add(Sounds.ITEM_COLLECT)
             }
             var frameMetadata = item.frameMetadata
             if (itemState == MapItemState.DEACTIVATING) {
@@ -238,7 +234,7 @@ class Engine {
                 }
             }
             MapItem(item.width, item.height, itemX, itemY, itemState, frameMetadata)
-        }.toCollection(ArrayList()), collision)
+        }.toCollection(ArrayList())
     }
 
     private fun manageMapEnemies(

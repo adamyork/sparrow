@@ -25,7 +25,6 @@ class GameMap {
     val items: ArrayList<MapItem>
     val enemies: ArrayList<MapEnemy>
     val particles: ArrayList<Particle>
-    val pendingAudio: ArrayList<Sounds>
     val pendingPlayerCollision: Boolean
 
     constructor(
@@ -41,7 +40,6 @@ class GameMap {
         items: ArrayList<MapItem>,
         enemies: ArrayList<MapEnemy>,
         particles: ArrayList<Particle>,
-        pendingAudio: ArrayList<Sounds>,
         pendingPlayerCollision: Boolean
     ) {
         this.farGroundAsset = farGroundAsset
@@ -56,7 +54,6 @@ class GameMap {
         this.items = items
         this.enemies = enemies
         this.particles = particles
-        this.pendingAudio = pendingAudio
         this.pendingPlayerCollision = pendingPlayerCollision
     }
 

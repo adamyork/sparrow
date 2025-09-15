@@ -2,15 +2,21 @@ package com.github.adamyork.socketgame.web
 
 import com.github.adamyork.socketgame.game.service.ScoreService
 import com.github.adamyork.socketgame.web.data.Score
-import org.springframework.stereotype.Component
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.ServerResponse.ok
 import reactor.core.publisher.Mono
 
 
-@Component
+@Service
 class ScoreHandler {
+
+    companion object {
+        val LOGGER: Logger = LoggerFactory.getLogger(ScoreHandler::class.java)
+    }
 
     final val scoreService: ScoreService
 
@@ -19,6 +25,7 @@ class ScoreHandler {
     }
 
     fun getScore(request: ServerRequest): Mono<ServerResponse> {
+        LOGGER.info("Request for ${request.requestPath()} received")
         return ok().bodyValue(Score(scoreService.getTotal(), scoreService.getRemaining()))
     }
 

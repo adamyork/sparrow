@@ -1,10 +1,11 @@
 package com.github.adamyork.socketgame.socket
 
-import com.github.adamyork.socketgame.game.engine.Engine
-import com.github.adamyork.socketgame.game.service.AssetService
-import com.github.adamyork.socketgame.game.Game
 import com.github.adamyork.socketgame.common.ControlAction
 import com.github.adamyork.socketgame.common.ControlType
+import com.github.adamyork.socketgame.game.Game
+import com.github.adamyork.socketgame.game.engine.Engine
+import com.github.adamyork.socketgame.game.service.AssetService
+import com.github.adamyork.socketgame.game.service.ScoreService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.web.reactive.socket.WebSocketHandler
@@ -26,14 +27,17 @@ class GameHandler : WebSocketHandler {
 
     val assetService: AssetService
     val engine: Engine
+    val scoreService: ScoreService
     var game: Game? = null
 
     constructor(
         assetService: AssetService,
-        engine: Engine
+        engine: Engine,
+        scoreService: ScoreService
     ) {
         this.assetService = assetService
         this.engine = engine
+        this.scoreService = scoreService
     }
 
     override fun handle(session: WebSocketSession): Mono<Void?> {
@@ -44,7 +48,7 @@ class GameHandler : WebSocketHandler {
                 val payloadAsText = message.payloadAsText
                 if (payloadAsText == INPUT_START) {
                     LOGGER.info("Game started")
-                    game = Game(session, assetService, engine)
+                    game = Game(session, assetService, engine, scoreService)
                     game?.init()
                     game?.start()
                 } else {

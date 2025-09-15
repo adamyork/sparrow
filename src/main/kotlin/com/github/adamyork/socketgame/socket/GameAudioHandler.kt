@@ -1,5 +1,6 @@
 package com.github.adamyork.socketgame.socket
 
+import com.github.adamyork.socketgame.common.AudioQueue
 import com.github.adamyork.socketgame.game.GameAudio
 import com.github.adamyork.socketgame.game.service.AssetService
 import org.slf4j.Logger
@@ -17,12 +18,12 @@ class GameAudioHandler : WebSocketHandler {
     }
 
     val assetService: AssetService
-    val gameHandler: GameHandler
+    val audioQueue: AudioQueue
     var gameAudio: GameAudio? = null
 
-    constructor(assetService: AssetService, gameHandler: GameHandler) {
+    constructor(assetService: AssetService, audioQueue: AudioQueue) {
         this.assetService = assetService
-        this.gameHandler = gameHandler
+        this.audioQueue = audioQueue
     }
 
     override fun handle(session: WebSocketSession): Mono<Void?> {
@@ -32,7 +33,7 @@ class GameAudioHandler : WebSocketHandler {
             .map { message ->
                 LOGGER.info("Fx Started")
                 val payloadAsText = message.payloadAsText
-                gameAudio = GameAudio(gameHandler, session, assetService)
+                gameAudio = GameAudio(session, assetService, audioQueue)
                 gameAudio?.start()
                 session.textMessage("Message Received: $payloadAsText")
             }

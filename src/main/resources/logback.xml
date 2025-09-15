@@ -5,6 +5,7 @@
         </encoder>
     </appender>
 
+    <logger name="com.github.adamyork.socketgame.web.ScoreHandler" level="WARN"/>
     <logger name="com.github.adamyork.socketgame.socket.GameHandler" level="INFO"/>
     <logger name="com.github.adamyork.socketgame.socket.GameAudioHandler" level="INFO"/>
     <logger name="com.github.adamyork.socketgame.game.Game" level="INFO"/>
