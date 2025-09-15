@@ -31,7 +31,7 @@ class GameAudioHandler : WebSocketHandler {
             .doOnNext { message -> message.retain() }
             .publishOn(Schedulers.boundedElastic())
             .map { message ->
-                LOGGER.info("Fx Started")
+                LOGGER.info("Game audio started")
                 val payloadAsText = message.payloadAsText
                 gameAudio = GameAudio(session, assetService, audioQueue)
                 gameAudio?.start()

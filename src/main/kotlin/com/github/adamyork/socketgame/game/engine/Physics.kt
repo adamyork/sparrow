@@ -257,7 +257,7 @@ class Physics {
         var targetX = playerX
         var xBoundary = playerX
         var nextVx = playerVx
-        var collisionRebound = 0
+        var collisionRebound: Int
         if (colliding) {
             collisionRebound = playerWidth
             if (playerDirection == Direction.LEFT) {
@@ -440,7 +440,7 @@ class Physics {
             var position = Tuples.of(particle.x.toFloat(), particle.y.toFloat())
             if (particle.radius < Particles.MAX_SQUARE_RADIAL_RADIUS) {
                 nextRadius = particle.radius + 10
-                position = getPosition(nextRadius.toFloat(), particle.id.toFloat(), particle.originX, particle.originY)
+                position = getParticlePosition(nextRadius.toFloat(), particle.id.toFloat(), particle.originX, particle.originY)
             } else {
                 if (particle.frame <= particle.lifetime) {
                     position = Tuples.of(particle.x.toFloat(), particle.y.toFloat() + GRAVITY.toFloat())
@@ -464,7 +464,7 @@ class Physics {
         }.toCollection(ArrayList())
     }
 
-    fun getPosition(radius: Float, angleInDegrees: Float, originX: Int, originY: Int): Tuple2<Float, Float> {
+    fun getParticlePosition(radius: Float, angleInDegrees: Float, originX: Int, originY: Int): Tuple2<Float, Float> {
         val x: Float = (radius * cos(angleInDegrees * Math.PI / 180f)).toFloat() + originX
         val y: Float = (radius * sin(angleInDegrees * Math.PI / 180f)).toFloat() + originY
         return Tuples.of(x, y)

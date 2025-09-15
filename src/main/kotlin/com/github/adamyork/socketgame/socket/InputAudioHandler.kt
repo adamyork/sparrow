@@ -13,6 +13,7 @@ import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
 
 class InputAudioHandler : WebSocketHandler {
+
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(InputAudioHandler::class.java)
     }

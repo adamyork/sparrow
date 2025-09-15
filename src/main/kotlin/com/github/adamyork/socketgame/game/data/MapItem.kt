@@ -2,7 +2,6 @@ package com.github.adamyork.socketgame.game.data
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import reactor.util.function.Tuples
 
 class MapItem {
 
@@ -17,7 +16,7 @@ class MapItem {
     var y: Int = 0
     var state: MapItemState
     var deactivatingFrames: HashMap<Int, FrameMetadata> = HashMap()
-    var frameMetadata: FrameMetadata = FrameMetadata(1, Tuples.of(0, 0))
+    var frameMetadata: FrameMetadata = FrameMetadata(1, Cell(1, 1, 64, 64))
 
     constructor(width: Int, height: Int, x: Int, y: Int, state: MapItemState) {
         this.width = width
@@ -41,20 +40,20 @@ class MapItem {
     fun getNextFrameCell(): FrameMetadata {
         if (state == MapItemState.DEACTIVATING) {
             if (frameMetadata.frame == ANIMATION_DEACTIVATING_FRAMES) {
-                return FrameMetadata(0, Tuples.of(0, 0))
+                return FrameMetadata(0, Cell(0, 0, 64, 64))
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                return deactivatingFrames.get(nextFrame) ?: FrameMetadata(1, Tuples.of(0, 0))
+                return deactivatingFrames.get(nextFrame) ?: FrameMetadata(1, Cell(0, 0, 64, 64))
             }
         }
-        return FrameMetadata(1, Tuples.of(0, 0))
+        return FrameMetadata(1, Cell(1, 1, 64, 64))
     }
 
     private fun generateAnimationFrameIndex() {
-        deactivatingFrames[1] = FrameMetadata(1, Tuples.of(0, 0))
-        deactivatingFrames[2] = FrameMetadata(2, Tuples.of(64, 0))
-        deactivatingFrames[3] = FrameMetadata(3, Tuples.of(128, 0))
-        deactivatingFrames[4] = FrameMetadata(4, Tuples.of(192, 0))
-        deactivatingFrames[5] = FrameMetadata(5, Tuples.of(256, 0))
+        deactivatingFrames[1] = FrameMetadata(1, Cell(1, 1, 64, 64))
+        deactivatingFrames[2] = FrameMetadata(2, Cell(1, 2, 64, 64))
+        deactivatingFrames[3] = FrameMetadata(3, Cell(1, 3, 64, 64))
+        deactivatingFrames[4] = FrameMetadata(4, Cell(1, 4, 64, 64))
+        deactivatingFrames[5] = FrameMetadata(5, Cell(1, 5, 64, 64))
     }
 }

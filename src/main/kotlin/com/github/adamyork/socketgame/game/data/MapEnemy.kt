@@ -2,7 +2,6 @@ package com.github.adamyork.socketgame.game.data
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import reactor.util.function.Tuples
 
 class MapEnemy {
 
@@ -21,7 +20,7 @@ class MapEnemy {
     var originY: Int = 0
     var state: MapItemState
     var animatingsFrames: HashMap<Int, FrameMetadata> = HashMap()
-    var frameMetadata: FrameMetadata = FrameMetadata(1, Tuples.of(0, 0))
+    var frameMetadata: FrameMetadata = FrameMetadata(1, Cell(1, 1, 128, 128))
 
     lateinit var enemyPosition: EnemyPosition
 
@@ -69,7 +68,7 @@ class MapEnemy {
 //                return animatingsFrames.get(nextFrame) ?: FrameMetadata(1, Tuples.of(0, 0))
 //            }
 //        }
-        return FrameMetadata(1, Tuples.of(0, 0))
+        return FrameMetadata(1, Cell(1, 1, 128, 128))
     }
 
     fun getNextPosition(xDelta: Int, yDelta: Int): EnemyPosition {
@@ -97,6 +96,6 @@ class MapEnemy {
     }
 
     private fun generateAnimationFrameIndex() {
-        animatingsFrames[1] = FrameMetadata(1, Tuples.of(0, 0))
+        animatingsFrames[1] = FrameMetadata(1, Cell(1, 1, 128, 128))
     }
 }

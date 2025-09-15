@@ -152,9 +152,11 @@ class Engine {
         graphics.drawImage(collisionSubImage, 0, 0, null)
         map.items.forEach { item ->
             if (item.state != MapItemState.INACTIVE) {
+                LOGGER.info("${item.frameMetadata.frame}")
+                LOGGER.info("${item.frameMetadata.cell.xOffset}")
                 val mapItemSubImage = mapItemAsset.bufferedImage.getSubimage(
-                    item.frameMetadata.cell.t1,
-                    item.frameMetadata.cell.t2,
+                    item.frameMetadata.cell.xOffset,
+                    item.frameMetadata.cell.yOffset,
                     item.width,
                     item.height
                 )
@@ -164,8 +166,8 @@ class Engine {
         map.enemies.forEach { enemy ->
             if (enemy.state != MapItemState.INACTIVE) {
                 val mapEnemySubImage = mapEnemyAsset.bufferedImage.getSubimage(
-                    enemy.frameMetadata.cell.t1,
-                    enemy.frameMetadata.cell.t2,
+                    enemy.frameMetadata.cell.xOffset,
+                    enemy.frameMetadata.cell.yOffset,
                     enemy.width,
                     enemy.height
                 )
@@ -188,7 +190,12 @@ class Engine {
         }
         graphics.drawImage(particleImage, 0, 0, null)
         val playerSubImage =
-            playerAsset.bufferedImage.getSubimage(player.frameMetadata.cell.t1, player.frameMetadata.cell.t2, 64, 64)
+            playerAsset.bufferedImage.getSubimage(
+                player.frameMetadata.cell.xOffset,
+                player.frameMetadata.cell.yOffset,
+                64,
+                64
+            )
         graphics.drawImage(transformDirection(playerSubImage, player.direction, player.width), player.x, player.y, null)
         val backgroundBuffer = ByteArrayOutputStream()
         ImageIO.write(compositeImage, "png", backgroundBuffer)

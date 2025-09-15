@@ -1,7 +1,5 @@
 package com.github.adamyork.socketgame.game.data
 
-import reactor.util.function.Tuples
-
 class Player {
 
     companion object {
@@ -28,7 +26,7 @@ class Player {
     var jumpReached: Boolean = false
     var moving: Boolean = false
     var direction: Direction = Direction.RIGHT
-    var frameMetadata: FrameMetadata = FrameMetadata(1, Tuples.of(0, 0))
+    var frameMetadata: FrameMetadata = FrameMetadata(1, Cell(1, 1, 64, 64))
     var colliding: Boolean = false
 
     constructor(xPos: Int, yPos: Int) {
@@ -71,52 +69,52 @@ class Player {
     }
 
     fun getNextFrameCell(): FrameMetadata {
-        if(colliding){
+        if (colliding) {
             if (frameMetadata.frame == ANIMATION_COLLISION_FRAMES) {
-                return collisionFrames.get(1) ?: FrameMetadata(1, Tuples.of(0, 0))
+                return collisionFrames.get(1) ?: FrameMetadata(1, Cell(1, 1, 64, 64))
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                return collisionFrames.get(nextFrame) ?: FrameMetadata(1, Tuples.of(0, 0))
+                return collisionFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, 64, 64))
             }
         }
-        if(jumping && !jumpReached){
+        if (jumping && !jumpReached) {
             if (frameMetadata.frame == ANIMATION_JUMPING_FRAMES) {
-                return jumpingFrames.get(1) ?: FrameMetadata(1, Tuples.of(0, 0))
+                return jumpingFrames.get(1) ?: FrameMetadata(1, Cell(1, 1, 64, 64))
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                return jumpingFrames.get(nextFrame) ?: FrameMetadata(1, Tuples.of(0, 0))
+                return jumpingFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, 64, 64))
             }
         } else if (jumping) {
-            return jumpingFrames.get(4) ?: FrameMetadata(1, Tuples.of(0, 0))
+            return jumpingFrames.get(4) ?: FrameMetadata(1, Cell(1, 1, 64, 64))
         }
         if (moving) {
             if (frameMetadata.frame == ANIMATION_MOVING_FRAMES) {
-                return movingFrames.get(1) ?: FrameMetadata(1, Tuples.of(0, 0))
+                return movingFrames.get(1) ?: FrameMetadata(1, Cell(1, 1, 64, 64))
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                return movingFrames.get(nextFrame) ?: FrameMetadata(1, Tuples.of(0, 0))
+                return movingFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, 64, 64))
             }
         }
-        return FrameMetadata(1, Tuples.of(0, 0))
+        return FrameMetadata(1, Cell(1, 1, 64, 64))
     }
 
     private fun generateAnimationFrameIndex() {
-        movingFrames[1] = FrameMetadata(1, Tuples.of(0, 0))
-        movingFrames[2] = FrameMetadata(2, Tuples.of(64, 0))
-        movingFrames[3] = FrameMetadata(3, Tuples.of(128, 0))
+        movingFrames[1] = FrameMetadata(1, Cell(1, 1, 64, 64))
+        movingFrames[2] = FrameMetadata(2, Cell(1, 2, 64, 64))
+        movingFrames[3] = FrameMetadata(3, Cell(1, 3, 64, 64))
 
-        jumpingFrames[1] = FrameMetadata(1, Tuples.of(192, 0))
-        jumpingFrames[2] = FrameMetadata(2, Tuples.of(256, 0))
-        jumpingFrames[3] = FrameMetadata(3, Tuples.of(320, 0))
-        jumpingFrames[4] = FrameMetadata(4, Tuples.of(0, 64))
+        jumpingFrames[1] = FrameMetadata(1, Cell(1, 4, 64, 64))
+        jumpingFrames[2] = FrameMetadata(2, Cell(1, 5, 64, 64))
+        jumpingFrames[3] = FrameMetadata(3, Cell(1, 6, 64, 64))
+        jumpingFrames[4] = FrameMetadata(4, Cell(2, 1, 64, 64))
 
-        collisionFrames[1] = FrameMetadata(1, Tuples.of(320, 128))
-        collisionFrames[2] = FrameMetadata(2, Tuples.of(320, 128))
-        collisionFrames[3] = FrameMetadata(3, Tuples.of(192, 0))
-        collisionFrames[4] = FrameMetadata(4, Tuples.of(192, 0))
-        collisionFrames[5] = FrameMetadata(5, Tuples.of(320, 128))
-        collisionFrames[6] = FrameMetadata(6, Tuples.of(320, 128))
-        collisionFrames[7] = FrameMetadata(7, Tuples.of(192, 0))
-        collisionFrames[8] = FrameMetadata(8, Tuples.of(192, 0))
+        collisionFrames[1] = FrameMetadata(1, Cell(3, 5, 64, 64))
+        collisionFrames[2] = FrameMetadata(2, Cell(3, 5, 64, 64))
+        collisionFrames[3] = FrameMetadata(3, Cell(1, 3, 64, 64))
+        collisionFrames[4] = FrameMetadata(4, Cell(1, 3, 64, 64))
+        collisionFrames[5] = FrameMetadata(5, Cell(3, 5, 64, 64))
+        collisionFrames[6] = FrameMetadata(6, Cell(3, 5, 64, 64))
+        collisionFrames[7] = FrameMetadata(7, Cell(1, 3, 64, 64))
+        collisionFrames[8] = FrameMetadata(8, Cell(1, 3, 64, 64))
     }
 }
