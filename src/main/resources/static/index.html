@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
     <title>Socket Game</title>
-    <script src="main.js" defer></script>
-    <link rel="stylesheet" href="main.css"/>
+    <script defer src="main.js"></script>
+    <link href="main.css" rel="stylesheet"/>
 </head>
 <body>
 <div>
-    <canvas id="game-window" width="1024" height="768"></canvas>
+    <canvas height="768" id="game-window" width="1024"></canvas>
     <div class="scoreContainer">
         <table>
             <thead>Score</thead>
@@ -30,5 +30,6 @@
 <button id="start">Start</button>
 <audio id="audio-player"></audio>
 <audio id="fx-player"></audio>
+<audio id="bg-music" src="level-1-music.wav"></audio>
 </body>
 </html>

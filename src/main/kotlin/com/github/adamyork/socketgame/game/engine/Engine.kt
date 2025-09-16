@@ -152,11 +152,9 @@ class Engine {
         graphics.drawImage(collisionSubImage, 0, 0, null)
         map.items.forEach { item ->
             if (item.state != MapItemState.INACTIVE) {
-                LOGGER.info("${item.frameMetadata.frame}")
-                LOGGER.info("${item.frameMetadata.cell.xOffset}")
                 val mapItemSubImage = mapItemAsset.bufferedImage.getSubimage(
-                    item.frameMetadata.cell.xOffset,
-                    item.frameMetadata.cell.yOffset,
+                    item.frameMetadata.cell.x,
+                    item.frameMetadata.cell.y,
                     item.width,
                     item.height
                 )
@@ -166,8 +164,8 @@ class Engine {
         map.enemies.forEach { enemy ->
             if (enemy.state != MapItemState.INACTIVE) {
                 val mapEnemySubImage = mapEnemyAsset.bufferedImage.getSubimage(
-                    enemy.frameMetadata.cell.xOffset,
-                    enemy.frameMetadata.cell.yOffset,
+                    enemy.frameMetadata.cell.x,
+                    enemy.frameMetadata.cell.y,
                     enemy.width,
                     enemy.height
                 )
@@ -191,8 +189,8 @@ class Engine {
         graphics.drawImage(particleImage, 0, 0, null)
         val playerSubImage =
             playerAsset.bufferedImage.getSubimage(
-                player.frameMetadata.cell.xOffset,
-                player.frameMetadata.cell.yOffset,
+                player.frameMetadata.cell.x,
+                player.frameMetadata.cell.y,
                 64,
                 64
             )
@@ -263,7 +261,8 @@ class Engine {
             val enemyRect = Rectangle(itemX, itemY, enemy.width, enemy.height)
             val playerRect = Rectangle(player.x, player.y, player.width, player.height)
             if (playerRect.intersects(enemyRect)) {
-                //LOGGER.info("enemy collision !")
+                LOGGER.info("enemy collision !")
+                audioQueue.queue.add(Sounds.PLAYER_COLLISION)
                 if (mapParticles.isEmpty()) {
                     mapParticles = particles.createCollisionParticles(itemX, itemY)
                 }
@@ -272,6 +271,7 @@ class Engine {
             mapParticles = physics.applyParticlePhysics(mapParticles)
             mapParticles = mapParticles.filter { particle -> particle.frame <= particle.lifetime }
                 .toCollection(ArrayList())
+            val frameMetadata = enemy.getNextFrameCell()
             MapEnemy(
                 enemy.width,
                 enemy.height,
@@ -280,8 +280,9 @@ class Engine {
                 enemy.originX - xDelta,
                 enemy.originY + yDelta,
                 enemy.state,
-                enemy.frameMetadata,
-                nextPosition
+                frameMetadata,
+                nextPosition,
+                isColliding
             )
         }.toCollection(ArrayList()), isColliding, mapParticles)
     }

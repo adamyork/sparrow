@@ -21,7 +21,7 @@ class WebConfig : WebFluxConfigurer {
     fun rootRouter() =
         router {
             val index = ClassPathResource("static/index.html")
-            val extensions = listOf("js", "css")
+            val extensions = listOf("js", "css", "wav")
             val spaPredicate = !(path("/score") or
                     pathExtension(extensions::contains))
             resource(spaPredicate, index)
@@ -31,7 +31,7 @@ class WebConfig : WebFluxConfigurer {
     fun jsRouter() =
         router {
             val index = ClassPathResource("static/main.js")
-            val extensions = listOf("css")
+            val extensions = listOf("css", "wav")
             val spaPredicate = !(path("/score") or
                     pathExtension(extensions::contains))
             resource(spaPredicate, index)
@@ -41,7 +41,17 @@ class WebConfig : WebFluxConfigurer {
     fun cssRouter() =
         router {
             val index = ClassPathResource("static/main.css")
-            val extensions = listOf("js")
+            val extensions = listOf("js", "wav")
+            val spaPredicate = !(path("/score") or
+                    pathExtension(extensions::contains))
+            resource(spaPredicate, index)
+        }
+
+    @Bean
+    fun wavRouter() =
+        router {
+            val index = ClassPathResource("static/level-1-music.wav")
+            val extensions = listOf("js", "css", "html")
             val spaPredicate = !(path("/score") or
                     pathExtension(extensions::contains))
             resource(spaPredicate, index)

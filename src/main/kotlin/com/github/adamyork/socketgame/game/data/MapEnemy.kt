@@ -6,8 +6,8 @@ import org.slf4j.LoggerFactory
 class MapEnemy {
 
     companion object {
-        val LOGGER: Logger = LoggerFactory.getLogger(MapItem::class.java)
-        const val ANIMATION_DEACTIVATING_FRAMES = 5
+        val LOGGER: Logger = LoggerFactory.getLogger(MapEnemy::class.java)
+        const val ANIMATION_COLLISION_FRAMES = 8
         const val MAX_X_MOVEMENT = 10
         const val MOVEMENT_X_DISTANCE = 10
     }
@@ -19,10 +19,11 @@ class MapEnemy {
     var originX: Int = 0
     var originY: Int = 0
     var state: MapItemState
-    var animatingsFrames: HashMap<Int, FrameMetadata> = HashMap()
+    var animatingFrames: HashMap<Int, FrameMetadata> = HashMap()
+    var collisionFrames: HashMap<Int, FrameMetadata> = HashMap()
     var frameMetadata: FrameMetadata = FrameMetadata(1, Cell(1, 1, 128, 128))
-
-    lateinit var enemyPosition: EnemyPosition
+    var enemyPosition: EnemyPosition
+    var colliding: Boolean
 
     constructor(width: Int, height: Int, x: Int, y: Int, state: MapItemState) {
         this.width = width
@@ -33,6 +34,7 @@ class MapEnemy {
         this.originY = y
         this.state = state
         this.enemyPosition = EnemyPosition(this.x, this.y, Direction.LEFT)
+        this.colliding = false
         generateAnimationFrameIndex()
     }
 
@@ -45,7 +47,8 @@ class MapEnemy {
         originY: Int,
         state: MapItemState,
         frameMetadata: FrameMetadata,
-        enemyPosition: EnemyPosition
+        enemyPosition: EnemyPosition,
+        colliding: Boolean
     ) {
         this.width = width
         this.height = height
@@ -56,18 +59,19 @@ class MapEnemy {
         this.state = state
         this.frameMetadata = frameMetadata
         this.enemyPosition = enemyPosition
+        this.colliding = colliding
         generateAnimationFrameIndex()
     }
 
     fun getNextFrameCell(): FrameMetadata {
-//        if (state == MapItemState.DEACTIVATING) {
-//            if (frameMetadata.frame == ANIMATION_DEACTIVATING_FRAMES) {
-//                return FrameMetadata(0, Tuples.of(0, 0))
-//            } else {
-//                val nextFrame = frameMetadata.frame + 1
-//                return animatingsFrames.get(nextFrame) ?: FrameMetadata(1, Tuples.of(0, 0))
-//            }
-//        }
+        if (colliding) {
+            if (frameMetadata.frame == ANIMATION_COLLISION_FRAMES) {
+                return collisionFrames[1] ?: FrameMetadata(1, Cell(1, 1, 64, 64))
+            } else {
+                val nextFrame = frameMetadata.frame + 1
+                return collisionFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, 64, 64))
+            }
+        }
         return FrameMetadata(1, Cell(1, 1, 128, 128))
     }
 
@@ -96,6 +100,15 @@ class MapEnemy {
     }
 
     private fun generateAnimationFrameIndex() {
-        animatingsFrames[1] = FrameMetadata(1, Cell(1, 1, 128, 128))
+        animatingFrames[1] = FrameMetadata(1, Cell(1, 1, 128, 128))
+
+        collisionFrames[1] = FrameMetadata(1, Cell(1, 2, 128, 128))
+        collisionFrames[2] = FrameMetadata(2, Cell(1, 2, 128, 128))
+        collisionFrames[3] = FrameMetadata(3, Cell(1, 1, 128, 128))
+        collisionFrames[4] = FrameMetadata(4, Cell(1, 1, 128, 128))
+        collisionFrames[5] = FrameMetadata(5, Cell(1, 2, 128, 128))
+        collisionFrames[6] = FrameMetadata(6, Cell(1, 2, 128, 128))
+        collisionFrames[7] = FrameMetadata(7, Cell(1, 1, 128, 128))
+        collisionFrames[8] = FrameMetadata(8, Cell(1, 1, 128, 128))
     }
 }

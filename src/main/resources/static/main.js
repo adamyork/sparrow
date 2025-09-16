@@ -15,6 +15,9 @@ startButton.addEventListener("click", (event) => {
     });
     document.game.audioSocket.addEventListener("open", (event) => {
         console.log("START AUDIO");
+        let bgAudio = document.getElementById("bg-music");
+        bgAudio.loop = true;
+        bgAudio.play();
     });
     startButton.disabled = true;
     document.game.imageLoader = new Image(1024, 168);

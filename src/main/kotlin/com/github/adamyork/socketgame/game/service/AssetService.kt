@@ -36,8 +36,13 @@ class AssetService {
     constructor() {
         val jumpSoundBytes = urlToBytes(this::class.java.classLoader.getResource("static/jump-sound.wav"))
         val itemCollectSoundBytes = urlToBytes(this::class.java.classLoader.getResource("static/item-collect.wav"))
+        val playerCollisionSoundBytes =
+            urlToBytes(this::class.java.classLoader.getResource("static/player-collision.wav"))
+
         soundBytesMap[Sounds.JUMP] = jumpSoundBytes
         soundBytesMap[Sounds.ITEM_COLLECT] = itemCollectSoundBytes
+        soundBytesMap[Sounds.PLAYER_COLLISION] = playerCollisionSoundBytes
+
         itemUrlMap[0] = this::class.java.classLoader.getResource(mapItem1Asset.path)
         enemyUrlMap[0] = this::class.java.classLoader.getResource(mapEnemy1Asset.path)
 
