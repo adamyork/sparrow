@@ -1,6 +1,10 @@
 document.game = {};
 let startButton = document.getElementById("start");
 startButton.addEventListener("click", (event) => {
+    document.getElementById("start").disabled = true;
+    document.game.paused = false
+    let splashContainer = document.getElementById("splashContainer");
+    splashContainer.style.display = "none";
     document.onkeydown = function (event) {
         document.game.socket.send(event.type + ":" + event.code);
         document.game.audioSocket.send(event.type + ":" + event.code);
@@ -76,4 +80,23 @@ startButton.addEventListener("click", (event) => {
             document.game.fxPlayer.play();
         }
     });
+});
+let pauseButton = document.getElementById("pause");
+pauseButton.addEventListener("click", (event) => {
+    if(document.game.paused){
+        document.game.paused = false;
+        document.game.socket.send("RESUME");
+        let bgAudio = document.getElementById("bg-music");
+        bgAudio.play();
+        document.getElementById("pause").innerHTML = "PAUSE";
+        document.getElementById("pause").blur()
+        console.log("RESUME");
+    } else {
+        document.game.paused = true;
+        document.game.socket.send("PAUSE");
+        let bgAudio = document.getElementById("bg-music");
+        bgAudio.pause();
+        document.getElementById("pause").innerHTML = "RESUME";
+        console.log("PAUSE");
+    }
 });

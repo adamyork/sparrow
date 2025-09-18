@@ -6,8 +6,8 @@ class Player {
         const val MAX_X_VELOCITY: Double = 16.0
         const val MAX_Y_VELOCITY: Double = 64.0
         const val JUMP_DISTANCE: Int = 256
-        const val ANIMATION_MOVING_FRAMES = 3
-        const val ANIMATION_JUMPING_FRAMES = 4
+        const val ANIMATION_MOVING_FRAMES = 2
+        const val ANIMATION_JUMPING_FRAMES = 3
         const val ANIMATION_COLLISION_FRAMES = 8
     }
 
@@ -101,19 +101,17 @@ class Player {
     private fun generateAnimationFrameIndex() {
         movingFrames[1] = FrameMetadata(1, Cell(1, 1, 64, 64))
         movingFrames[2] = FrameMetadata(2, Cell(1, 2, 64, 64))
-        movingFrames[3] = FrameMetadata(3, Cell(1, 3, 64, 64))
 
-        jumpingFrames[1] = FrameMetadata(1, Cell(1, 4, 64, 64))
-        jumpingFrames[2] = FrameMetadata(2, Cell(1, 5, 64, 64))
-        jumpingFrames[3] = FrameMetadata(3, Cell(1, 6, 64, 64))
-        jumpingFrames[4] = FrameMetadata(4, Cell(2, 1, 64, 64))
+        jumpingFrames[1] = FrameMetadata(1, Cell(1, 1, 64, 64))
+        jumpingFrames[2] = FrameMetadata(2, Cell(1, 2, 64, 64))
+        jumpingFrames[3] = FrameMetadata(3, Cell(1, 3, 64, 64))
 
-        collisionFrames[1] = FrameMetadata(1, Cell(3, 5, 64, 64))
-        collisionFrames[2] = FrameMetadata(2, Cell(3, 5, 64, 64))
+        collisionFrames[1] = FrameMetadata(1, Cell(1, 4, 64, 64))
+        collisionFrames[2] = FrameMetadata(2, Cell(1, 4, 64, 64))
         collisionFrames[3] = FrameMetadata(3, Cell(1, 3, 64, 64))
         collisionFrames[4] = FrameMetadata(4, Cell(1, 3, 64, 64))
-        collisionFrames[5] = FrameMetadata(5, Cell(3, 5, 64, 64))
-        collisionFrames[6] = FrameMetadata(6, Cell(3, 5, 64, 64))
+        collisionFrames[5] = FrameMetadata(5, Cell(1, 4, 64, 64))
+        collisionFrames[6] = FrameMetadata(6, Cell(1, 4, 64, 64))
         collisionFrames[7] = FrameMetadata(7, Cell(1, 3, 64, 64))
         collisionFrames[8] = FrameMetadata(8, Cell(1, 3, 64, 64))
     }

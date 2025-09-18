@@ -183,7 +183,7 @@ class Engine {
         )
         map.particles.forEach { particle ->
             val particleGraphics = particleImage.graphics
-            particleGraphics.color = Color.RED
+            particleGraphics.color = Color.WHITE
             particleGraphics.fillRect(particle.x, particle.y, particle.width, particle.height)
         }
         graphics.drawImage(particleImage, 0, 0, null)
@@ -191,8 +191,8 @@ class Engine {
             playerAsset.bufferedImage.getSubimage(
                 player.frameMetadata.cell.x,
                 player.frameMetadata.cell.y,
-                64,
-                64
+                player.width,
+                player.height
             )
         graphics.drawImage(transformDirection(playerSubImage, player.direction, player.width), player.x, player.y, null)
         val backgroundBuffer = ByteArrayOutputStream()

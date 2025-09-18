@@ -1,10 +1,54 @@
+#viewportContainer {
+    height: 768px;
+}
+
 #game-window {
     background: blue;
 }
 
+.centered {
+    margin: auto;
+    width: 50%;
+}
+
+.position-absolute {
+    position: absolute;
+}
+
+.position-relative {
+    position: relative;
+}
+
+.text-align-center {
+    text-align: center;
+    width: 1024px;
+}
+
 .scoreContainer {
-    position: fixed;
-    top: 20px;
-    left: 900px;
-    background: white;
+    width: 1024px;
+}
+
+.scoreContainer table {
+    position: absolute;
+    right: 0;
+    background-color: #ffffffa6;
+}
+
+.scoreContainer table caption{
+    background-color: #ffffffa6;
+}
+
+button {
+    color: black;
+    background: #edc189;
+    width: 100px;
+    border-radius: 6px;
+    border-color: #edc189;
+}
+
+button:disabled,
+button[disabled]{
+    border: 1px solid #999999;
+    background-color: #cccccc;
+    color: #666666;
 }

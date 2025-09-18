@@ -10,6 +10,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.web.reactive.socket.WebSocketHandler
 import org.springframework.web.reactive.socket.WebSocketSession
+import reactor.core.Disposable
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
 
@@ -19,6 +20,8 @@ class GameHandler : WebSocketHandler {
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(GameHandler::class.java)
         const val INPUT_START: String = "START"
+        const val INPUT_PAUSE: String = "PAUSE"
+        const val INPUT_RESUME: String = "RESUME"
         const val INPUT_KEY_STATE = "keydown"
         const val INPUT_KEY_RIGHT: String = "ArrowRight"
         const val INPUT_KEY_LEFT: String = "ArrowLeft"
@@ -29,6 +32,7 @@ class GameHandler : WebSocketHandler {
     val engine: Engine
     val scoreService: ScoreService
     var game: Game? = null
+    var gameLoop: Disposable? = null
 
     constructor(
         assetService: AssetService,
@@ -50,7 +54,13 @@ class GameHandler : WebSocketHandler {
                     LOGGER.info("Game started")
                     game = Game(session, assetService, engine, scoreService)
                     game?.init()
-                    game?.start()
+                    gameLoop = game?.start()
+                } else if (payloadAsText == INPUT_PAUSE) {
+                    LOGGER.info("Game paused")
+                    gameLoop?.dispose()
+                } else if (payloadAsText == INPUT_RESUME) {
+                    LOGGER.info("Game resumed")
+                    gameLoop = game?.start()
                 } else {
                     val controlCodes = payloadAsText.split(":")
                     val type = controlCodes[0]

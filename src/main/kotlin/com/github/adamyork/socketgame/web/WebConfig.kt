@@ -21,7 +21,7 @@ class WebConfig : WebFluxConfigurer {
     fun rootRouter() =
         router {
             val index = ClassPathResource("static/index.html")
-            val extensions = listOf("js", "css", "wav")
+            val extensions = listOf("js", "css", "wav", "png")
             val spaPredicate = !(path("/score") or
                     pathExtension(extensions::contains))
             resource(spaPredicate, index)
@@ -31,7 +31,7 @@ class WebConfig : WebFluxConfigurer {
     fun jsRouter() =
         router {
             val index = ClassPathResource("static/main.js")
-            val extensions = listOf("css", "wav")
+            val extensions = listOf("css", "wav", "png")
             val spaPredicate = !(path("/score") or
                     pathExtension(extensions::contains))
             resource(spaPredicate, index)
@@ -41,7 +41,7 @@ class WebConfig : WebFluxConfigurer {
     fun cssRouter() =
         router {
             val index = ClassPathResource("static/main.css")
-            val extensions = listOf("js", "wav")
+            val extensions = listOf("js", "wav", "png")
             val spaPredicate = !(path("/score") or
                     pathExtension(extensions::contains))
             resource(spaPredicate, index)
@@ -51,7 +51,17 @@ class WebConfig : WebFluxConfigurer {
     fun wavRouter() =
         router {
             val index = ClassPathResource("static/level-1-music.wav")
-            val extensions = listOf("js", "css", "html")
+            val extensions = listOf("js", "css", "html", "png")
+            val spaPredicate = !(path("/score") or
+                    pathExtension(extensions::contains))
+            resource(spaPredicate, index)
+        }
+
+    @Bean
+    fun pngRouter() =
+        router {
+            val index = ClassPathResource("static/splash.png")
+            val extensions = listOf("js", "css", "html", "wav")
             val spaPredicate = !(path("/score") or
                     pathExtension(extensions::contains))
             resource(spaPredicate, index)
