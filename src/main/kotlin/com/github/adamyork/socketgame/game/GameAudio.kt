@@ -1,6 +1,7 @@
 package com.github.adamyork.socketgame.game
 
 import com.github.adamyork.socketgame.common.AudioQueue
+import com.github.adamyork.socketgame.common.Sounds
 import com.github.adamyork.socketgame.game.service.AssetService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -42,8 +43,12 @@ class GameAudio {
                 Mono.defer(Supplier {
                     val messages: ArrayList<WebSocketMessage> = ArrayList()
                     if (audioQueue.queue.isNotEmpty()) {
-                        LOGGER.info("playing item collect")
                         val sound = audioQueue.queue.element()
+                        if (sound == Sounds.PLAYER_COLLISION) {
+                            LOGGER.info("playing player collision audio")
+                        } else if (sound == Sounds.ITEM_COLLECT) {
+                            LOGGER.info("playing item collect audio")
+                        }
                         val bytes = assetService.getSoundStream(sound)
                         audioQueue.queue.remove()
                         val binaryMessage = webSocketSession.binaryMessage { session -> session.wrap(bytes) }

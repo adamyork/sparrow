@@ -2,6 +2,7 @@ package com.github.adamyork.socketgame.socket
 
 import com.github.adamyork.socketgame.common.ControlAction
 import com.github.adamyork.socketgame.common.ControlType
+import com.github.adamyork.socketgame.common.GameStatusProvider
 import com.github.adamyork.socketgame.game.Game
 import com.github.adamyork.socketgame.game.engine.Engine
 import com.github.adamyork.socketgame.game.service.AssetService
@@ -13,6 +14,7 @@ import org.springframework.web.reactive.socket.WebSocketSession
 import reactor.core.Disposable
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 
 class GameHandler : WebSocketHandler {
@@ -31,57 +33,71 @@ class GameHandler : WebSocketHandler {
     val assetService: AssetService
     val engine: Engine
     val scoreService: ScoreService
+    val gameStatusProvider: GameStatusProvider
     var game: Game? = null
-    var gameLoop: Disposable? = null
+    var gameRunner: Disposable? = null
 
     constructor(
         assetService: AssetService,
         engine: Engine,
-        scoreService: ScoreService
+        scoreService: ScoreService,
+        gameStatusProvider: GameStatusProvider
     ) {
         this.assetService = assetService
         this.engine = engine
         this.scoreService = scoreService
+        this.gameStatusProvider = gameStatusProvider
     }
 
+    @OptIn(ExperimentalAtomicApi::class)
     override fun handle(session: WebSocketSession): Mono<Void?> {
         val map = session.receive()
             .doOnNext { message -> message.retain() }
             .publishOn(Schedulers.boundedElastic())
             .map { message ->
                 val payloadAsText = message.payloadAsText
-                if (payloadAsText == INPUT_START) {
-                    LOGGER.info("Game started")
-                    game = Game(session, assetService, engine, scoreService)
-                    game?.init()
-                    gameLoop = game?.start()
-                } else if (payloadAsText == INPUT_PAUSE) {
-                    LOGGER.info("Game paused")
-                    gameLoop?.dispose()
-                } else if (payloadAsText == INPUT_RESUME) {
-                    LOGGER.info("Game resumed")
-                    gameLoop = game?.start()
-                } else {
-                    val controlCodes = payloadAsText.split(":")
-                    val type = controlCodes[0]
-                    val input = controlCodes[1]
-                    val action = if (type == INPUT_KEY_STATE) ControlType.START else ControlType.STOP
-                    when (input) {
-                        INPUT_KEY_RIGHT -> {
-                            game?.applyInput(action, ControlAction.RIGHT) ?: handleNoGameCreated()
-                        }
+                when (payloadAsText) {
+                    INPUT_START -> {
+                        LOGGER.info("Game started")
+                        game = Game(session, assetService, engine, scoreService)
+                        game?.init()
+                        gameRunner = game?.start()
+                        gameStatusProvider.running.store(true)
+                    }
 
-                        INPUT_KEY_LEFT -> {
-                            game?.applyInput(action, ControlAction.LEFT) ?: handleNoGameCreated()
-                        }
+                    INPUT_PAUSE -> {
+                        LOGGER.info("Game paused")
+                        gameRunner?.dispose()
+                        gameStatusProvider.running.store(false)
+                    }
 
-                        INPUT_KEY_JUMP -> {
-                            LOGGER.debug("jump key received")
-                            game?.applyInput(action, ControlAction.JUMP) ?: handleNoGameCreated()
+                    INPUT_RESUME -> {
+                        LOGGER.info("Game resumed")
+                        gameRunner = game?.start()
+                        gameStatusProvider.running.store(true)
+                    }
+
+                    else -> {
+                        val controlCodes = payloadAsText.split(":")
+                        val type = controlCodes[0]
+                        val input = controlCodes[1]
+                        val action = if (type == INPUT_KEY_STATE) ControlType.START else ControlType.STOP
+                        when (input) {
+                            INPUT_KEY_RIGHT -> {
+                                game?.applyInput(action, ControlAction.RIGHT) ?: handleNoGameCreated()
+                            }
+
+                            INPUT_KEY_LEFT -> {
+                                game?.applyInput(action, ControlAction.LEFT) ?: handleNoGameCreated()
+                            }
+
+                            INPUT_KEY_JUMP -> {
+                                LOGGER.debug("jump key received")
+                                game?.applyInput(action, ControlAction.JUMP) ?: handleNoGameCreated()
+                            }
                         }
                     }
                 }
-
                 session.textMessage("Message Received: $payloadAsText")
             }
         return session.send(map)

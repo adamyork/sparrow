@@ -9,8 +9,8 @@
     <logger name="com.github.adamyork.socketgame.socket.GameHandler" level="INFO"/>
     <logger name="com.github.adamyork.socketgame.socket.GameAudioHandler" level="INFO"/>
     <logger name="com.github.adamyork.socketgame.game.Game" level="INFO"/>
-    <logger name="com.github.adamyork.socketgame.game.engine.Engine" level="INFO"/>
-    <logger name="com.github.adamyork.socketgame.game.engine.Physics" level="INFO"/>
+    <logger name="com.github.adamyork.socketgame.game.engine.SinglePassEngine" level="INFO"/>
+    <logger name="com.github.adamyork.socketgame.game.engine.CollisionAgnosticPhysics" level="INFO"/>
 
     <root level="info">
         <appender-ref ref="STDOUT"/>

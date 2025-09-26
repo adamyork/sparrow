@@ -77,24 +77,24 @@ class MapEnemy {
 
     fun getNextPosition(xDelta: Int, yDelta: Int): EnemyPosition {
         if (enemyPosition.direction == Direction.LEFT) {
-            if (enemyPosition.x >= originX - MAX_X_MOVEMENT) {
-                return EnemyPosition(
+            return if (enemyPosition.x >= originX - MAX_X_MOVEMENT) {
+                EnemyPosition(
                     enemyPosition.x - MOVEMENT_X_DISTANCE - xDelta,
                     enemyPosition.y + yDelta,
                     Direction.LEFT
                 )
             } else {
-                return EnemyPosition(enemyPosition.x, enemyPosition.y + yDelta, Direction.RIGHT)
+                EnemyPosition(enemyPosition.x, enemyPosition.y + yDelta, Direction.RIGHT)
             }
         } else {
-            if (enemyPosition.x <= originX + MAX_X_MOVEMENT) {
-                return EnemyPosition(
+            return if (enemyPosition.x <= originX + MAX_X_MOVEMENT) {
+                EnemyPosition(
                     enemyPosition.x + MOVEMENT_X_DISTANCE - xDelta,
                     enemyPosition.y + yDelta,
                     Direction.RIGHT
                 )
             } else {
-                return EnemyPosition(enemyPosition.x, enemyPosition.y + yDelta, Direction.LEFT)
+                EnemyPosition(enemyPosition.x, enemyPosition.y + yDelta, Direction.LEFT)
             }
         }
     }

@@ -1,6 +1,5 @@
 package com.github.adamyork.socketgame.game.data
 
-import com.github.adamyork.socketgame.common.Sounds
 import com.github.adamyork.socketgame.game.engine.data.Particle
 import com.github.adamyork.socketgame.game.service.data.Asset
 
@@ -21,11 +20,9 @@ class GameMap {
     val y: Int
     val width: Int
     val height: Int
-    val moved: Boolean
     val items: ArrayList<MapItem>
     val enemies: ArrayList<MapEnemy>
     val particles: ArrayList<Particle>
-    val pendingPlayerCollision: Boolean
 
     constructor(
         farGroundAsset: Asset,
@@ -36,11 +33,9 @@ class GameMap {
         y: Int,
         width: Int,
         height: Int,
-        moved: Boolean,
         items: ArrayList<MapItem>,
         enemies: ArrayList<MapEnemy>,
-        particles: ArrayList<Particle>,
-        pendingPlayerCollision: Boolean
+        particles: ArrayList<Particle>
     ) {
         this.farGroundAsset = farGroundAsset
         this.midGroundAsset = midGroundAsset
@@ -50,11 +45,9 @@ class GameMap {
         this.y = y
         this.width = width
         this.height = height
-        this.moved = moved
         this.items = items
         this.enemies = enemies
         this.particles = particles
-        this.pendingPlayerCollision = pendingPlayerCollision
     }
 
     fun generateMapItems() {
@@ -64,8 +57,8 @@ class GameMap {
     }
 
     fun generateMapEnemies() {
-        enemies.add(MapEnemy(128, 128, 200, 583, MapItemState.ACTIVE))
-        enemies.add(MapEnemy(128, 128, 1140, 355, MapItemState.ACTIVE))
+        //enemies.add(MapEnemy(128, 128, 200, 583, MapItemState.ACTIVE))
+        //enemies.add(MapEnemy(128, 128, 1140, 355, MapItemState.ACTIVE))
     }
 
 }

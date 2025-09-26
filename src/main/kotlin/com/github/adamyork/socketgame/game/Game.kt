@@ -72,9 +72,15 @@ class Game {
             .onBackpressureDrop()
             .concatMap(Function { _: Long? ->
                 Mono.defer(Supplier {
+                    val previousX = player.x
+                    val previousY = player.y
+                    player = engine.managePlayer(player, gameMap, gameMap.collisionAsset)
                     gameMap = engine.manageMap(player, gameMap)
                     scoreService.gameMapItem = gameMap.items
-                    player = engine.managePlayer(player, gameMap, gameMap.collisionAsset)
+                    val collisionResult =
+                        engine.manageCollision(player, previousX, previousY, gameMap, gameMap.collisionAsset)
+                    player = collisionResult.t1
+                    gameMap = collisionResult.t2
                     val bytes: ByteArray = engine.paint(gameMap, playerAsset, player, mapItemAsset, mapEnemyAsset)
                     val binaryMessage = gameWebSocketSession.binaryMessage { session -> session.wrap(bytes) }
                     val messages: List<WebSocketMessage> = listOf(binaryMessage)

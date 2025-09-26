@@ -6,11 +6,15 @@ startButton.addEventListener("click", (event) => {
     let splashContainer = document.getElementById("splashContainer");
     splashContainer.style.display = "none";
     document.onkeydown = function (event) {
-        document.game.socket.send(event.type + ":" + event.code);
-        document.game.audioSocket.send(event.type + ":" + event.code);
+        if(!document.game.paused) {
+            document.game.socket.send(event.type + ":" + event.code);
+            document.game.audioSocket.send(event.type + ":" + event.code);
+        }
     }
     document.onkeyup = function (event) {
-        document.game.socket.send(event.type + ":" + event.code);
+        if(!document.game.paused) {
+            document.game.socket.send(event.type + ":" + event.code);
+        }
     }
     document.game.socket = new WebSocket("ws://localhost:8080/game");
     document.game.audioSocket = new WebSocket("ws://localhost:8080/input-audio");

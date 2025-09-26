@@ -77,11 +77,9 @@ class AssetService {
             Game.Companion.VIEWPORT_HEIGHT,
             mapAssetMap[id + 3]!!.width,
             mapAssetMap[id + 3]!!.height,
-            false,
             ArrayList(),
             ArrayList(),
-            ArrayList(),
-            false
+            ArrayList()
         )
     }
 
@@ -124,7 +122,7 @@ class AssetService {
         FileInputStream(file).use { fis ->
             val bytesRead = fis.read(byteArray)
             if (bytesRead != byteArray.size) {
-                throw IOException("Could not read the entire file.")
+                throw IOException("File only partially read: `${file.path}`")
             }
         }
         return byteArray
