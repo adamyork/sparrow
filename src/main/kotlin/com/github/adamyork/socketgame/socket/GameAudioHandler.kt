@@ -19,23 +19,32 @@ class GameAudioHandler : WebSocketHandler {
 
     val assetService: AssetService
     val audioQueue: AudioQueue
-    var gameAudio: GameAudio? = null
+
+    lateinit var gameAudio: GameAudio
 
     constructor(assetService: AssetService, audioQueue: AudioQueue) {
         this.assetService = assetService
         this.audioQueue = audioQueue
     }
 
-    override fun handle(session: WebSocketSession): Mono<Void?> {
+    override fun handle(session: WebSocketSession): Mono<Void> {
         val map = session.receive()
             .doOnNext { message -> message.retain() }
             .publishOn(Schedulers.boundedElastic())
             .map { message ->
                 LOGGER.info("Game audio started")
                 val payloadAsText = message.payloadAsText
-                gameAudio = GameAudio(session, assetService, audioQueue)
-                gameAudio?.start()
                 session.textMessage("Message Received: $payloadAsText")
+            }
+            .flatMap { message ->
+                if (!gameAudio.isInitialized) {
+                    gameAudio = GameAudio(session, assetService, audioQueue)
+                    gameAudio.start().map {
+                        message
+                    }
+                } else {
+                    Mono.just(message)
+                }
             }
         return session.send(map)
     }

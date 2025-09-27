@@ -2,6 +2,7 @@ package com.github.adamyork.socketgame.game
 
 import com.github.adamyork.socketgame.common.ControlAction
 import com.github.adamyork.socketgame.common.ControlType
+import com.github.adamyork.socketgame.common.GameStatusProvider
 import com.github.adamyork.socketgame.game.data.Direction
 import com.github.adamyork.socketgame.game.data.GameMap
 import com.github.adamyork.socketgame.game.data.Player
@@ -13,13 +14,13 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.web.reactive.socket.WebSocketMessage
 import org.springframework.web.reactive.socket.WebSocketSession
-import reactor.core.Disposable
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
 import java.time.Duration
 import java.util.function.Function
 import java.util.function.Supplier
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 
 class Game {
@@ -34,6 +35,7 @@ class Game {
     val assetService: AssetService
     val engine: Engine
     val scoreService: ScoreService
+    val gameStatusProvider: GameStatusProvider
     var isInitialized: Boolean = false
 
 
@@ -47,12 +49,14 @@ class Game {
         webSocketSession: WebSocketSession,
         assetService: AssetService,
         engine: Engine,
-        scoreService: ScoreService
+        scoreService: ScoreService,
+        gameStatusProvider: GameStatusProvider
     ) {
         this.gameWebSocketSession = webSocketSession
         this.assetService = assetService
         this.engine = engine
         this.scoreService = scoreService
+        this.gameStatusProvider = gameStatusProvider
     }
 
     fun init(): Mono<Boolean> {
@@ -75,29 +79,35 @@ class Game {
         }
     }
 
-    fun start(): Disposable {
+    @OptIn(ExperimentalAtomicApi::class)
+    fun start(): Mono<Boolean> {
         return Flux.interval(Duration.ofMillis(80))
             .publishOn(Schedulers.boundedElastic())
             .onBackpressureDrop()
             .concatMap(Function { _: Long? ->
                 Mono.defer(Supplier {
-                    val previousX = player.x
-                    val previousY = player.y
-                    player = engine.managePlayer(player, gameMap, gameMap.collisionAsset)
-                    gameMap = engine.manageMap(player, gameMap)
-                    scoreService.gameMapItem = gameMap.items
-                    val collisionResult =
-                        engine.manageCollision(player, previousX, previousY, gameMap, gameMap.collisionAsset)
-                    player = collisionResult.t1
-                    gameMap = collisionResult.t2
-                    val bytes: ByteArray = engine.paint(gameMap, playerAsset, player, mapItemAsset, mapEnemyAsset)
-                    val binaryMessage = gameWebSocketSession.binaryMessage { session -> session.wrap(bytes) }
-                    val messages: List<WebSocketMessage> = listOf(binaryMessage)
-                    val messageFlux: Flux<WebSocketMessage> = Flux.fromIterable(messages)
-                    gameWebSocketSession.send(messageFlux)
+                    if (gameStatusProvider.running.load()) {
+                        val previousX = player.x
+                        val previousY = player.y
+                        player = engine.managePlayer(player, gameMap, gameMap.collisionAsset)
+                        gameMap = engine.manageMap(player, gameMap)
+                        scoreService.gameMapItem = gameMap.items
+                        val collisionResult =
+                            engine.manageCollision(player, previousX, previousY, gameMap, gameMap.collisionAsset)
+                        player = collisionResult.t1
+                        gameMap = collisionResult.t2
+                        val bytes: ByteArray = engine.paint(gameMap, playerAsset, player, mapItemAsset, mapEnemyAsset)
+                        val binaryMessage = gameWebSocketSession.binaryMessage { session -> session.wrap(bytes) }
+                        val messages: List<WebSocketMessage> = listOf(binaryMessage)
+                        val messageFlux: Flux<WebSocketMessage> = Flux.fromIterable(messages)
+                        gameWebSocketSession.send(messageFlux)
+                    } else {
+                        Mono.just(false).then()
+                    }
                 })
             }, 0)
-            .subscribe()
+            .collectList()
+            .map { _ -> true }
     }
 
     fun applyInput(controlType: ControlType, controlAction: ControlAction) {

@@ -29,7 +29,7 @@ class InputAudioHandler : WebSocketHandler {
     }
 
     @OptIn(ExperimentalAtomicApi::class)
-    override fun handle(session: WebSocketSession): Mono<Void?> {
+    override fun handle(session: WebSocketSession): Mono<Void> {
         val map = session.receive()
             .doOnNext { message -> message.retain() }
             .publishOn(Schedulers.boundedElastic())

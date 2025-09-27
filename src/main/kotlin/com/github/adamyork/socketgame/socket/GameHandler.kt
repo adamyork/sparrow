@@ -11,7 +11,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.web.reactive.socket.WebSocketHandler
 import org.springframework.web.reactive.socket.WebSocketSession
-import reactor.core.Disposable
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -34,7 +33,6 @@ class GameHandler : WebSocketHandler {
     val engine: Engine
     val scoreService: ScoreService
     val gameStatusProvider: GameStatusProvider
-    var gameRunner: Disposable? = null
 
     lateinit var game: Game
 
@@ -60,18 +58,16 @@ class GameHandler : WebSocketHandler {
                 when (payloadAsText) {
                     INPUT_START -> {
                         LOGGER.info("Game started")
-                        game = Game(session, assetService, engine, scoreService)
+                        game = Game(session, assetService, engine, scoreService, gameStatusProvider)
                     }
 
                     INPUT_PAUSE -> {
                         LOGGER.info("Game paused")
-                        gameRunner?.dispose()
                         gameStatusProvider.running.store(false)
                     }
 
                     INPUT_RESUME -> {
                         LOGGER.info("Game resumed")
-                        gameRunner = game.start()
                         gameStatusProvider.running.store(true)
                     }
 
@@ -100,10 +96,11 @@ class GameHandler : WebSocketHandler {
             }
             .flatMap { message ->
                 if (!game.isInitialized) {
-                    game.init().map {
-                        gameRunner = game.start()
+                    game.init().flatMap {
                         gameStatusProvider.running.store(true)
-                        message
+                        game.start().map { _ ->
+                            message
+                        }
                     }
                 } else {
                     Mono.just(message)
