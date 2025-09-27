@@ -51,11 +51,15 @@ class Collision {
             val playerRect = Rectangle(player.x, player.y, player.width, player.height)
             var itemState = item.state
             if (playerRect.intersects(itemRect) && itemState == MapItemState.ACTIVE) {
-                LOGGER.info("item collision !")
-                itemState = MapItemState.DEACTIVATING
-                audioQueue.queue.add(Sounds.ITEM_COLLECT)
+                if (item.type == MapItemType.FINISH) {
+                    LOGGER.info("finish reached!")
+                } else {
+                    LOGGER.info("item collision !")
+                    itemState = MapItemState.DEACTIVATING
+                    audioQueue.queue.add(Sounds.ITEM_COLLECT)
+                }
             }
-            MapItem(item.width, item.height, item.x, item.y, itemState, item.frameMetadata)
+            MapItem(item.width, item.height, item.x, item.y, item.type, itemState, item.frameMetadata)
         }.toCollection(ArrayList())
         return GameMap(
             gameMap.farGroundAsset,

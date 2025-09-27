@@ -14,24 +14,35 @@ class MapItem {
     var height: Int = 64//TODO Magic Number
     var x: Int = 0
     var y: Int = 0
+    var type: MapItemType
     var state: MapItemState
     var deactivatingFrames: HashMap<Int, FrameMetadata> = HashMap()
     var frameMetadata: FrameMetadata = FrameMetadata(1, Cell(1, 1, 64, 64))
 
-    constructor(width: Int, height: Int, x: Int, y: Int, state: MapItemState) {
+    constructor(width: Int, height: Int, x: Int, y: Int, type: MapItemType, state: MapItemState) {
         this.width = width
         this.height = height
         this.x = x
         this.y = y
+        this.type = type
         this.state = state
         generateAnimationFrameIndex()
     }
 
-    constructor(width: Int, height: Int, x: Int, y: Int, state: MapItemState, frameMetadata: FrameMetadata) {
+    constructor(
+        width: Int,
+        height: Int,
+        x: Int,
+        y: Int,
+        type: MapItemType,
+        state: MapItemState,
+        frameMetadata: FrameMetadata
+    ) {
         this.width = width
         this.height = height
         this.x = x
         this.y = y
+        this.type = type
         this.state = state
         this.frameMetadata = frameMetadata
         generateAnimationFrameIndex()

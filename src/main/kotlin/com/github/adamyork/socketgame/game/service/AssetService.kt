@@ -22,6 +22,7 @@ class AssetService {
     //sprites
     final val playerAsset: Asset = Asset("static/rabbit.png", 64, 64)
     final val mapItem1Asset: Asset = Asset("static/item.png", 64, 64)
+    final val mapItem2Asset: Asset = Asset("static/finish-item.png", 64, 64)
     final val mapEnemy1Asset: Asset = Asset("static/vacuum.png", 128, 128)
 
     //sounds
@@ -48,6 +49,8 @@ class AssetService {
         soundBytesMap[Sounds.PLAYER_COLLISION] = playerCollisionSoundBytes
 
         itemUrlMap[0] = this::class.java.classLoader.getResource(mapItem1Asset.path)
+        itemUrlMap[1] = this::class.java.classLoader.getResource(mapItem2Asset.path)
+
         enemyUrlMap[0] = this::class.java.classLoader.getResource(mapEnemy1Asset.path)
 
         mapAssetMap[0] = Asset("static/map-1-far-ground.png", 2048, 1536)
@@ -96,7 +99,7 @@ class AssetService {
                     mapAssetMap[id + 2]!!,
                     mapAssetMap[id + 3]!!,
                     0,
-                    Game.Companion.VIEWPORT_HEIGHT,
+                    Game.VIEWPORT_HEIGHT,
                     mapAssetMap[id + 3]!!.width,
                     mapAssetMap[id + 3]!!.height,
                     ArrayList(),
@@ -108,21 +111,26 @@ class AssetService {
     }
 
     fun loadItem(id: Int): Mono<Asset> {
-        val itemUrl = itemUrlMap[id]
-        val itemFile = urlToFile(itemUrl)
         val itemMono = mono {
+            val itemUrl = itemUrlMap[id]
+            val itemFile = urlToFile(itemUrl)
             loadBufferedImageAsync(itemFile)
         }
         return itemMono.map { image ->
-            mapItem1Asset.bufferedImage = image
-            mapItem1Asset
+            if (id == 0) {
+                mapItem1Asset.bufferedImage = image
+                mapItem1Asset
+            } else {
+                mapItem2Asset.bufferedImage = image
+                mapItem2Asset
+            }
         }
     }
 
     fun loadEnemy(id: Int): Mono<Asset> {
-        val enemyUrl = enemyUrlMap[id]
-        val enemyFile = urlToFile(enemyUrl)
         val enemyMono = mono {
+            val enemyUrl = enemyUrlMap[id]
+            val enemyFile = urlToFile(enemyUrl)
             loadBufferedImageAsync(enemyFile)
         }
         return enemyMono.map { image ->

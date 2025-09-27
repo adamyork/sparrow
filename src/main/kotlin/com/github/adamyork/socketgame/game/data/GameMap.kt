@@ -51,9 +51,11 @@ class GameMap {
     }
 
     fun generateMapItems() {
-        items.add(MapItem(64, 64, 400, 583, MapItemState.ACTIVE))
-        items.add(MapItem(64, 64, 600, 450, MapItemState.ACTIVE))
-        items.add(MapItem(64, 64, 1024, 450, MapItemState.ACTIVE))
+        //items.add(MapItem(64, 64, 400, 583, MapItemType.COLLECTABLE, MapItemState.ACTIVE))
+        items.add(MapItem(64, 64, 400, 583, MapItemType.FINISH, MapItemState.ACTIVE))
+        items.add(MapItem(64, 64, 600, 450, MapItemType.COLLECTABLE, MapItemState.ACTIVE))
+        items.add(MapItem(64, 64, 1024, 450, MapItemType.COLLECTABLE, MapItemState.ACTIVE))
+        //items.add(MapItem(64, 64, 650, 300, MapItemType.FINISH, MapItemState.ACTIVE))
     }
 
     fun generateMapEnemies() {

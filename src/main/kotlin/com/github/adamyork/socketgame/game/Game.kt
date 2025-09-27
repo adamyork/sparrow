@@ -43,6 +43,7 @@ class Game {
     lateinit var gameMap: GameMap
     lateinit var playerAsset: Asset
     lateinit var mapItemAsset: Asset
+    lateinit var finishItemAsset: Asset
     lateinit var mapEnemyAsset: Asset
 
     constructor(
@@ -64,13 +65,15 @@ class Game {
             assetService.loadMap(0),
             assetService.loadPlayer(),
             assetService.loadItem(0),
+            assetService.loadItem(1),
             assetService.loadEnemy(0)
         ).map { objects ->
             player = Player(400, 100)
             gameMap = objects.t1
             playerAsset = objects.t2
             mapItemAsset = objects.t3
-            mapEnemyAsset = objects.t4
+            finishItemAsset = objects.t4
+            mapEnemyAsset = objects.t5
             gameMap.generateMapItems()
             gameMap.generateMapEnemies()
             isInitialized = true
@@ -96,7 +99,8 @@ class Game {
                             engine.manageCollision(player, previousX, previousY, gameMap, gameMap.collisionAsset)
                         player = collisionResult.t1
                         gameMap = collisionResult.t2
-                        val bytes: ByteArray = engine.paint(gameMap, playerAsset, player, mapItemAsset, mapEnemyAsset)
+                        val bytes: ByteArray =
+                            engine.paint(gameMap, playerAsset, player, mapItemAsset, finishItemAsset, mapEnemyAsset)
                         val binaryMessage = gameWebSocketSession.binaryMessage { session -> session.wrap(bytes) }
                         val messages: List<WebSocketMessage> = listOf(binaryMessage)
                         val messageFlux: Flux<WebSocketMessage> = Flux.fromIterable(messages)

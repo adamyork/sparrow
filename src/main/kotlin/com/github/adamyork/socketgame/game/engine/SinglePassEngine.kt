@@ -146,7 +146,7 @@ class SinglePassEngine : Engine {
                     itemState = MapItemState.INACTIVE
                 }
             }
-            MapItem(item.width, item.height, itemX, itemY, itemState, frameMetadata)
+            MapItem(item.width, item.height, itemX, itemY, item.type, itemState, frameMetadata)
         }.toCollection(ArrayList())
     }
 
@@ -188,6 +188,7 @@ class SinglePassEngine : Engine {
         playerAsset: Asset,
         player: Player,
         mapItemAsset: Asset,
+        finishItemAsset: Asset,
         mapEnemyAsset: Asset
     ): ByteArray {
         val compositeImage = BufferedImage(
@@ -212,14 +213,24 @@ class SinglePassEngine : Engine {
         graphics.drawImage(nearFieldSubImag, 0, 0, null)
         graphics.drawImage(collisionSubImage, 0, 0, null)
         map.items.forEach { item ->
-            if (item.state != MapItemState.INACTIVE) {
-                val mapItemSubImage = mapItemAsset.bufferedImage.getSubimage(
-                    item.frameMetadata.cell.x,
-                    item.frameMetadata.cell.y,
+            if (item.type == MapItemType.FINISH) {
+                val finishItemSubImage = finishItemAsset.bufferedImage.getSubimage(
+                    0,
+                    0,
                     item.width,
                     item.height
                 )
-                graphics.drawImage(mapItemSubImage, item.x, item.y, null)
+                 graphics.drawImage(finishItemSubImage, item.x, item.y, null)
+            } else {
+                if (item.state != MapItemState.INACTIVE) {
+                    val mapItemSubImage = mapItemAsset.bufferedImage.getSubimage(
+                        item.frameMetadata.cell.x,
+                        item.frameMetadata.cell.y,
+                        item.width,
+                        item.height
+                    )
+                    graphics.drawImage(mapItemSubImage, item.x, item.y, null)
+                }
             }
         }
         map.enemies.forEach { enemy ->

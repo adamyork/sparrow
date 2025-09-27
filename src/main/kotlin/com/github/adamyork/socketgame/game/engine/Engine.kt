@@ -19,6 +19,13 @@ interface Engine {
         collisionAsset: Asset
     ): Tuple2<Player, GameMap>
 
-    fun paint(map: GameMap, playerAsset: Asset, player: Player, mapItemAsset: Asset, mapEnemyAsset: Asset): ByteArray
+    fun paint(
+        map: GameMap,
+        playerAsset: Asset,
+        player: Player,
+        mapItemAsset: Asset,
+        finishItemAsset: Asset,
+        mapEnemyAsset: Asset
+    ): ByteArray
 
 }
