@@ -4,13 +4,17 @@ import com.github.adamyork.socketgame.common.Sounds
 import com.github.adamyork.socketgame.game.Game
 import com.github.adamyork.socketgame.game.data.GameMap
 import com.github.adamyork.socketgame.game.service.data.Asset
+import kotlinx.coroutines.reactor.mono
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Mono
+import java.awt.image.BufferedImage
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
 import java.net.URI
 import java.net.URL
 import javax.imageio.ImageIO
+
 
 @Service
 class AssetService {
@@ -57,50 +61,85 @@ class AssetService {
         mapUrlMap[3] = this::class.java.classLoader.getResource(mapAssetMap[3]?.path)
     }
 
-    fun loadMap(id: Int): GameMap {
+    suspend fun loadBufferedImageAsync(file: File): BufferedImage {
+        return ImageIO.read(file)
+    }
+
+    fun loadMap(id: Int): Mono<GameMap> {
         val farGroundFile = urlToFile(mapUrlMap[id])
         val midGroundFile = urlToFile(mapUrlMap[id + 1])
         val nearFieldFile = urlToFile(mapUrlMap[id + 2])
         val collisionFile = urlToFile(mapUrlMap[id + 3])
 
-        mapAssetMap[id]?.bufferedImage = ImageIO.read(farGroundFile)
-        mapAssetMap[id + 1]?.bufferedImage = ImageIO.read(midGroundFile)
-        mapAssetMap[id + 2]?.bufferedImage = ImageIO.read(nearFieldFile)
-        mapAssetMap[id + 3]?.bufferedImage = ImageIO.read(collisionFile)
+        val farGroundMono = mono {
+            loadBufferedImageAsync(farGroundFile)
+        }
+        val midGroundMono = mono {
+            loadBufferedImageAsync(midGroundFile)
+        }
+        val nearFieldMono = mono {
+            loadBufferedImageAsync(nearFieldFile)
+        }
+        val collisionMono = mono {
+            loadBufferedImageAsync(collisionFile)
+        }
 
-        return GameMap(
-            mapAssetMap[id]!!,
-            mapAssetMap[id + 1]!!,
-            mapAssetMap[id + 2]!!,
-            mapAssetMap[id + 3]!!,
-            0,
-            Game.Companion.VIEWPORT_HEIGHT,
-            mapAssetMap[id + 3]!!.width,
-            mapAssetMap[id + 3]!!.height,
-            ArrayList(),
-            ArrayList(),
-            ArrayList()
-        )
+        return Mono.zip(farGroundMono, midGroundMono, nearFieldMono, collisionMono)
+            .map { objects ->
+                mapAssetMap[id]?.bufferedImage = objects.t1
+                mapAssetMap[id + 1]?.bufferedImage = objects.t2
+                mapAssetMap[id + 2]?.bufferedImage = objects.t3
+                mapAssetMap[id + 3]?.bufferedImage = objects.t4
+                GameMap(
+                    mapAssetMap[id]!!,
+                    mapAssetMap[id + 1]!!,
+                    mapAssetMap[id + 2]!!,
+                    mapAssetMap[id + 3]!!,
+                    0,
+                    Game.Companion.VIEWPORT_HEIGHT,
+                    mapAssetMap[id + 3]!!.width,
+                    mapAssetMap[id + 3]!!.height,
+                    ArrayList(),
+                    ArrayList(),
+                    ArrayList()
+                )
+            }
+
     }
 
-    fun loadItem(id: Int): Asset {
+    fun loadItem(id: Int): Mono<Asset> {
         val itemUrl = itemUrlMap[id]
         val itemFile = urlToFile(itemUrl)
-        mapItem1Asset.bufferedImage = ImageIO.read(itemFile)
-        return mapItem1Asset
+        val itemMono = mono {
+            loadBufferedImageAsync(itemFile)
+        }
+        return itemMono.map { image ->
+            mapItem1Asset.bufferedImage = image
+            mapItem1Asset
+        }
     }
 
-    fun loadEnemy(id: Int): Asset {
+    fun loadEnemy(id: Int): Mono<Asset> {
         val enemyUrl = enemyUrlMap[id]
         val enemyFile = urlToFile(enemyUrl)
-        mapEnemy1Asset.bufferedImage = ImageIO.read(enemyFile)
-        return mapEnemy1Asset
+        val enemyMono = mono {
+            loadBufferedImageAsync(enemyFile)
+        }
+        return enemyMono.map { image ->
+            mapEnemy1Asset.bufferedImage = image
+            mapEnemy1Asset
+        }
     }
 
-    fun loadPlayer(): Asset {
+    fun loadPlayer(): Mono<Asset> {
         val playerFile = urlToFile(this::class.java.classLoader.getResource(playerAsset.path))
-        playerAsset.bufferedImage = ImageIO.read(playerFile)
-        return playerAsset
+        val playerMono = mono {
+            loadBufferedImageAsync(playerFile)
+        }
+        return playerMono.map { image ->
+            playerAsset.bufferedImage = image
+            playerAsset
+        }
     }
 
     fun getSoundStream(sound: Sounds): ByteArray {

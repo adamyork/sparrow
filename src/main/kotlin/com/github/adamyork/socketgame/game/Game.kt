@@ -55,15 +55,24 @@ class Game {
         this.scoreService = scoreService
     }
 
-    fun init() {
-        player = Player(400, 100)
-        gameMap = assetService.loadMap(0)
-        playerAsset = assetService.loadPlayer()
-        mapItemAsset = assetService.loadItem(0)
-        mapEnemyAsset = assetService.loadEnemy(0)
-        gameMap.generateMapItems()
-        gameMap.generateMapEnemies()
-        isInitialized = true
+    fun init(): Mono<Boolean> {
+        return Mono.zip(
+            assetService.loadMap(0),
+            assetService.loadPlayer(),
+            assetService.loadItem(0),
+            assetService.loadEnemy(0)
+        ).map { objects ->
+            player = Player(400, 100)
+            gameMap = objects.t1
+            playerAsset = objects.t2
+            mapItemAsset = objects.t3
+            mapEnemyAsset = objects.t4
+            gameMap.generateMapItems()
+            gameMap.generateMapEnemies()
+            isInitialized = true
+            LOGGER.info("assets Loaded")
+            true
+        }
     }
 
     fun start(): Disposable {

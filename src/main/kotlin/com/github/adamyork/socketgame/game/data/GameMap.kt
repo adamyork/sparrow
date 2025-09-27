@@ -57,7 +57,7 @@ class GameMap {
     }
 
     fun generateMapEnemies() {
-        //enemies.add(MapEnemy(128, 128, 200, 583, MapItemState.ACTIVE))
+        enemies.add(MapEnemy(128, 128, 200, 583, MapItemState.ACTIVE))
         //enemies.add(MapEnemy(128, 128, 1140, 355, MapItemState.ACTIVE))
     }
 

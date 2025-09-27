@@ -34,8 +34,9 @@ class GameHandler : WebSocketHandler {
     val engine: Engine
     val scoreService: ScoreService
     val gameStatusProvider: GameStatusProvider
-    var game: Game? = null
     var gameRunner: Disposable? = null
+
+    lateinit var game: Game
 
     constructor(
         assetService: AssetService,
@@ -50,7 +51,7 @@ class GameHandler : WebSocketHandler {
     }
 
     @OptIn(ExperimentalAtomicApi::class)
-    override fun handle(session: WebSocketSession): Mono<Void?> {
+    override fun handle(session: WebSocketSession): Mono<Void> {
         val map = session.receive()
             .doOnNext { message -> message.retain() }
             .publishOn(Schedulers.boundedElastic())
@@ -60,9 +61,6 @@ class GameHandler : WebSocketHandler {
                     INPUT_START -> {
                         LOGGER.info("Game started")
                         game = Game(session, assetService, engine, scoreService)
-                        game?.init()
-                        gameRunner = game?.start()
-                        gameStatusProvider.running.store(true)
                     }
 
                     INPUT_PAUSE -> {
@@ -73,7 +71,7 @@ class GameHandler : WebSocketHandler {
 
                     INPUT_RESUME -> {
                         LOGGER.info("Game resumed")
-                        gameRunner = game?.start()
+                        gameRunner = game.start()
                         gameStatusProvider.running.store(true)
                     }
 
@@ -84,27 +82,34 @@ class GameHandler : WebSocketHandler {
                         val action = if (type == INPUT_KEY_STATE) ControlType.START else ControlType.STOP
                         when (input) {
                             INPUT_KEY_RIGHT -> {
-                                game?.applyInput(action, ControlAction.RIGHT) ?: handleNoGameCreated()
+                                game.applyInput(action, ControlAction.RIGHT)
                             }
 
                             INPUT_KEY_LEFT -> {
-                                game?.applyInput(action, ControlAction.LEFT) ?: handleNoGameCreated()
+                                game.applyInput(action, ControlAction.LEFT)
                             }
 
                             INPUT_KEY_JUMP -> {
                                 LOGGER.debug("jump key received")
-                                game?.applyInput(action, ControlAction.JUMP) ?: handleNoGameCreated()
+                                game.applyInput(action, ControlAction.JUMP)
                             }
                         }
                     }
                 }
                 session.textMessage("Message Received: $payloadAsText")
             }
+            .flatMap { message ->
+                if (!game.isInitialized) {
+                    game.init().map {
+                        gameRunner = game.start()
+                        gameStatusProvider.running.store(true)
+                        message
+                    }
+                } else {
+                    Mono.just(message)
+                }
+            }
         return session.send(map)
-    }
-
-    private fun handleNoGameCreated() {
-        LOGGER.debug("No Game Created Yet")
     }
 
 }
