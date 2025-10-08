@@ -4,6 +4,7 @@ import com.github.adamyork.socketgame.common.Sounds
 import com.github.adamyork.socketgame.game.Game
 import com.github.adamyork.socketgame.game.data.GameMap
 import com.github.adamyork.socketgame.game.service.data.Asset
+import com.github.adamyork.socketgame.game.service.data.ItemPositionAndType
 import kotlinx.coroutines.reactor.mono
 import net.mamoe.yamlkt.YamlMap
 import org.slf4j.Logger
@@ -11,8 +12,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
-import reactor.util.function.Tuple3
-import reactor.util.function.Tuples
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.FileInputStream
@@ -231,9 +230,9 @@ class AssetService {
         return itemPositions.keys.size
     }
 
-    fun getItemPosition(id: Int): Tuple3<Int, Int, String> {
+    fun getItemPosition(id: Int): ItemPositionAndType {
         val item: YamlMap = itemPositions[id.toString()] as YamlMap
-        return Tuples.of(item.getInt("x"), item.getInt("y"), item.getString("type"))
+        return ItemPositionAndType(item.getInt("x"), item.getInt("y"), item.getString("type"))
     }
 
     fun loadPlayer(): Mono<Asset> {

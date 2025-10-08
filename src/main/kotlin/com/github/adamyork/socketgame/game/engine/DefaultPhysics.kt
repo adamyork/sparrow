@@ -2,12 +2,10 @@ package com.github.adamyork.socketgame.game.engine
 
 import com.github.adamyork.socketgame.game.Game
 import com.github.adamyork.socketgame.game.data.Direction
-import com.github.adamyork.socketgame.game.data.GameMap
 import com.github.adamyork.socketgame.game.data.Player
 import com.github.adamyork.socketgame.game.engine.data.Particle
 import com.github.adamyork.socketgame.game.engine.data.PhysicsXResult
 import com.github.adamyork.socketgame.game.engine.data.PhysicsYResult
-import com.github.adamyork.socketgame.game.service.data.Asset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import reactor.util.function.Tuple2
@@ -27,11 +25,7 @@ class DefaultPhysics : Physics {
         const val VELOCITY_COEFFICIENT: Double = 0.5
     }
 
-    override fun applyPlayerPhysics(
-        player: Player,
-        gameMap: GameMap,
-        collisionAsset: Asset
-    ): Player {
+    override fun applyPlayerPhysics(player: Player): Player {
         val vx = getXVelocity(player.vx, player.moving)
         val vy = getYVelocity(player.y, player.jumpY, player.vy, player.jumping)
         val xResult = movePlayerX(

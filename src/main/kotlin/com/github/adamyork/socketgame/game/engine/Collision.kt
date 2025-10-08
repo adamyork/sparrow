@@ -4,9 +4,9 @@ import com.github.adamyork.socketgame.common.AudioQueue
 import com.github.adamyork.socketgame.common.Sounds
 import com.github.adamyork.socketgame.game.Game
 import com.github.adamyork.socketgame.game.data.*
-import com.github.adamyork.socketgame.game.engine.data.EnemyCollisionResult
 import com.github.adamyork.socketgame.game.engine.data.PhysicsXResult
 import com.github.adamyork.socketgame.game.engine.data.PhysicsYResult
+import com.github.adamyork.socketgame.game.engine.data.PlayerMapPair
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -85,7 +85,7 @@ class Collision {
         audioQueue: AudioQueue,
         particles: Particles,
         physics: Physics
-    ): EnemyCollisionResult {
+    ): PlayerMapPair {
         var managedMapParticles = gameMap.particles
         var playerIsColliding = false
         val managedMapEnemies = gameMap.enemies.map { enemy ->
@@ -136,7 +136,7 @@ class Collision {
             }
             nextVx = 0.0
         }
-        return EnemyCollisionResult(
+        return PlayerMapPair(
             Player(
                 nextX,
                 player.y,
@@ -178,12 +178,21 @@ class Collision {
         val boundedX = player.x.coerceAtMost(collisionImage.width - player.width)
         val scanHeight = abs(player.jumpY - previousY)
         if (player.jumpY < 0) {
-            return PhysicsYResult(player.y, player.vy, player.jumping, player.jumpY, player.jumpReached, false, false)
+            return PhysicsYResult(
+                player.y, player.vy, player.jumping, player.jumpY, player.jumpReached,
+                scanVerticalCeiling = false,
+                scanVerticalFloor = false
+            )
         }
         if (player.scanVerticalCeiling) {
             LOGGER.info("potentially moved through a ceiling")
             val ceiling = findCeiling(boundedX, previousY + player.height, player.width, collisionImage)
-            return PhysicsYResult(ceiling, 0.0, false, 0, false, false, false)
+            return PhysicsYResult(
+                ceiling, 0.0, false, 0,
+                jumpReached = false,
+                scanVerticalCeiling = false,
+                scanVerticalFloor = false
+            )
         }
         if (player.jumping && !player.jumpReached && player.y > player.jumpY) {
             LOGGER.info("player is jumping and rising")
@@ -197,7 +206,12 @@ class Collision {
             if (playerWillCollide) {
                 LOGGER.info("player is jumping a needs to check for ceiling")
                 val ceiling = findCeiling(boundedX, previousY, player.width, collisionImage)
-                return PhysicsYResult(ceiling, 0.0, false, 0, false, false, false)
+                return PhysicsYResult(
+                    ceiling, 0.0, false, 0,
+                    jumpReached = false,
+                    scanVerticalCeiling = false,
+                    scanVerticalFloor = false
+                )
             } else {
                 LOGGER.info("player is jumping and will not collide")
                 return PhysicsYResult(
@@ -206,15 +220,20 @@ class Collision {
                     player.jumping,
                     player.jumpY,
                     player.jumpReached,
-                    false,
-                    false
+                    scanVerticalCeiling = false,
+                    scanVerticalFloor = false
                 )
             }
         }
         if (player.scanVerticalFloor) {
             LOGGER.info("potentially moved through a floor")
             val floor = findFloor(boundedX, previousY - player.height, player.height, player.width, collisionImage)
-            return PhysicsYResult(floor, 0.0, false, 0, false, false, false)
+            return PhysicsYResult(
+                floor, 0.0, false, 0,
+                jumpReached = false,
+                scanVerticalCeiling = false,
+                scanVerticalFloor = false
+            )
         }
         val floor = findFloor(player.x, previousY + player.height, player.height, player.width, collisionImage)
         if (player.y < floor) {
@@ -229,9 +248,18 @@ class Collision {
             if (playerYIsClipping) {
                 LOGGER.info("Player is clipping above")
                 val newCeiling = findCeilingDescending(player.x, player.y, player.width, collisionImage)
-                return PhysicsYResult(newCeiling, 0.0, false, 0, false, false, false)
+                return PhysicsYResult(
+                    newCeiling, 0.0, false, 0,
+                    jumpReached = false,
+                    scanVerticalCeiling = false,
+                    scanVerticalFloor = false
+                )
             }
-            return PhysicsYResult(player.y, player.vy, player.jumping, player.jumpY, player.jumpReached, false, false)
+            return PhysicsYResult(
+                player.y, player.vy, player.jumping, player.jumpY, player.jumpReached,
+                scanVerticalCeiling = false,
+                scanVerticalFloor = false
+            )
         }
         val playerYIsClipping = testForColorCollision(
             previousX,
@@ -243,9 +271,19 @@ class Collision {
         if (playerYIsClipping) {
             LOGGER.info("Player is clipping below")
             val newFloor = findFloorAscending(boundedX, previousY, player.width, player.height, collisionImage)
-            return PhysicsYResult(newFloor, 0.0, false, 0, false, false, false)
+            return PhysicsYResult(
+                newFloor, 0.0, false, 0,
+                jumpReached = false,
+                scanVerticalCeiling = false,
+                scanVerticalFloor = false
+            )
         }
-        return PhysicsYResult(floor, 0.0, false, 0, false, false, false)
+        return PhysicsYResult(
+            floor, 0.0, false, 0,
+            jumpReached = false,
+            scanVerticalCeiling = false,
+            scanVerticalFloor = false
+        )
     }
 
 

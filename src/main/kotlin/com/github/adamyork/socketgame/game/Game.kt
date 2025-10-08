@@ -92,13 +92,13 @@ class Game {
                     if (gameStatusProvider.running.load()) {
                         val previousX = player.x
                         val previousY = player.y
-                        player = engine.managePlayer(player, gameMap, gameMap.collisionAsset)
+                        player = engine.managePlayer(player)
                         gameMap = engine.manageMap(player, gameMap)
                         scoreService.gameMapItem = gameMap.items
                         val collisionResult =
                             engine.manageCollision(player, previousX, previousY, gameMap, gameMap.collisionAsset)
-                        player = collisionResult.t1
-                        gameMap = collisionResult.t2
+                        player = collisionResult.player
+                        gameMap = collisionResult.map
                         val bytes: ByteArray =
                             engine.paint(gameMap, playerAsset, player, mapItemAsset, finishItemAsset, mapEnemyAsset)
                         val binaryMessage = gameWebSocketSession.binaryMessage { session -> session.wrap(bytes) }

@@ -8,10 +8,10 @@ import org.springframework.context.annotation.Configuration
 class EngineConfig {
 
     @Bean
-    fun collisionAgnosticPhysics(): DefaultPhysics = DefaultPhysics()
+    fun physics(): DefaultPhysics = DefaultPhysics()
 
     @Bean
-    fun singlePassEngine(
+    fun engine(
         physics: Physics,
         collision: Collision,
         particles: Particles,

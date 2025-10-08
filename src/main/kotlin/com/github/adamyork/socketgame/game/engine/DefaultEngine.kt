@@ -3,12 +3,11 @@ package com.github.adamyork.socketgame.game.engine
 import com.github.adamyork.socketgame.common.AudioQueue
 import com.github.adamyork.socketgame.game.Game
 import com.github.adamyork.socketgame.game.data.*
-import com.github.adamyork.socketgame.game.engine.data.Particle
+import com.github.adamyork.socketgame.game.engine.data.EnemiesParticlesPair
+import com.github.adamyork.socketgame.game.engine.data.PlayerMapPair
 import com.github.adamyork.socketgame.game.service.data.Asset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import reactor.util.function.Tuple2
-import reactor.util.function.Tuples
 import java.awt.Color
 import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
@@ -34,29 +33,25 @@ class DefaultEngine : Engine {
         this.collision = collision
     }
 
-    override fun managePlayer(
-        player: Player,
-        map: GameMap,
-        collisionAsset: Asset
-    ): Player {
-        val physicsResult = physics.applyPlayerPhysics(player, map, collisionAsset)
-        val frameMetadata = player.getNextFrameCell()
+    override fun managePlayer(player: Player): Player {
+        val physicsAppliedPlayer = physics.applyPlayerPhysics(player)
+        val nextFrameMetadata = player.getNextFrameCell()
         return Player(
-            physicsResult.x,
-            physicsResult.y,
-            physicsResult.width,
-            physicsResult.height,
-            physicsResult.vx,
-            physicsResult.vy,
-            physicsResult.jumping,
-            physicsResult.jumpY,
-            physicsResult.jumpReached,
-            physicsResult.moving,
-            physicsResult.direction,
-            frameMetadata,
-            physicsResult.colliding,
-            physicsResult.scanVerticalCeiling,
-            physicsResult.scanVerticalFloor
+            physicsAppliedPlayer.x,
+            physicsAppliedPlayer.y,
+            physicsAppliedPlayer.width,
+            physicsAppliedPlayer.height,
+            physicsAppliedPlayer.vx,
+            physicsAppliedPlayer.vy,
+            physicsAppliedPlayer.jumping,
+            physicsAppliedPlayer.jumpY,
+            physicsAppliedPlayer.jumpReached,
+            physicsAppliedPlayer.moving,
+            physicsAppliedPlayer.direction,
+            nextFrameMetadata,
+            physicsAppliedPlayer.colliding,
+            physicsAppliedPlayer.scanVerticalCeiling,
+            physicsAppliedPlayer.scanVerticalFloor
         )
     }
 
@@ -97,7 +92,7 @@ class DefaultEngine : Engine {
             }
         }
         val managedMapItems = manageMapItems(gameMap, nextX, nextY)
-        val managedMapEnemies = manageMapEnemies(gameMap, nextX, nextY)
+        val managedMapEnemiesAndParticles = manageMapEnemies(gameMap, nextX, nextY)
         //LOGGER.info("player.x : ${player.x} nextX is ${nextX}")
         return GameMap(
             gameMap.farGroundAsset,
@@ -109,8 +104,8 @@ class DefaultEngine : Engine {
             gameMap.width,
             gameMap.height,
             managedMapItems,
-            managedMapEnemies.t1,
-            managedMapEnemies.t2,
+            managedMapEnemiesAndParticles.enemies,
+            managedMapEnemiesAndParticles.particles,
         )
     }
 
@@ -120,14 +115,14 @@ class DefaultEngine : Engine {
         previousY: Int,
         map: GameMap,
         collisionAsset: Asset
-    ): Tuple2<Player, GameMap> {
+    ): PlayerMapPair {
         val currentCollisionArea = collisionAsset.bufferedImage.getSubimage(map.x, map.y, 1024, 768)
         var nextPlayer = collision.checkForPlayerCollision(previousX, previousY, player, currentCollisionArea)
         var nextMap = collision.checkForItemCollision(nextPlayer, map, audioQueue)
         val enemyCollisionResult = collision.checkForEnemyCollision(nextPlayer, nextMap, audioQueue, particles, physics)
         nextPlayer = enemyCollisionResult.player
         nextMap = enemyCollisionResult.map
-        return Tuples.of(nextPlayer, nextMap)
+        return PlayerMapPair(nextPlayer, nextMap)
     }
 
     private fun manageMapItems(
@@ -158,13 +153,13 @@ class DefaultEngine : Engine {
         gameMap: GameMap,
         nextX: Int,
         nextY: Int
-    ): Tuple2<ArrayList<MapEnemy>, ArrayList<Particle>> {
+    ): EnemiesParticlesPair {
         val lastX = gameMap.x
         val lastY = gameMap.y
         val yDelta = lastY - nextY
         val xDelta = nextX - lastX
         var mapParticles = gameMap.particles
-        return Tuples.of(gameMap.enemies.map { enemy ->
+        return EnemiesParticlesPair(gameMap.enemies.map { enemy ->
             val nextPosition = enemy.getNextPosition(xDelta, yDelta)
             val itemX = nextPosition.x
             val itemY = nextPosition.y
@@ -210,7 +205,7 @@ class DefaultEngine : Engine {
         }
         val farGroundSubImage = map.farGroundAsset.bufferedImage.getSubimage(farGroundX, map.y, 1024, 768)
         val midGroundSubImage = map.midGroundAsset.bufferedImage.getSubimage(midGroundX, map.y, 1024, 768)
-        val nearFieldSubImag = map.nearFieldAsset.bufferedImage.getSubimage(map.x, map.y, 1024, 768)
+        map.nearFieldAsset.bufferedImage.getSubimage(map.x, map.y, 1024, 768)
         val collisionSubImage = map.collisionAsset.bufferedImage.getSubimage(map.x, map.y, 1024, 768)
         graphics.drawImage(farGroundSubImage, 0, 0, null)
         graphics.drawImage(midGroundSubImage, 0, 0, null)

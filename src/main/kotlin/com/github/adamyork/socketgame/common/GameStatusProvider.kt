@@ -1,6 +1,6 @@
-package com.github.adamyork.socketgame.common;
+package com.github.adamyork.socketgame.common
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Component
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
