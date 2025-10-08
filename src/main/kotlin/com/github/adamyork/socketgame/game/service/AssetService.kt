@@ -29,30 +29,46 @@ class AssetService {
         val LOGGER: Logger = LoggerFactory.getLogger(AssetService::class.java)
     }
 
-    //sprites
-    final val playerAsset: Asset
-    final val mapItem1Asset: Asset
-    final val mapItem2Asset: Asset
-    final val mapEnemy1Asset: Asset
-
     //sounds
     final val soundBytesMap: HashMap<Sounds, ByteArray> = HashMap()
+
+    //player
+    private final val playerWidth: Int
+    private final val playerHeight: Int
+    private final val playerAssetPath: String
 
     //maps
     final val mapUrlMap: HashMap<Int, URL?> = HashMap()
     final val mapAssetMap: HashMap<Int, Asset> = HashMap()
+    private final val mapWidth: Int
+    private final val mapHeight: Int
+    private final val mapBackgroundPath: String
+    private final val mapMiddleGroundPath: String
+    private final val mapForGroundPath: String
+    private final val mapCollisionPath: String
 
     //items
     final val itemUrlMap: HashMap<Int, URL?> = HashMap()
     final val itemPositions: YamlMap
+    private final val mapItemWidth: Int
+    private final val mapItemHeight: Int
+    private final val mapItemAssetOnePath: String
+    private final val mapItemAssetTwoPath: String
 
-    //items
+    //enemies
+    private final val mapEnemyWidth: Int
+    private final val mapEnemyHeight: Int
+    private final val mapEnemyAssetPath: String
     final val enemyUrlMap: HashMap<Int, URL?> = HashMap()
     final val enemyPositions: YamlMap
 
     constructor(
         @Value("\${map.width}") mapWidth: Int,
         @Value("\${map.height}") mapHeight: Int,
+        @Value("\${map.bg}") mapBackgroundPath: String,
+        @Value("\${map.mg}") mapMiddleGroundPath: String,
+        @Value("\${map.fg}") mapForGroundPath: String,
+        @Value("\${map.col}") mapCollisionPath: String,
         @Value("\${player.width}") playerWidth: Int,
         @Value("\${player.height}") playerHeight: Int,
         @Value("\${player.asset.path}") playerAssetPath: String,
@@ -62,40 +78,49 @@ class AssetService {
         @Value("\${map.item.asset.two.path}") mapItemAssetTwoPath: String,
         @Value("\${map.enemy.width}") mapEnemyWidth: Int,
         @Value("\${map.enemy.height}") mapEnemyHeight: Int,
-        @Value("\${map.enemy.asset.path}") mapEnemyAssetPath: String
+        @Value("\${map.enemy.asset.path}") mapEnemyAssetPath: String,
+        @Value("\${audio.player.jump}") audioPlayerJumpPath: String,
+        @Value("\${audio.player.collision}") audioPlayerCollisionPath: String,
+        @Value("\${audio.item.collect}") audioItemCollectPath: String
     ) {
+        this.mapWidth = mapWidth
+        this.mapHeight = mapHeight
+        this.mapBackgroundPath = mapBackgroundPath
+        this.mapMiddleGroundPath = mapMiddleGroundPath
+        this.mapForGroundPath = mapForGroundPath
+        this.mapCollisionPath = mapCollisionPath
+        this.playerWidth = playerWidth
+        this.playerHeight = playerHeight
+        this.playerAssetPath = playerAssetPath
+        this.mapItemWidth = mapItemWidth
+        this.mapItemHeight = mapItemHeight
+        this.mapItemAssetOnePath = mapItemAssetOnePath
+        this.mapItemAssetTwoPath = mapItemAssetTwoPath
+        this.mapEnemyWidth = mapEnemyWidth
+        this.mapEnemyHeight = mapEnemyHeight
+        this.mapEnemyAssetPath = mapEnemyAssetPath
+
         val applicationYamlFile = urlToFile(this::class.java.classLoader.getResource("application.yml"))
         enemyPositions = parseEnemyPositions(applicationYamlFile)
         itemPositions = parseItemPositions(applicationYamlFile)
 
-        playerAsset = Asset(playerAssetPath, playerWidth, playerHeight)
-        mapItem1Asset = Asset(mapItemAssetOnePath, mapItemWidth, mapItemHeight)
-        mapItem2Asset = Asset(mapItemAssetTwoPath, mapItemWidth, mapItemHeight)
-        mapEnemy1Asset = Asset(mapEnemyAssetPath, mapEnemyWidth, mapEnemyHeight)
-
-        val jumpSoundBytes = urlToBytes(this::class.java.classLoader.getResource("static/jump-sound.wav"))
-        val itemCollectSoundBytes = urlToBytes(this::class.java.classLoader.getResource("static/item-collect.wav"))
-        val playerCollisionSoundBytes =
-            urlToBytes(this::class.java.classLoader.getResource("static/player-collision.wav"))
+        val jumpSoundBytes = urlToBytes(this::class.java.classLoader.getResource(audioPlayerJumpPath))
+        val itemCollectSoundBytes = urlToBytes(this::class.java.classLoader.getResource(audioPlayerCollisionPath))
+        val playerCollisionSoundBytes = urlToBytes(this::class.java.classLoader.getResource(audioItemCollectPath))
 
         soundBytesMap[Sounds.JUMP] = jumpSoundBytes
         soundBytesMap[Sounds.ITEM_COLLECT] = itemCollectSoundBytes
         soundBytesMap[Sounds.PLAYER_COLLISION] = playerCollisionSoundBytes
 
-        itemUrlMap[0] = this::class.java.classLoader.getResource(mapItem1Asset.path)
-        itemUrlMap[1] = this::class.java.classLoader.getResource(mapItem2Asset.path)
+        itemUrlMap[0] = this::class.java.classLoader.getResource(mapItemAssetOnePath)
+        itemUrlMap[1] = this::class.java.classLoader.getResource(mapItemAssetTwoPath)
 
-        enemyUrlMap[0] = this::class.java.classLoader.getResource(mapEnemy1Asset.path)
+        enemyUrlMap[0] = this::class.java.classLoader.getResource(mapEnemyAssetPath)
 
-        mapAssetMap[0] = Asset("static/map1-bg-full-comp.png", mapWidth, mapHeight)
-        mapAssetMap[1] = Asset("static/map1-mg-full-comp.png", mapWidth, mapHeight)
-        mapAssetMap[2] = Asset("static/map-1-near-field.png", mapWidth, mapHeight)
-        mapAssetMap[3] = Asset("static/map1-collision.png", mapWidth, mapHeight)
-
-        mapUrlMap[0] = this::class.java.classLoader.getResource(mapAssetMap[0]?.path)
-        mapUrlMap[1] = this::class.java.classLoader.getResource(mapAssetMap[1]?.path)
-        mapUrlMap[2] = this::class.java.classLoader.getResource(mapAssetMap[2]?.path)
-        mapUrlMap[3] = this::class.java.classLoader.getResource(mapAssetMap[3]?.path)
+        mapUrlMap[0] = this::class.java.classLoader.getResource(mapBackgroundPath)
+        mapUrlMap[1] = this::class.java.classLoader.getResource(mapMiddleGroundPath)
+        mapUrlMap[2] = this::class.java.classLoader.getResource(mapForGroundPath)
+        mapUrlMap[3] = this::class.java.classLoader.getResource(mapCollisionPath)
     }
 
     private fun parseEnemyPositions(file: File): YamlMap {
@@ -151,10 +176,10 @@ class AssetService {
 
         return Mono.zip(farGroundMono, midGroundMono, nearFieldMono, collisionMono)
             .map { objects ->
-                mapAssetMap[id]?.bufferedImage = objects.t1
-                mapAssetMap[id + 1]?.bufferedImage = objects.t2
-                mapAssetMap[id + 2]?.bufferedImage = objects.t3
-                mapAssetMap[id + 3]?.bufferedImage = objects.t4
+                mapAssetMap[id] = Asset(mapWidth, mapHeight, objects.t1)
+                mapAssetMap[id + 1] = Asset(mapWidth, mapHeight, objects.t2)
+                mapAssetMap[id + 2] = Asset(mapWidth, mapHeight, objects.t3)
+                mapAssetMap[id + 3] = Asset(mapWidth, mapHeight, objects.t4)
                 GameMap(
                     mapAssetMap[id]!!,
                     mapAssetMap[id + 1]!!,
@@ -178,13 +203,7 @@ class AssetService {
             loadBufferedImageAsync(itemFile)
         }
         return itemMono.map { image ->
-            if (id == 0) {
-                mapItem1Asset.bufferedImage = image
-                mapItem1Asset
-            } else {
-                mapItem2Asset.bufferedImage = image
-                mapItem2Asset
-            }
+            Asset(mapItemWidth, mapItemHeight, image)
         }
     }
 
@@ -195,8 +214,7 @@ class AssetService {
             loadBufferedImageAsync(enemyFile)
         }
         return enemyMono.map { image ->
-            mapEnemy1Asset.bufferedImage = image
-            mapEnemy1Asset
+            Asset(mapEnemyWidth, mapEnemyHeight, image)
         }
     }
 
@@ -219,13 +237,12 @@ class AssetService {
     }
 
     fun loadPlayer(): Mono<Asset> {
-        val playerFile = urlToFile(this::class.java.classLoader.getResource(playerAsset.path))
+        val playerFile = urlToFile(this::class.java.classLoader.getResource(playerAssetPath))
         val playerMono = mono {
             loadBufferedImageAsync(playerFile)
         }
         return playerMono.map { image ->
-            playerAsset.bufferedImage = image
-            playerAsset
+            Asset(playerWidth, playerHeight, image)
         }
     }
 

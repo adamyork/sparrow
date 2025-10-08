@@ -1,44 +1,69 @@
 player:
   asset:
-    path: "static/sparrow-comp.png"
+    path: "game/sparrow-comp.png"
   width: 128
   height: 128
 map:
   width: 2048
   height: 1536
+  bg: "game/map1-bg-full-comp.png"
+  mg: "game/map1-mg-full-comp.png"
+  fg: "game/map-1-near-field.png"
+  col: "game/map1-collision.png"
   item:
     width: 64
     height: 64
     asset:
       one:
-        path: "static/item.png"
+        path: "game/item.png"
       two:
-        path: "static/finish-item.png"
+        path: "game/finish-item.png"
     position:
       0:
+        # noinspection SpringBootApplicationYaml
         x: 400
+        # noinspection SpringBootApplicationYaml
         y: 583
+        # noinspection SpringBootApplicationYaml
         type: "finish"
       1:
+        # noinspection SpringBootApplicationYaml
         x: 600
+        # noinspection SpringBootApplicationYaml
         y: 450
+        # noinspection SpringBootApplicationYaml
         type: "collectable"
       2:
+        # noinspection SpringBootApplicationYaml
         x: 1024
+        # noinspection SpringBootApplicationYaml
         y: 450
+        # noinspection SpringBootApplicationYaml
         type: "collectable"
   enemy:
     width: 128
     height: 128
     asset:
-      path: "static/vacuum.png"
+      path: "game/vacuum.png"
     position:
       0:
+        # noinspection SpringBootApplicationYaml
         x: 400
+        # noinspection SpringBootApplicationYaml
         y: 583
       1:
+        # noinspection SpringBootApplicationYaml
         x: 600
+        # noinspection SpringBootApplicationYaml
         y: 450
       2:
+        # noinspection SpringBootApplicationYaml
         x: 1024
+        # noinspection SpringBootApplicationYaml
         y: 450
+audio:
+  player:
+    jump: "game/jump-sound.wav"
+    collision: "game/player-collision.wav"
+  item:
+    collect: "game/item-collect.wav"
