@@ -16,10 +16,10 @@ import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
 
-class SinglePassEngine : Engine {
+class DefaultEngine : Engine {
 
     companion object {
-        val LOGGER: Logger = LoggerFactory.getLogger(SinglePassEngine::class.java)
+        val LOGGER: Logger = LoggerFactory.getLogger(DefaultEngine::class.java)
     }
 
     val physics: Physics
@@ -44,6 +44,8 @@ class SinglePassEngine : Engine {
         return Player(
             physicsResult.x,
             physicsResult.y,
+            physicsResult.width,
+            physicsResult.height,
             physicsResult.vx,
             physicsResult.vy,
             physicsResult.jumping,
@@ -53,6 +55,8 @@ class SinglePassEngine : Engine {
             physicsResult.direction,
             frameMetadata,
             physicsResult.colliding,
+            physicsResult.scanVerticalCeiling,
+            physicsResult.scanVerticalFloor
         )
     }
 
@@ -210,7 +214,7 @@ class SinglePassEngine : Engine {
         val collisionSubImage = map.collisionAsset.bufferedImage.getSubimage(map.x, map.y, 1024, 768)
         graphics.drawImage(farGroundSubImage, 0, 0, null)
         graphics.drawImage(midGroundSubImage, 0, 0, null)
-        graphics.drawImage(nearFieldSubImag, 0, 0, null)
+        //graphics.drawImage(nearFieldSubImag, 0, 0, null)
         graphics.drawImage(collisionSubImage, 0, 0, null)
         map.items.forEach { item ->
             if (item.type == MapItemType.FINISH) {
@@ -220,7 +224,7 @@ class SinglePassEngine : Engine {
                     item.width,
                     item.height
                 )
-                 graphics.drawImage(finishItemSubImage, item.x, item.y, null)
+                graphics.drawImage(finishItemSubImage, item.x, item.y, null)
             } else {
                 if (item.state != MapItemState.INACTIVE) {
                     val mapItemSubImage = mapItemAsset.bufferedImage.getSubimage(

@@ -12,16 +12,16 @@ class MapEnemy {
         const val MOVEMENT_X_DISTANCE = 10
     }
 
-    var width: Int = 64//TODO Magic Number
-    var height: Int = 64//TODO Magic Number
-    var x: Int = 0
-    var y: Int = 0
-    var originX: Int = 0
-    var originY: Int = 0
+    var width: Int
+    var height: Int
+    var x: Int
+    var y: Int
+    var originX: Int
+    var originY: Int
     var state: MapItemState
     var animatingFrames: HashMap<Int, FrameMetadata> = HashMap()
     var collisionFrames: HashMap<Int, FrameMetadata> = HashMap()
-    var frameMetadata: FrameMetadata = FrameMetadata(1, Cell(1, 1, 128, 128))
+    var frameMetadata: FrameMetadata
     var enemyPosition: EnemyPosition
     var colliding: Boolean
 
@@ -35,6 +35,7 @@ class MapEnemy {
         this.state = state
         this.enemyPosition = EnemyPosition(this.x, this.y, Direction.LEFT)
         this.colliding = false
+        this.frameMetadata = FrameMetadata(1, Cell(1, 1, width, height))
         generateAnimationFrameIndex()
     }
 
@@ -66,13 +67,13 @@ class MapEnemy {
     fun getNextFrameCell(): FrameMetadata {
         if (colliding) {
             if (frameMetadata.frame == ANIMATION_COLLISION_FRAMES) {
-                return collisionFrames[1] ?: FrameMetadata(1, Cell(1, 1, 64, 64))
+                return collisionFrames[1] ?: FrameMetadata(1, Cell(1, 1, width, height))
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                return collisionFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, 64, 64))
+                return collisionFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, width, height))
             }
         }
-        return FrameMetadata(1, Cell(1, 1, 128, 128))
+        return FrameMetadata(1, Cell(1, 1, width, height))
     }
 
     fun getNextPosition(xDelta: Int, yDelta: Int): EnemyPosition {
@@ -100,15 +101,15 @@ class MapEnemy {
     }
 
     private fun generateAnimationFrameIndex() {
-        animatingFrames[1] = FrameMetadata(1, Cell(1, 1, 128, 128))
+        animatingFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
 
-        collisionFrames[1] = FrameMetadata(1, Cell(1, 2, 128, 128))
-        collisionFrames[2] = FrameMetadata(2, Cell(1, 2, 128, 128))
-        collisionFrames[3] = FrameMetadata(3, Cell(1, 1, 128, 128))
-        collisionFrames[4] = FrameMetadata(4, Cell(1, 1, 128, 128))
-        collisionFrames[5] = FrameMetadata(5, Cell(1, 2, 128, 128))
-        collisionFrames[6] = FrameMetadata(6, Cell(1, 2, 128, 128))
-        collisionFrames[7] = FrameMetadata(7, Cell(1, 1, 128, 128))
-        collisionFrames[8] = FrameMetadata(8, Cell(1, 1, 128, 128))
+        collisionFrames[1] = FrameMetadata(1, Cell(1, 2, width, height))
+        collisionFrames[2] = FrameMetadata(2, Cell(1, 2, width, height))
+        collisionFrames[3] = FrameMetadata(3, Cell(1, 1, width, height))
+        collisionFrames[4] = FrameMetadata(4, Cell(1, 1, width, height))
+        collisionFrames[5] = FrameMetadata(5, Cell(1, 2, width, height))
+        collisionFrames[6] = FrameMetadata(6, Cell(1, 2, width, height))
+        collisionFrames[7] = FrameMetadata(7, Cell(1, 1, width, height))
+        collisionFrames[8] = FrameMetadata(8, Cell(1, 1, width, height))
     }
 }

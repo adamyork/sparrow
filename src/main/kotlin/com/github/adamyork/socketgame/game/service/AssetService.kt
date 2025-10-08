@@ -5,8 +5,14 @@ import com.github.adamyork.socketgame.game.Game
 import com.github.adamyork.socketgame.game.data.GameMap
 import com.github.adamyork.socketgame.game.service.data.Asset
 import kotlinx.coroutines.reactor.mono
+import net.mamoe.yamlkt.YamlMap
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
+import reactor.util.function.Tuple3
+import reactor.util.function.Tuples
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.FileInputStream
@@ -19,11 +25,15 @@ import javax.imageio.ImageIO
 @Service
 class AssetService {
 
+    companion object {
+        val LOGGER: Logger = LoggerFactory.getLogger(AssetService::class.java)
+    }
+
     //sprites
-    final val playerAsset: Asset = Asset("static/rabbit.png", 64, 64)
-    final val mapItem1Asset: Asset = Asset("static/item.png", 64, 64)
-    final val mapItem2Asset: Asset = Asset("static/finish-item.png", 64, 64)
-    final val mapEnemy1Asset: Asset = Asset("static/vacuum.png", 128, 128)
+    final val playerAsset: Asset
+    final val mapItem1Asset: Asset
+    final val mapItem2Asset: Asset
+    final val mapEnemy1Asset: Asset
 
     //sounds
     final val soundBytesMap: HashMap<Sounds, ByteArray> = HashMap()
@@ -34,11 +44,35 @@ class AssetService {
 
     //items
     final val itemUrlMap: HashMap<Int, URL?> = HashMap()
+    final val itemPositions: YamlMap
 
     //items
     final val enemyUrlMap: HashMap<Int, URL?> = HashMap()
+    final val enemyPositions: YamlMap
 
-    constructor() {
+    constructor(
+        @Value("\${map.width}") mapWidth: Int,
+        @Value("\${map.height}") mapHeight: Int,
+        @Value("\${player.width}") playerWidth: Int,
+        @Value("\${player.height}") playerHeight: Int,
+        @Value("\${player.asset.path}") playerAssetPath: String,
+        @Value("\${map.item.width}") mapItemWidth: Int,
+        @Value("\${map.item.height}") mapItemHeight: Int,
+        @Value("\${map.item.asset.one.path}") mapItemAssetOnePath: String,
+        @Value("\${map.item.asset.two.path}") mapItemAssetTwoPath: String,
+        @Value("\${map.enemy.width}") mapEnemyWidth: Int,
+        @Value("\${map.enemy.height}") mapEnemyHeight: Int,
+        @Value("\${map.enemy.asset.path}") mapEnemyAssetPath: String
+    ) {
+        val applicationYamlFile = urlToFile(this::class.java.classLoader.getResource("application.yml"))
+        enemyPositions = parseEnemyPositions(applicationYamlFile)
+        itemPositions = parseItemPositions(applicationYamlFile)
+
+        playerAsset = Asset(playerAssetPath, playerWidth, playerHeight)
+        mapItem1Asset = Asset(mapItemAssetOnePath, mapItemWidth, mapItemHeight)
+        mapItem2Asset = Asset(mapItemAssetTwoPath, mapItemWidth, mapItemHeight)
+        mapEnemy1Asset = Asset(mapEnemyAssetPath, mapEnemyWidth, mapEnemyHeight)
+
         val jumpSoundBytes = urlToBytes(this::class.java.classLoader.getResource("static/jump-sound.wav"))
         val itemCollectSoundBytes = urlToBytes(this::class.java.classLoader.getResource("static/item-collect.wav"))
         val playerCollisionSoundBytes =
@@ -53,15 +87,31 @@ class AssetService {
 
         enemyUrlMap[0] = this::class.java.classLoader.getResource(mapEnemy1Asset.path)
 
-        mapAssetMap[0] = Asset("static/map-1-far-ground.png", 2048, 1536)
-        mapAssetMap[1] = Asset("static/map-1-mid-ground.png", 2048, 1536)
-        mapAssetMap[2] = Asset("static/map-1-near-field.png", 2048, 1536)
-        mapAssetMap[3] = Asset("static/map-1-collision.png", 2048, 1536)
+        mapAssetMap[0] = Asset("static/map1-bg-full-comp.png", mapWidth, mapHeight)
+        mapAssetMap[1] = Asset("static/map1-mg-full-comp.png", mapWidth, mapHeight)
+        mapAssetMap[2] = Asset("static/map-1-near-field.png", mapWidth, mapHeight)
+        mapAssetMap[3] = Asset("static/map1-collision.png", mapWidth, mapHeight)
 
         mapUrlMap[0] = this::class.java.classLoader.getResource(mapAssetMap[0]?.path)
         mapUrlMap[1] = this::class.java.classLoader.getResource(mapAssetMap[1]?.path)
         mapUrlMap[2] = this::class.java.classLoader.getResource(mapAssetMap[2]?.path)
         mapUrlMap[3] = this::class.java.classLoader.getResource(mapAssetMap[3]?.path)
+    }
+
+    private fun parseEnemyPositions(file: File): YamlMap {
+        val yamlDefault = net.mamoe.yamlkt.Yaml.Default
+        val properties = yamlDefault.decodeFromString(YamlMap.serializer(), file.readText())
+        val map = properties["map"] as YamlMap
+        val enemy = map["enemy"] as YamlMap
+        return enemy["position"] as YamlMap
+    }
+
+    private fun parseItemPositions(file: File): YamlMap {
+        val yamlDefault = net.mamoe.yamlkt.Yaml.Default
+        val properties = yamlDefault.decodeFromString(YamlMap.serializer(), file.readText())
+        val map = properties["map"] as YamlMap
+        val item = map["item"] as YamlMap
+        return item["position"] as YamlMap
     }
 
     suspend fun loadBufferedImageAsync(file: File): BufferedImage {
@@ -76,15 +126,27 @@ class AssetService {
 
         val farGroundMono = mono {
             loadBufferedImageAsync(farGroundFile)
+        }.onErrorMap {
+            LOGGER.error("cant load the far ground image")
+            RuntimeException("cant load an image")
         }
         val midGroundMono = mono {
             loadBufferedImageAsync(midGroundFile)
+        }.onErrorMap {
+            LOGGER.error("cant load the mid ground image")
+            RuntimeException("cant load an image")
         }
         val nearFieldMono = mono {
             loadBufferedImageAsync(nearFieldFile)
+        }.onErrorMap {
+            LOGGER.error("cant load the near field image")
+            RuntimeException("cant load an image")
         }
         val collisionMono = mono {
             loadBufferedImageAsync(collisionFile)
+        }.onErrorMap {
+            LOGGER.error("cant load the collision image")
+            RuntimeException("cant load an image")
         }
 
         return Mono.zip(farGroundMono, midGroundMono, nearFieldMono, collisionMono)
@@ -107,7 +169,6 @@ class AssetService {
                     ArrayList()
                 )
             }
-
     }
 
     fun loadItem(id: Int): Mono<Asset> {
@@ -137,6 +198,24 @@ class AssetService {
             mapEnemy1Asset.bufferedImage = image
             mapEnemy1Asset
         }
+    }
+
+    fun getTotalEnemies(): Int {
+        return enemyPositions.keys.size
+    }
+
+    fun getEnemyPosition(id: Int): Pair<Int, Int> {
+        val item: YamlMap = enemyPositions[id.toString()] as YamlMap
+        return Pair(item.getInt("x"), item.getInt("y"))
+    }
+
+    fun getTotalItems(): Int {
+        return itemPositions.keys.size
+    }
+
+    fun getItemPosition(id: Int): Tuple3<Int, Int, String> {
+        val item: YamlMap = itemPositions[id.toString()] as YamlMap
+        return Tuples.of(item.getInt("x"), item.getInt("y"), item.getString("type"))
     }
 
     fun loadPlayer(): Mono<Asset> {

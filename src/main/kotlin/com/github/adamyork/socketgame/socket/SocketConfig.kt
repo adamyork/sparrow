@@ -5,7 +5,6 @@ import com.github.adamyork.socketgame.common.GameStatusProvider
 import com.github.adamyork.socketgame.game.engine.Engine
 import com.github.adamyork.socketgame.game.service.AssetService
 import com.github.adamyork.socketgame.game.service.ScoreService
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
@@ -25,7 +24,6 @@ class SocketConfig {
     @Bean
     fun handlerMapping(
         assetService: AssetService,
-        @Qualifier("singlePassEngine")
         engine: Engine,
         scoreService: ScoreService,
         audioQueue: AudioQueue,

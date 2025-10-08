@@ -28,6 +28,8 @@ class Collision {
         return Player(
             adjustedPlayerXResult.x,
             adjustedPlayerYResult.y,
+            player.width,
+            player.height,
             adjustedPlayerXResult.vx,
             adjustedPlayerYResult.vy,
             adjustedPlayerYResult.jumping,
@@ -36,11 +38,12 @@ class Collision {
             adjustedPlayerXResult.moving,
             player.direction,
             player.frameMetadata,
+            false,
+            adjustedPlayerYResult.scanVerticalCeiling,
             false
         )
     }
 
-    @Suppress("DuplicatedCode")
     fun checkForItemCollision(
         player: Player,
         gameMap: GameMap,
@@ -137,6 +140,8 @@ class Collision {
             Player(
                 nextX,
                 player.y,
+                player.width,
+                player.height,
                 nextVx,
                 player.vy,
                 player.jumping,
@@ -145,7 +150,9 @@ class Collision {
                 player.moving,
                 player.direction,
                 player.frameMetadata,
-                playerIsColliding
+                playerIsColliding,
+                player.scanVerticalCeiling,
+                player.scanVerticalFloor,
             ), GameMap(
                 gameMap.farGroundAsset,
                 gameMap.midGroundAsset,
@@ -171,7 +178,12 @@ class Collision {
         val boundedX = player.x.coerceAtMost(collisionImage.width - player.width)
         val scanHeight = abs(player.jumpY - previousY)
         if (player.jumpY < 0) {
-            return PhysicsYResult(player.y, player.vy, player.jumping, player.jumpY, player.jumpReached)
+            return PhysicsYResult(player.y, player.vy, player.jumping, player.jumpY, player.jumpReached, false, false)
+        }
+        if (player.scanVerticalCeiling) {
+            LOGGER.info("potentially moved through a ceiling")
+            val ceiling = findCeiling(boundedX, previousY + player.height, player.width, collisionImage)
+            return PhysicsYResult(ceiling, 0.0, false, 0, false, false, false)
         }
         if (player.jumping && !player.jumpReached && player.y > player.jumpY) {
             LOGGER.info("player is jumping and rising")
@@ -184,14 +196,27 @@ class Collision {
             )
             if (playerWillCollide) {
                 LOGGER.info("player is jumping a needs to check for ceiling")
-                val ceiling = findCeiling(boundedX, previousY, collisionImage)
-                return PhysicsYResult(ceiling, 0.0, false, 0, false)
+                val ceiling = findCeiling(boundedX, previousY, player.width, collisionImage)
+                return PhysicsYResult(ceiling, 0.0, false, 0, false, false, false)
             } else {
                 LOGGER.info("player is jumping and will not collide")
-                return PhysicsYResult(player.y, player.vy, player.jumping, player.jumpY, player.jumpReached)
+                return PhysicsYResult(
+                    player.y,
+                    player.vy,
+                    player.jumping,
+                    player.jumpY,
+                    player.jumpReached,
+                    false,
+                    false
+                )
             }
         }
-        val floor = findFloor(player.x, previousY + player.height, player.height, collisionImage)
+        if (player.scanVerticalFloor) {
+            LOGGER.info("potentially moved through a floor")
+            val floor = findFloor(boundedX, previousY - player.height, player.height, player.width, collisionImage)
+            return PhysicsYResult(floor, 0.0, false, 0, false, false, false)
+        }
+        val floor = findFloor(player.x, previousY + player.height, player.height, player.width, collisionImage)
         if (player.y < floor) {
             LOGGER.info("Player is falling")
             val playerYIsClipping = testForColorCollision(
@@ -203,10 +228,10 @@ class Collision {
             )
             if (playerYIsClipping) {
                 LOGGER.info("Player is clipping above")
-                val newCeiling = findCeilingDescending(player.x, player.y, collisionImage)
-                return PhysicsYResult(newCeiling, 0.0, false, 0, false)
+                val newCeiling = findCeilingDescending(player.x, player.y, player.width, collisionImage)
+                return PhysicsYResult(newCeiling, 0.0, false, 0, false, false, false)
             }
-            return PhysicsYResult(player.y, player.vy, player.jumping, player.jumpY, player.jumpReached)
+            return PhysicsYResult(player.y, player.vy, player.jumping, player.jumpY, player.jumpReached, false, false)
         }
         val playerYIsClipping = testForColorCollision(
             previousX,
@@ -217,49 +242,65 @@ class Collision {
         )
         if (playerYIsClipping) {
             LOGGER.info("Player is clipping below")
-            val newFloor = findFloorAscending(boundedX, previousY, player.width, collisionImage)
-            return PhysicsYResult(newFloor, 0.0, false, 0, false)
+            val newFloor = findFloorAscending(boundedX, previousY, player.width, player.height, collisionImage)
+            return PhysicsYResult(newFloor, 0.0, false, 0, false, false, false)
         }
-        return PhysicsYResult(floor, 0.0, false, 0, false)
+        return PhysicsYResult(floor, 0.0, false, 0, false, false, false)
     }
 
 
-    private fun findFloor(x: Int, startY: Int, playerHeight: Int, collisionImage: BufferedImage): Int {
+    private fun findFloor(
+        x: Int,
+        startY: Int,
+        playerHeight: Int,
+        playerWidth: Int,
+        collisionImage: BufferedImage
+    ): Int {
         if (startY >= collisionImage.height) {
             return collisionImage.height - playerHeight
         }
-        return if (testForColorCollision(x, startY, 64, 1, collisionImage)) {
+        return if (testForColorCollision(x, startY, playerWidth, 1, collisionImage)) {
             //LOGGER.debug("Floor found descending${startY - playerHeight}")
             startY - playerHeight
         } else {
-            findFloor(x, startY + 1, playerHeight, collisionImage)
+            findFloor(x, startY + 1, playerHeight, playerWidth, collisionImage)
         }
     }
 
-    private fun findCeiling(x: Int, startY: Int, collisionImage: BufferedImage): Int {
-        return if (testForColorCollision(x, startY, 64, 1, collisionImage)) {
+    private fun findCeiling(x: Int, startY: Int, playerWidth: Int, collisionImage: BufferedImage): Int {
+        if (startY <= 0) {
+            LOGGER.info("Ceiling found ascending 0")
+            return 0
+        }
+        return if (testForColorCollision(x, startY, playerWidth, 1, collisionImage)) {
             LOGGER.info("Ceiling found ascending ${startY + 1}")
             startY + 1
         } else {
-            findCeiling(x, startY - 1, collisionImage)
+            findCeiling(x, startY - 1, playerWidth, collisionImage)
         }
     }
 
-    private fun findCeilingDescending(x: Int, startY: Int, collisionImage: BufferedImage): Int {
-        return if (!testForColorCollision(x, startY, 64, 1, collisionImage)) {
+    private fun findCeilingDescending(x: Int, startY: Int, playerWidth: Int, collisionImage: BufferedImage): Int {
+        return if (!testForColorCollision(x, startY, playerWidth, 1, collisionImage)) {
             LOGGER.info("Ceiling found descending ${startY - 1}")
             startY - 1
         } else {
-            findCeilingDescending(x, startY + 1, collisionImage)
+            findCeilingDescending(x, startY + 1, playerWidth, collisionImage)
         }
     }
 
-    private fun findFloorAscending(x: Int, startY: Int, playerWidth: Int, collisionImage: BufferedImage): Int {
+    private fun findFloorAscending(
+        x: Int,
+        startY: Int,
+        playerWidth: Int,
+        playerHeight: Int,
+        collisionImage: BufferedImage
+    ): Int {
         return if (!testForColorCollision(x, startY, playerWidth, 1, collisionImage)) {
             LOGGER.info("Floor found ascending ${startY - playerWidth}")
-            startY - 64
+            startY - playerHeight
         } else {
-            findFloorAscending(x, startY - 1, playerWidth, collisionImage)
+            findFloorAscending(x, startY - 1, playerWidth, playerHeight, collisionImage)
         }
     }
 
@@ -288,7 +329,8 @@ class Collision {
         )
         if (playerWillCollide) {
             LOGGER.info("Player will horizontally collide ")
-            val edge = findEdge(startX, playerY, player.width, player.vx, player.direction, collisionImage)
+            val edge =
+                findEdge(startX, playerY, player.width, player.height, player.vx, player.direction, collisionImage)
             return PhysicsXResult(edge, 0.0, player.moving)
         }
         return PhysicsXResult(player.x, player.vx, player.moving)
@@ -298,11 +340,12 @@ class Collision {
         startX: Int,
         y: Int,
         playerWidth: Int,
+        playerHeight: Int,
         playerVx: Double,
         playerDirection: Direction,
         collisionImage: BufferedImage
     ): Int {
-        return if (testForColorCollision(startX, y, 1, 64, collisionImage)) {
+        return if (testForColorCollision(startX, y, 1, playerHeight, collisionImage)) {
             if (playerDirection == Direction.RIGHT) {
                 LOGGER.info("endFound player.x : startX - playerWidth - 1 ${startX - playerWidth - 1}")
                 startX - playerWidth - 1 - playerVx.toInt()
@@ -312,9 +355,9 @@ class Collision {
             }
         } else {
             if (playerDirection == Direction.RIGHT) {
-                findEdge(startX + 1, y, playerWidth, playerVx, playerDirection, collisionImage)
+                findEdge(startX + 1, y, playerWidth, playerHeight, playerVx, playerDirection, collisionImage)
             } else {
-                findEdge(startX - 1, y, playerWidth, playerVx, playerDirection, collisionImage)
+                findEdge(startX - 1, y, playerWidth, playerHeight, playerVx, playerDirection, collisionImage)
             }
         }
     }
@@ -322,7 +365,7 @@ class Collision {
     private fun testForColorCollision(x: Int, y: Int, width: Int, height: Int, collisionImage: BufferedImage): Boolean {
         try {
             val collisionBitMap =
-                collisionImage.getRGB(x, y, width, height, null, 0, 64)
+                collisionImage.getRGB(x, y, width, height, null, 0, width)
             return collisionBitMap.contains(COLLISION_COLOR_VALUE)
         } catch (ex: Exception) {
             LOGGER.info("ArrayIndexOutOfBoundsException x $x y:$y width:$width height:$height $ex")

@@ -14,7 +14,7 @@ import reactor.core.scheduler.Schedulers
 class GameAudioHandler : WebSocketHandler {
 
     companion object {
-        val LOGGER: Logger = LoggerFactory.getLogger(InputAudioHandler::class.java)
+        val LOGGER: Logger = LoggerFactory.getLogger(GameAudioHandler::class.java)
     }
 
     val assetService: AssetService

@@ -1,0 +1,44 @@
+player:
+  asset:
+    path: "static/sparrow-comp.png"
+  width: 128
+  height: 128
+map:
+  width: 2048
+  height: 1536
+  item:
+    width: 64
+    height: 64
+    asset:
+      one:
+        path: "static/item.png"
+      two:
+        path: "static/finish-item.png"
+    position:
+      0:
+        x: 400
+        y: 583
+        type: "finish"
+      1:
+        x: 600
+        y: 450
+        type: "collectable"
+      2:
+        x: 1024
+        y: 450
+        type: "collectable"
+  enemy:
+    width: 128
+    height: 128
+    asset:
+      path: "static/vacuum.png"
+    position:
+      0:
+        x: 400
+        y: 583
+      1:
+        x: 600
+        y: 450
+      2:
+        x: 1024
+        y: 450

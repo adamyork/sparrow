@@ -68,18 +68,18 @@ class Game {
             assetService.loadItem(1),
             assetService.loadEnemy(0)
         ).map { objects ->
-            player = Player(400, 100)
             gameMap = objects.t1
             playerAsset = objects.t2
             mapItemAsset = objects.t3
             finishItemAsset = objects.t4
             mapEnemyAsset = objects.t5
-            gameMap.generateMapItems()
-            gameMap.generateMapEnemies()
+            player = Player(400, 100, playerAsset.width, playerAsset.height)
+            gameMap.generateMapItems(mapItemAsset, finishItemAsset, assetService)
+            gameMap.generateMapEnemies(mapEnemyAsset, assetService)
             isInitialized = true
             LOGGER.info("assets Loaded")
             true
-        }
+        }.onErrorReturn(false)
     }
 
     @OptIn(ExperimentalAtomicApi::class)

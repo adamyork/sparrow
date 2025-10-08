@@ -16,18 +16,17 @@ import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-class CollisionAgnosticPhysics : Physics {
+class DefaultPhysics : Physics {
 
     companion object {
-        val LOGGER: Logger = LoggerFactory.getLogger(CollisionAgnosticPhysics::class.java)
+        val LOGGER: Logger = LoggerFactory.getLogger(DefaultPhysics::class.java)
         const val GRAVITY: Double = 20.0
         const val FRICTION: Double = 0.1
-        const val X_EASING_COEFFICIENT: Double = 1.0
+        const val X_EASING_COEFFICIENT: Double = 1.5
         const val Y_EASING_COEFFICIENT: Double = 0.1
         const val VELOCITY_COEFFICIENT: Double = 0.5
     }
 
-    @Suppress("DuplicatedCode")
     override fun applyPlayerPhysics(
         player: Player,
         gameMap: GameMap,
@@ -53,6 +52,8 @@ class CollisionAgnosticPhysics : Physics {
         return Player(
             xResult.x,
             yResult.y,
+            player.width,
+            player.height,
             xResult.vx,
             yResult.vy,
             yResult.jumping,
@@ -62,10 +63,11 @@ class CollisionAgnosticPhysics : Physics {
             player.direction,
             player.frameMetadata,
             player.colliding,
+            yResult.scanVerticalCeiling,
+            yResult.scanVerticalFloor
         )
     }
 
-    @Suppress("DuplicatedCode")
     private fun getXVelocity(playerVx: Double, playerMoving: Boolean): Double {
         var nextVx: Double = playerVx
         if (playerMoving) {
@@ -90,7 +92,6 @@ class CollisionAgnosticPhysics : Physics {
         return nextVx
     }
 
-    @Suppress("DuplicatedCode")
     private fun getYVelocity(playerY: Int, playerJumpY: Int, playerVy: Double, playerJumping: Boolean): Double {
         var nextVy: Double = playerVy
         if (playerJumping) {
@@ -144,13 +145,16 @@ class CollisionAgnosticPhysics : Physics {
         var destinationY = playerY + GRAVITY.roundToInt()
         var jumpY = playerJumpY
         var jumpReached = playerJumpReached
+        var scanVerticalCeiling = false
+        var scanVerticalFloor = false
         if (playerJumping) {
             if (jumpY == 0 && !jumpReached) {
                 LOGGER.info("starting a jump")
                 jumpY = destinationY - Player.JUMP_DISTANCE
                 destinationY -= vy.roundToInt()
                 if (destinationY < 0) {
-                    LOGGER.info("the jump destination is beyond the top of the viewport")
+                    scanVerticalCeiling = true
+                    LOGGER.info("the initial jump destination is beyond the top of the viewport")
                     destinationY = 0
                     jumpY = 0
                     jumpReached = true
@@ -158,6 +162,8 @@ class CollisionAgnosticPhysics : Physics {
             } else if (destinationY > jumpY && !jumpReached) {
                 destinationY -= vy.roundToInt()
                 if (destinationY <= 0) {
+                    scanVerticalCeiling = true
+                    LOGGER.info("the current jump destination is beyond the top of the viewport")
                     destinationY = 0
                     jumpY = 0
                     jumpReached = true
@@ -169,12 +175,21 @@ class CollisionAgnosticPhysics : Physics {
             }
         }
         if (destinationY > Game.VIEWPORT_HEIGHT - playerHeight) {
+            scanVerticalFloor = true
+            LOGGER.info("the destinationY is beyond the bottom of the viewport")
             destinationY = Game.VIEWPORT_HEIGHT - playerHeight
         }
-        return PhysicsYResult(destinationY, vy, playerJumping, jumpY, jumpReached)
+        return PhysicsYResult(
+            destinationY,
+            vy,
+            playerJumping,
+            jumpY,
+            jumpReached,
+            scanVerticalCeiling,
+            scanVerticalFloor
+        )
     }
 
-    @Suppress("DuplicatedCode")
     override fun applyParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle> {
         return mapParticles.map { particle ->
             val nextFrame = particle.frame + 1

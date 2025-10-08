@@ -14,6 +14,7 @@ import org.springframework.web.reactive.socket.WebSocketSession
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.system.exitProcess
 
 
 class GameHandler : WebSocketHandler {
@@ -57,17 +58,17 @@ class GameHandler : WebSocketHandler {
                 val payloadAsText = message.payloadAsText
                 when (payloadAsText) {
                     INPUT_START -> {
-                        LOGGER.info("Game started")
+                        LOGGER.info("game started")
                         game = Game(session, assetService, engine, scoreService, gameStatusProvider)
                     }
 
                     INPUT_PAUSE -> {
-                        LOGGER.info("Game paused")
+                        LOGGER.info("game paused")
                         gameStatusProvider.running.store(false)
                     }
 
                     INPUT_RESUME -> {
-                        LOGGER.info("Game resumed")
+                        LOGGER.info("game resumed")
                         gameStatusProvider.running.store(true)
                     }
 
@@ -96,15 +97,23 @@ class GameHandler : WebSocketHandler {
             }
             .flatMap { message ->
                 if (!game.isInitialized) {
-                    game.init().flatMap {
-                        gameStatusProvider.running.store(true)
-                        game.start().map { _ ->
-                            message
+                    game.init().flatMap { initialized ->
+                        if (initialized) {
+                            gameStatusProvider.running.store(true)
+                            game.start().map { _ ->
+                                message
+                            }
+                        } else {
+                            LOGGER.error("Game not initialized")
+                            Mono.error(RuntimeException("Game cannot be initialized"))
                         }
                     }
                 } else {
                     Mono.just(message)
                 }
+            }
+            .doOnError { _ ->
+                exitProcess(0)
             }
         return session.send(map)
     }

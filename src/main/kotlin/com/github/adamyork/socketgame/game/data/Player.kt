@@ -3,9 +3,9 @@ package com.github.adamyork.socketgame.game.data
 class Player {
 
     companion object {
-        const val MAX_X_VELOCITY: Double = 16.0
+        const val MAX_X_VELOCITY: Double = 24.0
         const val MAX_Y_VELOCITY: Double = 64.0
-        const val JUMP_DISTANCE: Int = 256
+        const val JUMP_DISTANCE: Int = 192
         const val ANIMATION_MOVING_FRAMES = 2
         const val ANIMATION_JUMPING_FRAMES = 3
         const val ANIMATION_COLLISION_FRAMES = 8
@@ -15,29 +15,46 @@ class Player {
     var jumpingFrames: HashMap<Int, FrameMetadata> = HashMap()
     var collisionFrames: HashMap<Int, FrameMetadata> = HashMap()
 
-    val width: Int = 64//TODO Magic Number
-    val height: Int = 64//TODO Magic Number
-    var x: Int = 0
-    var y: Int = 0
-    var vx: Double = 0.0
-    var vy: Double = 0.0
-    var jumping: Boolean = false
-    var jumpY: Int = 0
-    var jumpReached: Boolean = false
-    var moving: Boolean = false
-    var direction: Direction = Direction.RIGHT
-    var frameMetadata: FrameMetadata = FrameMetadata(1, Cell(1, 1, 64, 64))
-    var colliding: Boolean = false
+    var width: Int
+    var height: Int
+    var x: Int
+    var y: Int
+    var vx: Double
+    var vy: Double
+    var jumping: Boolean
+    var jumpY: Int
+    var jumpReached: Boolean
+    var moving: Boolean
+    var direction: Direction
+    var frameMetadata: FrameMetadata
+    var colliding: Boolean
+    var scanVerticalCeiling: Boolean
+    var scanVerticalFloor: Boolean
 
-    constructor(xPos: Int, yPos: Int) {
+    constructor(xPos: Int, yPos: Int, width: Int, height: Int) {
         this.x = xPos
         this.y = yPos
+        this.width = width
+        this.height = height
+        this.vx = 0.0
+        this.vy = 0.0
+        this.jumping = false
+        this.jumpY = 0
+        this.jumpReached = false
+        this.moving = false
+        this.direction = Direction.RIGHT
+        this.frameMetadata = FrameMetadata(1, Cell(1, 1, width, height))
+        this.colliding = false
+        this.scanVerticalCeiling = false
+        this.scanVerticalFloor = false
         generateAnimationFrameIndex()
     }
 
     constructor(
         x: Int,
         y: Int,
+        width: Int,
+        height: Int,
         vx: Double,
         vy: Double,
         jumping: Boolean,
@@ -46,10 +63,14 @@ class Player {
         moving: Boolean,
         direction: Direction,
         frame: FrameMetadata,
-        colliding: Boolean
+        colliding: Boolean,
+        scanVerticalCeiling: Boolean,
+        scanVerticalFloor: Boolean,
     ) {
         this.x = x
         this.y = y
+        this.width = width
+        this.height = height
         this.vx = vx
         this.vy = vy
         this.jumping = jumping
@@ -59,6 +80,8 @@ class Player {
         this.direction = direction
         this.frameMetadata = frame
         this.colliding = colliding
+        this.scanVerticalCeiling = scanVerticalCeiling
+        this.scanVerticalFloor = scanVerticalFloor
         generateAnimationFrameIndex()
     }
 
@@ -71,48 +94,48 @@ class Player {
     fun getNextFrameCell(): FrameMetadata {
         if (colliding) {
             if (frameMetadata.frame == ANIMATION_COLLISION_FRAMES) {
-                return collisionFrames.get(1) ?: FrameMetadata(1, Cell(1, 1, 64, 64))
+                return collisionFrames.get(1) ?: FrameMetadata(1, Cell(1, 1, width, height))
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                return collisionFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, 64, 64))
+                return collisionFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, width, height))
             }
         }
         if (jumping && !jumpReached) {
             if (frameMetadata.frame == ANIMATION_JUMPING_FRAMES) {
-                return jumpingFrames.get(1) ?: FrameMetadata(1, Cell(1, 1, 64, 64))
+                return jumpingFrames.get(1) ?: FrameMetadata(1, Cell(1, 1, width, height))
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                return jumpingFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, 64, 64))
+                return jumpingFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, width, height))
             }
         } else if (jumping) {
-            return jumpingFrames.get(4) ?: FrameMetadata(1, Cell(1, 1, 64, 64))
+            return jumpingFrames.get(4) ?: FrameMetadata(1, Cell(1, 1, width, height))
         }
         if (moving) {
             if (frameMetadata.frame == ANIMATION_MOVING_FRAMES) {
-                return movingFrames.get(1) ?: FrameMetadata(1, Cell(1, 1, 64, 64))
+                return movingFrames.get(1) ?: FrameMetadata(1, Cell(1, 1, width, height))
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                return movingFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, 64, 64))
+                return movingFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, width, height))
             }
         }
-        return FrameMetadata(1, Cell(1, 1, 64, 64))
+        return FrameMetadata(1, Cell(1, 1, width, height))
     }
 
     private fun generateAnimationFrameIndex() {
-        movingFrames[1] = FrameMetadata(1, Cell(1, 1, 64, 64))
-        movingFrames[2] = FrameMetadata(2, Cell(1, 2, 64, 64))
+        movingFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
+        movingFrames[2] = FrameMetadata(2, Cell(1, 2, width, height))
 
-        jumpingFrames[1] = FrameMetadata(1, Cell(1, 1, 64, 64))
-        jumpingFrames[2] = FrameMetadata(2, Cell(1, 2, 64, 64))
-        jumpingFrames[3] = FrameMetadata(3, Cell(1, 3, 64, 64))
+        jumpingFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
+        jumpingFrames[2] = FrameMetadata(2, Cell(1, 2, width, height))
+        jumpingFrames[3] = FrameMetadata(3, Cell(1, 3, width, height))
 
-        collisionFrames[1] = FrameMetadata(1, Cell(1, 4, 64, 64))
-        collisionFrames[2] = FrameMetadata(2, Cell(1, 4, 64, 64))
-        collisionFrames[3] = FrameMetadata(3, Cell(1, 3, 64, 64))
-        collisionFrames[4] = FrameMetadata(4, Cell(1, 3, 64, 64))
-        collisionFrames[5] = FrameMetadata(5, Cell(1, 4, 64, 64))
-        collisionFrames[6] = FrameMetadata(6, Cell(1, 4, 64, 64))
-        collisionFrames[7] = FrameMetadata(7, Cell(1, 3, 64, 64))
-        collisionFrames[8] = FrameMetadata(8, Cell(1, 3, 64, 64))
+        collisionFrames[1] = FrameMetadata(1, Cell(1, 4, width, height))
+        collisionFrames[2] = FrameMetadata(2, Cell(1, 4, width, height))
+        collisionFrames[3] = FrameMetadata(3, Cell(1, 3, width, height))
+        collisionFrames[4] = FrameMetadata(4, Cell(1, 3, width, height))
+        collisionFrames[5] = FrameMetadata(5, Cell(1, 4, width, height))
+        collisionFrames[6] = FrameMetadata(6, Cell(1, 4, width, height))
+        collisionFrames[7] = FrameMetadata(7, Cell(1, 3, width, height))
+        collisionFrames[8] = FrameMetadata(8, Cell(1, 3, width, height))
     }
 }

@@ -25,7 +25,7 @@ class ScoreHandler {
     }
 
     fun getScore(request: ServerRequest): Mono<ServerResponse> {
-        LOGGER.info("Request for ${request.requestPath()} received")
+        LOGGER.info("request for ${request.requestPath()} received")
         return ok().bodyValue(Score(scoreService.getTotal(), scoreService.getRemaining()))
     }
 

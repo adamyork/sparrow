@@ -1,6 +1,7 @@
 package com.github.adamyork.socketgame.game.data
 
 import com.github.adamyork.socketgame.game.engine.data.Particle
+import com.github.adamyork.socketgame.game.service.AssetService
 import com.github.adamyork.socketgame.game.service.data.Asset
 
 class GameMap {
@@ -50,17 +51,47 @@ class GameMap {
         this.particles = particles
     }
 
-    fun generateMapItems() {
-        //items.add(MapItem(64, 64, 400, 583, MapItemType.COLLECTABLE, MapItemState.ACTIVE))
-        items.add(MapItem(64, 64, 400, 583, MapItemType.FINISH, MapItemState.ACTIVE))
-        items.add(MapItem(64, 64, 600, 450, MapItemType.COLLECTABLE, MapItemState.ACTIVE))
-        items.add(MapItem(64, 64, 1024, 450, MapItemType.COLLECTABLE, MapItemState.ACTIVE))
-        //items.add(MapItem(64, 64, 650, 300, MapItemType.FINISH, MapItemState.ACTIVE))
+    fun generateMapItems(collectibleItemAsset: Asset, finishItemAsset: Asset, assetService: AssetService) {
+        for (i in 0..<assetService.getTotalItems()) {
+            val itemType = MapItemType.from(assetService.getItemPosition(i).t3)
+            if (itemType == MapItemType.FINISH) {
+                items.add(
+                    MapItem(
+                        finishItemAsset.width,
+                        finishItemAsset.height,
+                        assetService.getItemPosition(i).t1,
+                        assetService.getItemPosition(i).t2,
+                        MapItemType.FINISH,
+                        MapItemState.ACTIVE
+                    )
+                )
+            } else {
+                items.add(
+                    MapItem(
+                        collectibleItemAsset.width,
+                        collectibleItemAsset.height,
+                        assetService.getItemPosition(i).t1,
+                        assetService.getItemPosition(i).t2,
+                        MapItemType.COLLECTABLE,
+                        MapItemState.ACTIVE
+                    )
+                )
+            }
+        }
     }
 
-    fun generateMapEnemies() {
-        enemies.add(MapEnemy(128, 128, 200, 583, MapItemState.ACTIVE))
-        //enemies.add(MapEnemy(128, 128, 1140, 355, MapItemState.ACTIVE))
+    fun generateMapEnemies(asset: Asset, assetService: AssetService) {
+        for (i in 0..<assetService.getTotalEnemies()) {
+            enemies.add(
+                MapEnemy(
+                    asset.width,
+                    asset.height,
+                    assetService.getEnemyPosition(i).first,
+                    assetService.getEnemyPosition(i).second,
+                    MapItemState.ACTIVE
+                )
+            )
+        }
     }
 
 }
