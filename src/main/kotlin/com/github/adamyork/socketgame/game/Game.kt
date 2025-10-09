@@ -31,6 +31,8 @@ class Game {
     val scoreService: ScoreService
     val gameStatusProvider: GameStatusProvider
     var isInitialized: Boolean = false
+    val playerInitialX: Int
+    val playerInitialY: Int
 
 
     lateinit var player: Player
@@ -44,12 +46,16 @@ class Game {
         assetService: AssetService,
         engine: Engine,
         scoreService: ScoreService,
-        gameStatusProvider: GameStatusProvider
+        gameStatusProvider: GameStatusProvider,
+        playerInitialX: Int,
+        playerInitialY: Int
     ) {
         this.assetService = assetService
         this.engine = engine
         this.scoreService = scoreService
         this.gameStatusProvider = gameStatusProvider
+        this.playerInitialX = playerInitialX
+        this.playerInitialY = playerInitialY
     }
 
     fun init(): Mono<Boolean> {
@@ -65,7 +71,7 @@ class Game {
             mapItemAsset = objects.t3
             finishItemAsset = objects.t4
             mapEnemyAsset = objects.t5
-            player = Player(400, 100, playerAsset.width, playerAsset.height)
+            player = Player(playerInitialX, playerInitialY, playerAsset.width, playerAsset.height)
             gameMap.generateMapItems(mapItemAsset, finishItemAsset, assetService)
             gameMap.generateMapEnemies(mapEnemyAsset, assetService)
             isInitialized = true
@@ -120,7 +126,7 @@ class Game {
 
             ControlAction.JUMP -> {
                 if (!player.jumping) {
-                    LOGGER.debug("player is not jumping start a jump player.vy: ${player.vy}")
+                    LOGGER.debug("player is not jumping start a jump")
                     player.setPlayerState(
                         player.moving,
                         jumping = true,

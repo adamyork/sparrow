@@ -55,9 +55,9 @@ class Collision {
             var itemState = item.state
             if (playerRect.intersects(itemRect) && itemState == MapItemState.ACTIVE) {
                 if (item.type == MapItemType.FINISH) {
-                    LOGGER.info("finish reached!")
+                    LOGGER.info("finish reached")
                 } else {
-                    LOGGER.info("item collision !")
+                    LOGGER.info("item collision")
                     itemState = MapItemState.DEACTIVATING
                     audioQueue.queue.add(Sounds.ITEM_COLLECT)
                 }

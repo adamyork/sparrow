@@ -264,7 +264,7 @@ class AssetService {
         FileInputStream(file).use { fis ->
             val bytesRead = fis.read(byteArray)
             if (bytesRead != byteArray.size) {
-                throw IOException("File only partially read: `${file.path}`")
+                throw IOException("file only partially read: `${file.path}`")
             }
         }
         return byteArray

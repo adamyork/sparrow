@@ -3,6 +3,8 @@ player:
     path: "game/sparrow-comp.png"
   width: 128
   height: 128
+  x: 400
+  y: 100
 map:
   width: 2048
   height: 1536

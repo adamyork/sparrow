@@ -7,6 +7,7 @@ import com.github.adamyork.socketgame.game.GameAudio
 import com.github.adamyork.socketgame.game.engine.Engine
 import com.github.adamyork.socketgame.game.service.AssetService
 import com.github.adamyork.socketgame.game.service.ScoreService
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
@@ -29,10 +30,12 @@ class SocketConfig {
         engine: Engine,
         scoreService: ScoreService,
         audioQueue: AudioQueue,
-        gameStatusProvider: GameStatusProvider
+        gameStatusProvider: GameStatusProvider,
+        @Value("\${player.x}") playerInitialX: Int,
+        @Value("\${player.y}") playerInitialY: Int
     ): HandlerMapping {
         val map: MutableMap<String?, WebSocketHandler?> = HashMap()
-        val game = Game(assetService, engine, scoreService, gameStatusProvider)
+        val game = Game(assetService, engine, scoreService, gameStatusProvider, playerInitialX, playerInitialY)
         val gameAudio = GameAudio(assetService, audioQueue)
         map["/game"] = GameHandler(game, assetService, engine, scoreService, gameStatusProvider)
         map["/input"] = InputHandler(game)
