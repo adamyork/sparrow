@@ -6,17 +6,18 @@ startButton.addEventListener("click", (event) => {
     let splashContainer = document.getElementById("splashContainer");
     splashContainer.style.display = "none";
     document.onkeydown = function (event) {
-        if(!document.game.paused) {
-            document.game.socket.send(event.type + ":" + event.code);
+        if (!document.game.paused) {
+            document.game.inputSocket.send(event.type + ":" + event.code);
             document.game.audioSocket.send(event.type + ":" + event.code);
         }
     }
     document.onkeyup = function (event) {
-        if(!document.game.paused) {
-            document.game.socket.send(event.type + ":" + event.code);
+        if (!document.game.paused) {
+            document.game.inputSocket.send(event.type + ":" + event.code);
         }
     }
     document.game.socket = new WebSocket("ws://localhost:8080/game");
+    document.game.inputSocket = new WebSocket("ws://localhost:8080/input");
     document.game.audioSocket = new WebSocket("ws://localhost:8080/input-audio");
     document.game.socket.addEventListener("open", (event) => {
         document.game.socket.send("START");
@@ -43,6 +44,8 @@ startButton.addEventListener("click", (event) => {
                 URL.revokeObjectURL(this.src);
                 ctx.drawImage(document.game.imageLoader, 0, 0);
                 document.game.drawnTime = Date.now();
+                document.game.socket.send("NEXT");
+                document.game.fxSocket.send("FX:FX");
             };
         });
         let total = document.getElementById("total");
@@ -50,14 +53,14 @@ startButton.addEventListener("click", (event) => {
         const request = new Request("http://localhost:8080/score", {
             method: "GET"
         });
-        fetch(request)
-            .then((response) => {
-                response.text().then(text => {
-                    let obj = JSON.parse(text)
-                    total.innerHTML = obj.total;
-                    remaining.innerHTML = obj.remaining;
-                })
-            })
+        // fetch(request)
+        //     .then((response) => {
+        //         response.text().then(text => {
+        //             let obj = JSON.parse(text)
+        //             total.innerHTML = obj.total;
+        //             remaining.innerHTML = obj.remaining;
+        //         })
+        //     })
     });
     document.game.audioSocket.addEventListener("message", (event) => {
         let blob = new Blob([event.data], {'type': 'audio/wav'});
@@ -79,15 +82,17 @@ startButton.addEventListener("click", (event) => {
     })
     document.game.fxSocket.addEventListener("message", (event) => {
         let blob = new Blob([event.data], {'type': 'audio/wav'});
-        document.game.fxPlayer.src = window.URL.createObjectURL(blob);
-        if (!document.game.fxPlayer.duration > 0) {
-            document.game.fxPlayer.play();
+        if (blob.size !== 0) {
+            document.game.fxPlayer.src = window.URL.createObjectURL(blob);
+            if (!document.game.fxPlayer.duration > 0) {
+                document.game.fxPlayer.play();
+            }
         }
     });
 });
 let pauseButton = document.getElementById("pause");
 pauseButton.addEventListener("click", (event) => {
-    if(document.game.paused){
+    if (document.game.paused) {
         document.game.paused = false;
         document.game.socket.send("RESUME");
         let bgAudio = document.getElementById("bg-music");

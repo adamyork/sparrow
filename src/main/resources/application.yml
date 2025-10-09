@@ -40,6 +40,13 @@ map:
         y: 450
         # noinspection SpringBootApplicationYaml
         type: "collectable"
+      3:
+        # noinspection SpringBootApplicationYaml
+        x: 0
+        # noinspection SpringBootApplicationYaml
+        y: 450
+        # noinspection SpringBootApplicationYaml
+        type: "collectable"
   enemy:
     width: 128
     height: 128

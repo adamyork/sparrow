@@ -2,6 +2,8 @@ package com.github.adamyork.socketgame.socket
 
 import com.github.adamyork.socketgame.common.AudioQueue
 import com.github.adamyork.socketgame.common.GameStatusProvider
+import com.github.adamyork.socketgame.game.Game
+import com.github.adamyork.socketgame.game.GameAudio
 import com.github.adamyork.socketgame.game.engine.Engine
 import com.github.adamyork.socketgame.game.service.AssetService
 import com.github.adamyork.socketgame.game.service.ScoreService
@@ -30,9 +32,12 @@ class SocketConfig {
         gameStatusProvider: GameStatusProvider
     ): HandlerMapping {
         val map: MutableMap<String?, WebSocketHandler?> = HashMap()
-        map["/game"] = GameHandler(assetService, engine, scoreService, gameStatusProvider)
+        val game = Game(assetService, engine, scoreService, gameStatusProvider)
+        val gameAudio = GameAudio(assetService, audioQueue)
+        map["/game"] = GameHandler(game, assetService, engine, scoreService, gameStatusProvider)
+        map["/input"] = InputHandler(game)
         map["/input-audio"] = InputAudioHandler(assetService, gameStatusProvider)
-        map["/game-audio"] = GameAudioHandler(assetService, audioQueue)
+        map["/game-audio"] = GameAudioHandler(gameAudio, assetService, audioQueue)
         val mapping = SimpleUrlHandlerMapping()
         mapping.urlMap = map
         mapping.order = Ordered.HIGHEST_PRECEDENCE

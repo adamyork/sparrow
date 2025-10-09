@@ -104,8 +104,8 @@ class AssetService {
         itemPositions = parseItemPositions(applicationYamlFile)
 
         val jumpSoundBytes = urlToBytes(this::class.java.classLoader.getResource(audioPlayerJumpPath))
-        val itemCollectSoundBytes = urlToBytes(this::class.java.classLoader.getResource(audioPlayerCollisionPath))
-        val playerCollisionSoundBytes = urlToBytes(this::class.java.classLoader.getResource(audioItemCollectPath))
+        val itemCollectSoundBytes = urlToBytes(this::class.java.classLoader.getResource(audioItemCollectPath))
+        val playerCollisionSoundBytes = urlToBytes(this::class.java.classLoader.getResource(audioPlayerCollisionPath))
 
         soundBytesMap[Sounds.JUMP] = jumpSoundBytes
         soundBytesMap[Sounds.ITEM_COLLECT] = itemCollectSoundBytes

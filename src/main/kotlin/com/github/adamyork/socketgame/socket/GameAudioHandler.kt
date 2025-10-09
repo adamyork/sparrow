@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.web.reactive.socket.WebSocketHandler
 import org.springframework.web.reactive.socket.WebSocketSession
 import reactor.core.publisher.Mono
-import reactor.core.scheduler.Schedulers
 
 
 class GameAudioHandler : WebSocketHandler {
@@ -19,31 +18,19 @@ class GameAudioHandler : WebSocketHandler {
 
     val assetService: AssetService
     val audioQueue: AudioQueue
+    val gameAudio: GameAudio
 
-    lateinit var gameAudio: GameAudio
-
-    constructor(assetService: AssetService, audioQueue: AudioQueue) {
+    constructor(gameAudio: GameAudio, assetService: AssetService, audioQueue: AudioQueue) {
+        this.gameAudio = gameAudio
         this.assetService = assetService
         this.audioQueue = audioQueue
     }
 
     override fun handle(session: WebSocketSession): Mono<Void> {
         val map = session.receive()
-            .doOnNext { message -> message.retain() }
-            .publishOn(Schedulers.boundedElastic())
-            .map { message ->
-                LOGGER.info("Game audio started")
-                val payloadAsText = message.payloadAsText
-                session.textMessage("Message Received: $payloadAsText")
-            }
-            .flatMap { message ->
-                if (!gameAudio.isInitialized) {
-                    gameAudio = GameAudio(session, assetService, audioQueue)
-                    gameAudio.start().map {
-                        message
-                    }
-                } else {
-                    Mono.just(message)
+            .flatMap { _ ->
+                gameAudio.next().map { bytes ->
+                    session.binaryMessage { session -> session.wrap(bytes) }
                 }
             }
         return session.send(map)

@@ -11,7 +11,6 @@ import org.springframework.web.reactive.socket.WebSocketMessage
 import org.springframework.web.reactive.socket.WebSocketSession
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import reactor.core.scheduler.Schedulers
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 class InputAudioHandler : WebSocketHandler {
@@ -31,8 +30,6 @@ class InputAudioHandler : WebSocketHandler {
     @OptIn(ExperimentalAtomicApi::class)
     override fun handle(session: WebSocketSession): Mono<Void> {
         val map = session.receive()
-            .doOnNext { message -> message.retain() }
-            .publishOn(Schedulers.boundedElastic())
             .flatMap { message ->
                 var messageFlux = Flux.fromIterable<WebSocketMessage>(listOf())
                 if (!gameStatusProvider.running.load()) {

@@ -12,14 +12,9 @@ import com.github.adamyork.socketgame.game.service.ScoreService
 import com.github.adamyork.socketgame.game.service.data.Asset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.web.reactive.socket.WebSocketMessage
-import org.springframework.web.reactive.socket.WebSocketSession
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import reactor.core.scheduler.Schedulers
-import java.time.Duration
 import java.util.function.Function
-import java.util.function.Supplier
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 
@@ -31,7 +26,6 @@ class Game {
         const val VIEWPORT_HEIGHT: Int = 768
     }
 
-    val gameWebSocketSession: WebSocketSession
     val assetService: AssetService
     val engine: Engine
     val scoreService: ScoreService
@@ -47,13 +41,11 @@ class Game {
     lateinit var mapEnemyAsset: Asset
 
     constructor(
-        webSocketSession: WebSocketSession,
         assetService: AssetService,
         engine: Engine,
         scoreService: ScoreService,
         gameStatusProvider: GameStatusProvider
     ) {
-        this.gameWebSocketSession = webSocketSession
         this.assetService = assetService
         this.engine = engine
         this.scoreService = scoreService
@@ -83,35 +75,25 @@ class Game {
     }
 
     @OptIn(ExperimentalAtomicApi::class)
-    fun start(): Mono<Boolean> {
-        return Flux.interval(Duration.ofMillis(80))
-            .publishOn(Schedulers.boundedElastic())
-            .onBackpressureDrop()
-            .concatMap(Function { _: Long? ->
-                Mono.defer(Supplier {
-                    if (gameStatusProvider.running.load()) {
-                        val previousX = player.x
-                        val previousY = player.y
-                        player = engine.managePlayer(player)
-                        gameMap = engine.manageMap(player, gameMap)
-                        scoreService.gameMapItem = gameMap.items
-                        val collisionResult =
-                            engine.manageCollision(player, previousX, previousY, gameMap, gameMap.collisionAsset)
-                        player = collisionResult.player
-                        gameMap = collisionResult.map
-                        val bytes: ByteArray =
-                            engine.paint(gameMap, playerAsset, player, mapItemAsset, finishItemAsset, mapEnemyAsset)
-                        val binaryMessage = gameWebSocketSession.binaryMessage { session -> session.wrap(bytes) }
-                        val messages: List<WebSocketMessage> = listOf(binaryMessage)
-                        val messageFlux: Flux<WebSocketMessage> = Flux.fromIterable(messages)
-                        gameWebSocketSession.send(messageFlux)
-                    } else {
-                        Mono.just(false).then()
-                    }
-                })
-            }, 0)
+    fun next(): Mono<ByteArray> {
+        return Flux.fromIterable(listOf(1))
             .collectList()
-            .map { _ -> true }
+            .map(Function { _ ->
+                if (gameStatusProvider.running.load()) {
+                    val previousX = player.x
+                    val previousY = player.y
+                    player = engine.managePlayer(player)
+                    gameMap = engine.manageMap(player, gameMap)
+                    scoreService.gameMapItem = gameMap.items
+                    val collisionResult =
+                        engine.manageCollision(player, previousX, previousY, gameMap, gameMap.collisionAsset)
+                    player = collisionResult.player
+                    gameMap = collisionResult.map
+                    engine.paint(gameMap, playerAsset, player, mapItemAsset, finishItemAsset, mapEnemyAsset)
+                } else {
+                    ByteArray(0)
+                }
+            })
     }
 
     fun applyInput(controlType: ControlType, controlAction: ControlAction) {
