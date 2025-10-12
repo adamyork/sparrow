@@ -1,13 +1,16 @@
 package com.github.adamyork.socketgame.game.data
 
+import org.slf4j.LoggerFactory
+
 class Player {
 
     companion object {
+        val LOGGER: org.slf4j.Logger = LoggerFactory.getLogger(Player::class.java)
         const val MAX_X_VELOCITY: Double = 24.0
         const val MAX_Y_VELOCITY: Double = 64.0
         const val JUMP_DISTANCE: Int = 192
         const val ANIMATION_MOVING_FRAMES = 2
-        const val ANIMATION_JUMPING_FRAMES = 3
+        const val ANIMATION_JUMPING_FRAMES = 8
         const val ANIMATION_COLLISION_FRAMES = 8
     }
 
@@ -22,7 +25,7 @@ class Player {
     var vx: Double
     var vy: Double
     var jumping: Boolean
-    var jumpY: Int
+    var jumpDy: Int
     var jumpReached: Boolean
     var moving: Boolean
     var direction: Direction
@@ -39,7 +42,7 @@ class Player {
         this.vx = 0.0
         this.vy = 0.0
         this.jumping = false
-        this.jumpY = 0
+        this.jumpDy = 0
         this.jumpReached = false
         this.moving = false
         this.direction = Direction.RIGHT
@@ -58,7 +61,7 @@ class Player {
         vx: Double,
         vy: Double,
         jumping: Boolean,
-        jumpY: Int,
+        jumpDy: Int,
         jumpReached: Boolean,
         moving: Boolean,
         direction: Direction,
@@ -74,7 +77,7 @@ class Player {
         this.vx = vx
         this.vy = vy
         this.jumping = jumping
-        this.jumpY = jumpY
+        this.jumpDy = jumpDy
         this.jumpReached = jumpReached
         this.moving = moving
         this.direction = direction
@@ -88,6 +91,10 @@ class Player {
     fun setPlayerState(moving: Boolean, jumping: Boolean, direction: Direction) {
         this.moving = moving
         this.jumping = jumping
+        if (this.direction != direction) {
+            LOGGER.info("direction changed player vx was: ${this.vx} and is now 0")
+            this.vx = 0.0
+        }
         this.direction = direction
     }
 
@@ -101,14 +108,15 @@ class Player {
             }
         }
         if (jumping && !jumpReached) {
+            LOGGER.info("here")
             if (frameMetadata.frame == ANIMATION_JUMPING_FRAMES) {
+                LOGGER.info("here1")
                 return jumpingFrames.get(1) ?: FrameMetadata(1, Cell(1, 1, width, height))
             } else {
+                LOGGER.info("here2")
                 val nextFrame = frameMetadata.frame + 1
                 return jumpingFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, width, height))
             }
-        } else if (jumping) {
-            return jumpingFrames.get(4) ?: FrameMetadata(1, Cell(1, 1, width, height))
         }
         if (moving) {
             if (frameMetadata.frame == ANIMATION_MOVING_FRAMES) {
@@ -128,6 +136,11 @@ class Player {
         jumpingFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
         jumpingFrames[2] = FrameMetadata(2, Cell(1, 2, width, height))
         jumpingFrames[3] = FrameMetadata(3, Cell(1, 3, width, height))
+        jumpingFrames[4] = FrameMetadata(3, Cell(1, 3, width, height))
+        jumpingFrames[5] = FrameMetadata(3, Cell(1, 3, width, height))
+        jumpingFrames[6] = FrameMetadata(3, Cell(1, 3, width, height))
+        jumpingFrames[7] = FrameMetadata(3, Cell(1, 3, width, height))
+        jumpingFrames[8] = FrameMetadata(3, Cell(1, 3, width, height))
 
         collisionFrames[1] = FrameMetadata(1, Cell(1, 4, width, height))
         collisionFrames[2] = FrameMetadata(2, Cell(1, 4, width, height))
@@ -137,5 +150,21 @@ class Player {
         collisionFrames[6] = FrameMetadata(6, Cell(1, 4, width, height))
         collisionFrames[7] = FrameMetadata(7, Cell(1, 3, width, height))
         collisionFrames[8] = FrameMetadata(8, Cell(1, 3, width, height))
+    }
+
+    fun reset(xPos: Int, yPos: Int) {
+        this.x = xPos
+        this.y = yPos
+        this.vx = 0.0
+        this.vy = 0.0
+        this.jumping = false
+        this.jumpDy = 0
+        this.jumpReached = false
+        this.moving = false
+        this.direction = Direction.RIGHT
+        this.frameMetadata = FrameMetadata(1, Cell(1, 1, width, height))
+        this.colliding = false
+        this.scanVerticalCeiling = false
+        this.scanVerticalFloor = false
     }
 }

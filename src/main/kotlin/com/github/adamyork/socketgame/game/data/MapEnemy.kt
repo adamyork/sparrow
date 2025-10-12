@@ -100,6 +100,7 @@ class MapEnemy {
         }
     }
 
+    @Suppress("DuplicatedCode")
     private fun generateAnimationFrameIndex() {
         animatingFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
 

@@ -5,6 +5,7 @@ import com.github.adamyork.socketgame.common.ControlType
 import com.github.adamyork.socketgame.common.GameStatusProvider
 import com.github.adamyork.socketgame.game.data.Direction
 import com.github.adamyork.socketgame.game.data.GameMap
+import com.github.adamyork.socketgame.game.data.GameMapState
 import com.github.adamyork.socketgame.game.data.Player
 import com.github.adamyork.socketgame.game.engine.Engine
 import com.github.adamyork.socketgame.game.service.AssetService
@@ -74,6 +75,7 @@ class Game {
             player = Player(playerInitialX, playerInitialY, playerAsset.width, playerAsset.height)
             gameMap.generateMapItems(mapItemAsset, finishItemAsset, assetService)
             gameMap.generateMapEnemies(mapEnemyAsset, assetService)
+            scoreService.gameMapItem = gameMap.items
             isInitialized = true
             LOGGER.info("assets Loaded")
             true
@@ -95,6 +97,7 @@ class Game {
                         engine.manageCollision(player, previousX, previousY, gameMap, gameMap.collisionAsset)
                     player = collisionResult.player
                     gameMap = collisionResult.map
+                    gameStatusProvider.lastPaintTime.store(System.currentTimeMillis().toInt())
                     engine.paint(gameMap, playerAsset, player, mapItemAsset, finishItemAsset, mapEnemyAsset)
                 } else {
                     ByteArray(0)
@@ -109,8 +112,15 @@ class Game {
         }
     }
 
+    fun reset() {
+        LOGGER.info("reset game")
+        player.reset(playerInitialX, playerInitialY)
+        gameMap.reset(0, Game.VIEWPORT_HEIGHT, mapItemAsset, finishItemAsset, mapEnemyAsset, assetService)
+        scoreService.gameMapItem = gameMap.items
+    }
+
     private fun startInput(controlAction: ControlAction) {
-        //LOGGER.debug("start {}", controlAction)
+        //LOGGER.info("start {}", controlAction)
         when (controlAction) {
             ControlAction.LEFT -> player.setPlayerState(
                 true,
@@ -138,21 +148,26 @@ class Game {
     }
 
     private fun stopInput(controlAction: ControlAction) {
-        //LOGGER.debug("stop {}", controlAction)
-        when (controlAction) {
-            ControlAction.LEFT -> player.setPlayerState(
-                false,
-                jumping = player.jumping,
-                direction = Direction.LEFT
-            )
-
-            ControlAction.RIGHT -> player.setPlayerState(
-                false,
-                jumping = player.jumping,
-                direction = Direction.RIGHT
-            )
-
-            ControlAction.JUMP -> player.setPlayerState(
+        //LOGGER.info("stop {}", controlAction)
+        //LOGGER.info("player.direction {}", player.direction)
+        if (controlAction == ControlAction.RIGHT) {
+            if (player.direction == Direction.RIGHT) {
+                player.setPlayerState(
+                    false,
+                    jumping = player.jumping,
+                    direction = Direction.RIGHT
+                )
+            }
+        } else if (controlAction == ControlAction.LEFT) {
+            if (player.direction == Direction.LEFT) {
+                player.setPlayerState(
+                    false,
+                    jumping = player.jumping,
+                    direction = Direction.LEFT
+                )
+            }
+        } else {
+            player.setPlayerState(
                 player.moving,
                 jumping = player.jumping,
                 direction = player.direction

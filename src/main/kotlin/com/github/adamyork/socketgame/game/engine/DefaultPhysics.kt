@@ -1,5 +1,6 @@
 package com.github.adamyork.socketgame.game.engine
 
+import com.github.adamyork.socketgame.common.GameStatusProvider
 import com.github.adamyork.socketgame.game.Game
 import com.github.adamyork.socketgame.game.data.Direction
 import com.github.adamyork.socketgame.game.data.Player
@@ -10,6 +11,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import reactor.util.function.Tuple2
 import reactor.util.function.Tuples
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -19,15 +21,23 @@ class DefaultPhysics : Physics {
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(DefaultPhysics::class.java)
         const val GRAVITY: Double = 20.0
-        const val FRICTION: Double = 0.1
-        const val X_EASING_COEFFICIENT: Double = 1.5
+        const val FRICTION: Double = 0.9
         const val Y_EASING_COEFFICIENT: Double = 0.1
-        const val VELOCITY_COEFFICIENT: Double = 0.5
+        const val Y_VELOCITY_COEFFICIENT: Double = 0.5
+        const val X_MOVEMENT_DISTANCE: Double = 1.0
+        const val X_ACCELERATION_RATE: Double = 2.0
+        const val X_DEACCELERATION_RATE: Double = 4.0
+    }
+
+    val gameStatusProvider: GameStatusProvider
+
+    constructor(gameStatusProvider: GameStatusProvider) {
+        this.gameStatusProvider = gameStatusProvider
     }
 
     override fun applyPlayerPhysics(player: Player): Player {
         val vx = getXVelocity(player.vx, player.moving)
-        val vy = getYVelocity(player.y, player.jumpY, player.vy, player.jumping)
+        val vy = getYVelocity(player.y, player.jumpDy, player.vy, player.jumping)
         val xResult = movePlayerX(
             player.width,
             player.x,
@@ -40,7 +50,7 @@ class DefaultPhysics : Physics {
             player.y,
             vy,
             player.jumping,
-            player.jumpY,
+            player.jumpDy,
             player.jumpReached
         )
         return Player(
@@ -51,7 +61,7 @@ class DefaultPhysics : Physics {
             xResult.vx,
             yResult.vy,
             yResult.jumping,
-            yResult.jumpY,
+            yResult.jumpDy,
             yResult.jumpReached,
             xResult.moving,
             player.direction,
@@ -62,38 +72,40 @@ class DefaultPhysics : Physics {
         )
     }
 
+    @OptIn(ExperimentalAtomicApi::class)
     private fun getXVelocity(playerVx: Double, playerMoving: Boolean): Double {
         var nextVx: Double = playerVx
         if (playerMoving) {
-            //LOGGER.debug("incrementing player velocity $vx")
             if (nextVx == 0.0) {
-                nextVx += VELOCITY_COEFFICIENT
-            } else if (nextVx < Player.MAX_X_VELOCITY) {
-                nextVx += (VELOCITY_COEFFICIENT * playerVx)
-                if (nextVx > Player.MAX_X_VELOCITY) {
-                    nextVx = Player.MAX_X_VELOCITY
-                }
+                nextVx = X_MOVEMENT_DISTANCE
             }
+            nextVx = X_MOVEMENT_DISTANCE * (nextVx * X_ACCELERATION_RATE)
+            nextVx *= FRICTION
+            if (nextVx > Player.MAX_X_VELOCITY) {
+                nextVx = Player.MAX_X_VELOCITY
+            }
+            //LOGGER.debug("incrementing player $nextVx")
         } else {
             if (nextVx > 0.0) {
-                //LOGGER.debug("decrementing player velocity $vx")
-                nextVx -= (VELOCITY_COEFFICIENT * playerVx)
-                if (nextVx < VELOCITY_COEFFICIENT) {
+                nextVx -= X_DEACCELERATION_RATE
+                //LOGGER.debug("decrementing player $nextVx")
+                if (nextVx < 0) {
                     nextVx = 0.0
                 }
             }
         }
+        //LOGGER.debug("player vx $nextVx")
         return nextVx
     }
 
-    private fun getYVelocity(playerY: Int, playerJumpY: Int, playerVy: Double, playerJumping: Boolean): Double {
+    private fun getYVelocity(playerY: Int, playerJumpDy: Int, playerVy: Double, playerJumping: Boolean): Double {
         var nextVy: Double = playerVy
         if (playerJumping) {
             if (nextVy == 0.0) {
                 nextVy += Player.JUMP_DISTANCE / 2
             } else if (nextVy < Player.MAX_Y_VELOCITY) {
-                val distanceToTarget = playerY - playerJumpY
-                nextVy += (VELOCITY_COEFFICIENT * nextVy) + (distanceToTarget * Y_EASING_COEFFICIENT)
+                val distanceToTarget = playerY - playerJumpDy
+                nextVy += (Y_VELOCITY_COEFFICIENT * nextVy) + (distanceToTarget * Y_EASING_COEFFICIENT)
                 if (nextVy > Player.MAX_Y_VELOCITY) {
                     nextVy = Player.MAX_Y_VELOCITY
                 }
@@ -104,6 +116,7 @@ class DefaultPhysics : Physics {
         return nextVy
     }
 
+    @OptIn(ExperimentalAtomicApi::class)
     private fun movePlayerX(
         playerWidth: Int,
         playerX: Int,
@@ -112,14 +125,19 @@ class DefaultPhysics : Physics {
         playerDirection: Direction
     ): PhysicsXResult {
         var targetX = playerX
+        var deltaTime = (System.currentTimeMillis().toInt() - gameStatusProvider.lastPaintTime.load()) / 60
+        if (deltaTime <= 0) {
+            deltaTime = 1
+        }
+        //LOGGER.info("deltaTime: $deltaTime")
         if (playerMoving || playerVx != 0.0) {
             if (playerDirection == Direction.LEFT) {
-                targetX -= ((X_EASING_COEFFICIENT * playerVx) + FRICTION).roundToInt()
+                targetX -= (playerVx * deltaTime).roundToInt()
                 if (targetX < 0) {
                     targetX = 0
                 }
             } else {
-                targetX += ((X_EASING_COEFFICIENT * playerVx) - FRICTION).roundToInt()
+                targetX += (playerVx * deltaTime).roundToInt()
                 if (targetX >= Game.VIEWPORT_WIDTH - playerWidth) {
                     targetX = Game.VIEWPORT_WIDTH - playerWidth - 1
                 }
@@ -133,39 +151,39 @@ class DefaultPhysics : Physics {
         playerY: Int,
         vy: Double,
         playerJumping: Boolean,
-        playerJumpY: Int,
+        playerJumpDy: Int,
         playerJumpReached: Boolean
     ): PhysicsYResult {
         var destinationY = playerY + GRAVITY.roundToInt()
-        var jumpY = playerJumpY
+        var jumpDy = playerJumpDy
         var jumpReached = playerJumpReached
         var scanVerticalCeiling = false
         var scanVerticalFloor = false
         if (playerJumping) {
-            if (jumpY == 0 && !jumpReached) {
+            if (jumpDy == 0 && !jumpReached) {
                 LOGGER.info("starting a jump")
-                jumpY = destinationY - Player.JUMP_DISTANCE
+                jumpDy = destinationY - Player.JUMP_DISTANCE
                 destinationY -= vy.roundToInt()
                 if (destinationY < 0) {
                     scanVerticalCeiling = true
                     LOGGER.info("the initial jump destination is beyond the top of the viewport")
                     destinationY = 0
-                    jumpY = 0
+                    jumpDy = 0
                     jumpReached = true
                 }
-            } else if (destinationY > jumpY && !jumpReached) {
+            } else if (destinationY > jumpDy && !jumpReached) {
                 destinationY -= vy.roundToInt()
                 if (destinationY <= 0) {
                     scanVerticalCeiling = true
                     LOGGER.info("the current jump destination is beyond the top of the viewport")
                     destinationY = 0
-                    jumpY = 0
+                    jumpDy = 0
                     jumpReached = true
                 }
-            } else if (destinationY <= jumpY && !jumpReached) {
+            } else if (destinationY <= jumpDy && !jumpReached) {
                 LOGGER.info("the jump height has been reached")
                 jumpReached = true
-                jumpY = 0
+                jumpDy = 0
             }
         }
         if (destinationY > Game.VIEWPORT_HEIGHT - playerHeight) {
@@ -177,7 +195,7 @@ class DefaultPhysics : Physics {
             destinationY,
             vy,
             playerJumping,
-            jumpY,
+            jumpDy,
             jumpReached,
             scanVerticalCeiling,
             scanVerticalFloor

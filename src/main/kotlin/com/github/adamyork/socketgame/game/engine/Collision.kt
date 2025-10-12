@@ -33,7 +33,7 @@ class Collision {
             adjustedPlayerXResult.vx,
             adjustedPlayerYResult.vy,
             adjustedPlayerYResult.jumping,
-            adjustedPlayerYResult.jumpY,
+            adjustedPlayerYResult.jumpDy,
             adjustedPlayerYResult.jumpReached,
             adjustedPlayerXResult.moving,
             player.direction,
@@ -49,22 +49,28 @@ class Collision {
         gameMap: GameMap,
         audioQueue: AudioQueue
     ): GameMap {
+        var gameState = gameMap.state
         val managedMapItems = gameMap.items.map { item ->
             val itemRect = Rectangle(item.x, item.y, item.width, item.height)
             val playerRect = Rectangle(player.x, player.y, player.width, player.height)
             var itemState = item.state
+            var frameMetadata = item.frameMetadata
             if (playerRect.intersects(itemRect) && itemState == MapItemState.ACTIVE) {
                 if (item.type == MapItemType.FINISH) {
                     LOGGER.info("finish reached")
+                    gameState = GameMapState.COMPLETED
+                    itemState = MapItemState.INACTIVE
                 } else {
                     LOGGER.info("item collision")
                     itemState = MapItemState.DEACTIVATING
                     audioQueue.queue.add(Sounds.ITEM_COLLECT)
+                    frameMetadata = item.getFirstDeactivatingFrame()
                 }
             }
-            MapItem(item.width, item.height, item.x, item.y, item.type, itemState, item.frameMetadata)
+            MapItem(item.width, item.height, item.x, item.y, item.type, itemState, frameMetadata)
         }.toCollection(ArrayList())
         return GameMap(
+            gameState,
             gameMap.farGroundAsset,
             gameMap.midGroundAsset,
             gameMap.nearFieldAsset,
@@ -145,7 +151,7 @@ class Collision {
                 nextVx,
                 player.vy,
                 player.jumping,
-                player.jumpY,
+                player.jumpDy,
                 player.jumpReached,
                 player.moving,
                 player.direction,
@@ -154,6 +160,7 @@ class Collision {
                 player.scanVerticalCeiling,
                 player.scanVerticalFloor,
             ), GameMap(
+                gameMap.state,
                 gameMap.farGroundAsset,
                 gameMap.midGroundAsset,
                 gameMap.nearFieldAsset,
@@ -176,10 +183,10 @@ class Collision {
         collisionImage: BufferedImage
     ): PhysicsYResult {
         val boundedX = player.x.coerceAtMost(collisionImage.width - player.width)
-        val scanHeight = abs(player.jumpY - previousY)
-        if (player.jumpY < 0) {
+        val scanHeight = abs(player.jumpDy - previousY)
+        if (player.jumpDy < 0) {
             return PhysicsYResult(
-                player.y, player.vy, player.jumping, player.jumpY, player.jumpReached,
+                player.y, player.vy, player.jumping, player.jumpDy, player.jumpReached,
                 scanVerticalCeiling = false,
                 scanVerticalFloor = false
             )
@@ -194,11 +201,11 @@ class Collision {
                 scanVerticalFloor = false
             )
         }
-        if (player.jumping && !player.jumpReached && player.y > player.jumpY) {
+        if (player.jumping && !player.jumpReached && player.y > player.jumpDy) {
             LOGGER.info("player is jumping and rising")
             val playerWillCollide = testForColorCollision(
                 boundedX,
-                player.jumpY,
+                player.jumpDy,
                 player.width,
                 scanHeight,
                 collisionImage
@@ -218,7 +225,7 @@ class Collision {
                     player.y,
                     player.vy,
                     player.jumping,
-                    player.jumpY,
+                    player.jumpDy,
                     player.jumpReached,
                     scanVerticalCeiling = false,
                     scanVerticalFloor = false
@@ -256,7 +263,7 @@ class Collision {
                 )
             }
             return PhysicsYResult(
-                player.y, player.vy, player.jumping, player.jumpY, player.jumpReached,
+                player.y, player.vy, player.jumping, player.jumpDy, player.jumpReached,
                 scanVerticalCeiling = false,
                 scanVerticalFloor = false
             )

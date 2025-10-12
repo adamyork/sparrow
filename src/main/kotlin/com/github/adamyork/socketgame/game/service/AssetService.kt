@@ -3,6 +3,7 @@ package com.github.adamyork.socketgame.game.service
 import com.github.adamyork.socketgame.common.Sounds
 import com.github.adamyork.socketgame.game.Game
 import com.github.adamyork.socketgame.game.data.GameMap
+import com.github.adamyork.socketgame.game.data.GameMapState
 import com.github.adamyork.socketgame.game.service.data.Asset
 import com.github.adamyork.socketgame.game.service.data.ItemPositionAndType
 import kotlinx.coroutines.reactor.mono
@@ -180,6 +181,7 @@ class AssetService {
                 mapAssetMap[id + 2] = Asset(mapWidth, mapHeight, objects.t3)
                 mapAssetMap[id + 3] = Asset(mapWidth, mapHeight, objects.t4)
                 GameMap(
+                    GameMapState.COLLECTING,
                     mapAssetMap[id]!!,
                     mapAssetMap[id + 1]!!,
                     mapAssetMap[id + 2]!!,

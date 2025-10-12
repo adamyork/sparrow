@@ -3,7 +3,7 @@ package com.github.adamyork.socketgame.socket
 import com.github.adamyork.socketgame.common.GameStatusProvider
 import com.github.adamyork.socketgame.common.Sounds
 import com.github.adamyork.socketgame.game.service.AssetService
-import com.github.adamyork.socketgame.socket.GameHandler.Companion.INPUT_KEY_JUMP
+import com.github.adamyork.socketgame.socket.InputHandler.Companion.INPUT_KEY_JUMP
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.web.reactive.socket.WebSocketHandler

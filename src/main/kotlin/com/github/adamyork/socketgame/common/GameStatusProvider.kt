@@ -2,6 +2,7 @@ package com.github.adamyork.socketgame.common
 
 import org.springframework.stereotype.Component
 import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 
@@ -10,5 +11,6 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 class GameStatusProvider {
 
     val running: AtomicBoolean = AtomicBoolean(false)
+    val lastPaintTime: AtomicInt = AtomicInt(0)
 
 }

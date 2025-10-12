@@ -28,9 +28,10 @@ startButton.addEventListener("click", () => {
             document.game.imageLoader.onload = function () {
                 document.game.loadedTime = Date.now();
                 URL.revokeObjectURL(document.game.imageLoader.src);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(document.game.imageLoader, 0, 0);
                 if (Date.now() - document.game.lastDrawTime >= 1000) {
-                    console.log("FPS : " + document.game.drawCyclesCompleted);
+                    //console.log("FPS : " + document.game.drawCyclesCompleted);
                     document.game.lastDrawTime = Date.now();
                     document.game.drawCyclesCompleted = 0;
                 }
@@ -60,12 +61,14 @@ startButton.addEventListener("click", () => {
     document.game.inputSocket = new WebSocket("ws://localhost:8080/input");
     document.onkeydown = function (event) {
         if (!document.game.paused) {
+            console.log("keydown " + event.type + ":" + event.code)
             document.game.inputSocket.send(event.type + ":" + event.code);
             document.game.inputAudioSocket.send(event.type + ":" + event.code);
         }
     }
     document.onkeyup = function (event) {
         if (!document.game.paused) {
+            console.log("keyup " + event.type + ":" + event.code)
             document.game.inputSocket.send(event.type + ":" + event.code);
         }
     }

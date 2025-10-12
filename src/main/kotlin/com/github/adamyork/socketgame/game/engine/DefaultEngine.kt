@@ -5,15 +5,19 @@ import com.github.adamyork.socketgame.game.Game
 import com.github.adamyork.socketgame.game.data.*
 import com.github.adamyork.socketgame.game.engine.data.EnemiesParticlesPair
 import com.github.adamyork.socketgame.game.engine.data.PlayerMapPair
+import com.github.adamyork.socketgame.game.service.ScoreService
 import com.github.adamyork.socketgame.game.service.data.Asset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.Color
+import java.awt.Font
+import java.awt.FontMetrics
 import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
+
 
 class DefaultEngine : Engine {
 
@@ -25,12 +29,20 @@ class DefaultEngine : Engine {
     val collision: Collision
     val particles: Particles
     val audioQueue: AudioQueue
+    val scoreService: ScoreService
 
-    constructor(physics: Physics, collision: Collision, particles: Particles, audioQueue: AudioQueue) {
+    constructor(
+        physics: Physics,
+        collision: Collision,
+        particles: Particles,
+        audioQueue: AudioQueue,
+        scoreService: ScoreService
+    ) {
         this.physics = physics
         this.particles = particles
         this.audioQueue = audioQueue
         this.collision = collision
+        this.scoreService = scoreService
     }
 
     override fun managePlayer(player: Player): Player {
@@ -44,7 +56,7 @@ class DefaultEngine : Engine {
             physicsAppliedPlayer.vx,
             physicsAppliedPlayer.vy,
             physicsAppliedPlayer.jumping,
-            physicsAppliedPlayer.jumpY,
+            physicsAppliedPlayer.jumpDy,
             physicsAppliedPlayer.jumpReached,
             physicsAppliedPlayer.moving,
             physicsAppliedPlayer.direction,
@@ -93,8 +105,14 @@ class DefaultEngine : Engine {
         }
         val managedMapItems = manageMapItems(gameMap, nextX, nextY)
         val managedMapEnemiesAndParticles = manageMapEnemies(gameMap, nextX, nextY)
+        var mapState = gameMap.state
+        if (mapState == GameMapState.COLLECTING && scoreService.allFound()) {
+            LOGGER.info("all items found map is in completing mode")
+            mapState = GameMapState.COMPLETING
+        }
         //LOGGER.info("player.x : ${player.x} nextX is ${nextX}")
         return GameMap(
+            mapState,
             gameMap.farGroundAsset,
             gameMap.midGroundAsset,
             gameMap.nearFieldAsset,
@@ -137,15 +155,8 @@ class DefaultEngine : Engine {
         return gameMap.items.map { item ->
             val itemX = item.x - xDelta
             val itemY = item.y + yDelta
-            var itemState = item.state
-            var frameMetadata = item.frameMetadata
-            if (itemState == MapItemState.DEACTIVATING) {
-                frameMetadata = item.getNextFrameCell()
-                if (frameMetadata.frame == 0) {
-                    itemState = MapItemState.INACTIVE
-                }
-            }
-            MapItem(item.width, item.height, itemX, itemY, item.type, itemState, frameMetadata)
+            val frameMetadata = item.getNextFrameCell()
+            MapItem(item.width, item.height, itemX, itemY, item.type, item.state, frameMetadata)
         }.toCollection(ArrayList())
     }
 
@@ -205,23 +216,35 @@ class DefaultEngine : Engine {
         }
         val farGroundSubImage = map.farGroundAsset.bufferedImage.getSubimage(farGroundX, map.y, 1024, 768)
         val midGroundSubImage = map.midGroundAsset.bufferedImage.getSubimage(midGroundX, map.y, 1024, 768)
-        map.nearFieldAsset.bufferedImage.getSubimage(map.x, map.y, 1024, 768)
+        val nearFieldSubImage = map.nearFieldAsset.bufferedImage.getSubimage(map.x, map.y, 1024, 768)
         val collisionSubImage = map.collisionAsset.bufferedImage.getSubimage(map.x, map.y, 1024, 768)
         graphics.drawImage(farGroundSubImage, 0, 0, null)
         graphics.drawImage(midGroundSubImage, 0, 0, null)
-        //graphics.drawImage(nearFieldSubImag, 0, 0, null)
+        graphics.drawImage(nearFieldSubImage, 0, 0, null)
         graphics.drawImage(collisionSubImage, 0, 0, null)
+        if (map.state == GameMapState.COMPLETING) {
+            val gameScreenMessage = "FIND THE FINISH FLAG"
+            graphics.color = Color.BLACK
+            graphics.font = Font("Arial", Font.BOLD, 32)
+            val metrics: FontMetrics? = graphics.getFontMetrics(graphics.font)
+            val txtX = (Game.VIEWPORT_WIDTH - (metrics?.stringWidth(gameScreenMessage) ?: 0)) / 2
+            val txtY = ((Game.VIEWPORT_HEIGHT - (metrics?.height ?: 0)) / 2) + (metrics?.ascent ?: 0)
+            graphics.drawString(gameScreenMessage, txtX, txtY)
+            map.activateFinish()
+        }
+
         map.items.forEach { item ->
-            if (item.type == MapItemType.FINISH) {
-                val finishItemSubImage = finishItemAsset.bufferedImage.getSubimage(
-                    0,
-                    0,
-                    item.width,
-                    item.height
-                )
-                graphics.drawImage(finishItemSubImage, item.x, item.y, null)
-            } else {
-                if (item.state != MapItemState.INACTIVE) {
+            if (item.state != MapItemState.INACTIVE) {
+                if (item.type == MapItemType.FINISH) {
+                    val finishItemSubImage = finishItemAsset.bufferedImage.getSubimage(
+                        0,
+                        0,
+                        item.width,
+                        item.height
+                    )
+                    graphics.drawImage(finishItemSubImage, item.x, item.y, null)
+                } else {
+
                     val mapItemSubImage = mapItemAsset.bufferedImage.getSubimage(
                         item.frameMetadata.cell.x,
                         item.frameMetadata.cell.y,

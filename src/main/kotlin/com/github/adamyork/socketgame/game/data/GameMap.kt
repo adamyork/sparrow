@@ -5,17 +5,18 @@ import com.github.adamyork.socketgame.game.service.AssetService
 import com.github.adamyork.socketgame.game.service.data.Asset
 
 data class GameMap(
+    var state: GameMapState,
     val farGroundAsset: Asset,
     val midGroundAsset: Asset,
     val nearFieldAsset: Asset,
     val collisionAsset: Asset,
-    val x: Int,
-    val y: Int,
+    var x: Int,
+    var y: Int,
     val width: Int,
     val height: Int,
-    val items: ArrayList<MapItem>,
-    val enemies: ArrayList<MapEnemy>,
-    val particles: ArrayList<Particle>
+    var items: ArrayList<MapItem>,
+    var enemies: ArrayList<MapEnemy>,
+    var particles: ArrayList<Particle>
 ) {
 
     companion object {
@@ -36,7 +37,7 @@ data class GameMap(
                         assetService.getItemPosition(i).x,
                         assetService.getItemPosition(i).y,
                         MapItemType.FINISH,
-                        MapItemState.ACTIVE
+                        MapItemState.INACTIVE
                     )
                 )
             } else {
@@ -66,6 +67,30 @@ data class GameMap(
                 )
             )
         }
+    }
+
+    fun reset(
+        xPos: Int,
+        yPos: Int,
+        collectibleItemAsset: Asset,
+        finishItemAsset: Asset,
+        enemyAsset: Asset,
+        assetService: AssetService
+    ) {
+        this.state = GameMapState.COLLECTING
+        this.x = xPos
+        this.y = yPos
+        this.items = ArrayList()
+        this.enemies = ArrayList()
+        this.particles = ArrayList()
+        generateMapItems(collectibleItemAsset, finishItemAsset, assetService)
+        generateMapEnemies(enemyAsset, assetService)
+    }
+
+    fun activateFinish() {
+        val finishItem = this.items
+            .find { it.type == MapItemType.FINISH }
+        finishItem?.state = MapItemState.ACTIVE
     }
 
 }

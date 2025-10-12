@@ -10,62 +10,48 @@ map:
   height: 1536
   bg: "game/map1-bg-full-comp.png"
   mg: "game/map1-mg-full-comp.png"
-  fg: "game/map-1-near-field.png"
+  fg: "game/map1-fg-full-comp.png"
   col: "game/map1-collision.png"
   item:
     width: 64
     height: 64
     asset:
       one:
-        path: "game/item.png"
+        path: "game/greenie-full.png"
       two:
         path: "game/finish-item.png"
     position:
       0:
-        # noinspection SpringBootApplicationYaml
-        x: 400
-        # noinspection SpringBootApplicationYaml
-        y: 583
-        # noinspection SpringBootApplicationYaml
-        type: "finish"
-      1:
-        # noinspection SpringBootApplicationYaml
-        x: 600
-        # noinspection SpringBootApplicationYaml
-        y: 450
-        # noinspection SpringBootApplicationYaml
-        type: "collectable"
-      2:
-        # noinspection SpringBootApplicationYaml
-        x: 1024
-        # noinspection SpringBootApplicationYaml
-        y: 450
-        # noinspection SpringBootApplicationYaml
-        type: "collectable"
-      3:
         # noinspection SpringBootApplicationYaml
         x: 0
         # noinspection SpringBootApplicationYaml
         y: 450
         # noinspection SpringBootApplicationYaml
         type: "collectable"
+      1:
+        # noinspection SpringBootApplicationYaml
+        x: 797
+        # noinspection SpringBootApplicationYaml
+        y: 450
+        # noinspection SpringBootApplicationYaml
+        type: "finish"
   enemy:
     width: 128
     height: 128
     asset:
       path: "game/vacuum.png"
     position:
+      #      0:
+      #        # noinspection SpringBootApplicationYaml
+      #        x: 400
+      #        # noinspection SpringBootApplicationYaml
+      #        y: 583
+      #      1:
+      #        # noinspection SpringBootApplicationYaml
+      #        x: 600
+      #        # noinspection SpringBootApplicationYaml
+      #        y: 450
       0:
-        # noinspection SpringBootApplicationYaml
-        x: 400
-        # noinspection SpringBootApplicationYaml
-        y: 583
-      1:
-        # noinspection SpringBootApplicationYaml
-        x: 600
-        # noinspection SpringBootApplicationYaml
-        y: 450
-      2:
         # noinspection SpringBootApplicationYaml
         x: 1024
         # noinspection SpringBootApplicationYaml

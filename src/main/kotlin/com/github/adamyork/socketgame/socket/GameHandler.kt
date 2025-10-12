@@ -20,12 +20,7 @@ class GameHandler : WebSocketHandler {
         val LOGGER: Logger = LoggerFactory.getLogger(GameHandler::class.java)
         const val INPUT_START: String = "START"
         const val INPUT_PAUSE: String = "PAUSE"
-        const val INPUT_NEXT: String = "NEXT"
         const val INPUT_RESUME: String = "RESUME"
-        const val INPUT_KEY_STATE = "keydown"
-        const val INPUT_KEY_RIGHT: String = "ArrowRight"
-        const val INPUT_KEY_LEFT: String = "ArrowLeft"
-        const val INPUT_KEY_JUMP: String = "Space"
     }
 
     val assetService: AssetService
@@ -56,6 +51,10 @@ class GameHandler : WebSocketHandler {
                 val payloadAsText = message.payloadAsText
                 when (payloadAsText) {
                     INPUT_START -> {
+                        if (game.isInitialized) {
+                            game.reset()
+                            gameStatusProvider.lastPaintTime.store(System.currentTimeMillis().toInt())
+                        }
                         LOGGER.info("game started")
                     }
 
@@ -89,7 +88,8 @@ class GameHandler : WebSocketHandler {
                         }
                 }
             }
-            .doOnError { _ ->
+            .doOnError { error ->
+                LOGGER.error("Game error", error)
                 exitProcess(0)
             }
         return session.send(map)

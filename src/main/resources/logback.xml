@@ -10,7 +10,7 @@
     <logger name="com.github.adamyork.socketgame.socket.GameAudioHandler" level="INFO"/>
     <logger name="com.github.adamyork.socketgame.game.Game" level="INFO"/>
     <logger name="com.github.adamyork.socketgame.game.engine.DefaultEngine" level="INFO"/>
-    <logger name="com.github.adamyork.socketgame.game.engine.DefaultPhysics" level="INFO"/>
+    <logger name="com.github.adamyork.socketgame.game.engine.DefaultPhysics" level="DEBUG"/>
 
     <root level="info">
         <appender-ref ref="STDOUT"/>

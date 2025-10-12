@@ -4,7 +4,7 @@ data class PhysicsYResult(
     val y: Int,
     val vy: Double,
     val jumping: Boolean,
-    val jumpY: Int,
+    val jumpDy: Int,
     val jumpReached: Boolean,
     val scanVerticalCeiling: Boolean,
     val scanVerticalFloor: Boolean,
