@@ -7,6 +7,6 @@ interface Physics {
 
     fun applyPlayerPhysics(player: Player): Player
 
-    fun applyParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle>
+    fun applyCollisionParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle>
 
 }

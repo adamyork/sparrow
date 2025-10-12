@@ -35,4 +35,27 @@ class Particles {
         return particles
     }
 
+    fun createFireworksParticles(originX: Int, originY: Int): ArrayList<Particle> {
+        val particles: ArrayList<Particle> = ArrayList()
+        for (i in 0..360) {
+            val particle = Particle(
+                i,
+                originX,
+                originY,
+                originX,
+                originY,
+                2,
+                2,
+                ParticleType.CIRCLE,
+                0,
+                20,
+                Random.nextInt(50),
+                Random.nextInt(50),
+                1
+            )
+            particles.add(particle)
+        }
+        return particles
+    }
+
 }

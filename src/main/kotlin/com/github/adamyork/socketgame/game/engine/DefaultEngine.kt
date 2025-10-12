@@ -174,7 +174,7 @@ class DefaultEngine : Engine {
             val nextPosition = enemy.getNextPosition(xDelta, yDelta)
             val itemX = nextPosition.x
             val itemY = nextPosition.y
-            mapParticles = physics.applyParticlePhysics(mapParticles)
+            mapParticles = physics.applyCollisionParticlePhysics(mapParticles)
             mapParticles = mapParticles.filter { particle -> particle.frame <= particle.lifetime }
                 .toCollection(ArrayList())
             val frameMetadata = enemy.getNextFrameCell()

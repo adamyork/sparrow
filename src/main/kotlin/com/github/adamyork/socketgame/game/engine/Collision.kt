@@ -107,7 +107,7 @@ class Collision {
                 isColliding = true
                 playerIsColliding = true
             }
-            managedMapParticles = physics.applyParticlePhysics(managedMapParticles)
+            managedMapParticles = physics.applyCollisionParticlePhysics(managedMapParticles)
             managedMapParticles = managedMapParticles.filter { particle -> particle.frame <= particle.lifetime }
                 .toCollection(ArrayList())
             val frameMetadata = enemy.getNextFrameCell()

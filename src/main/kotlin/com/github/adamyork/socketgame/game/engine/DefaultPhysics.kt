@@ -202,7 +202,7 @@ class DefaultPhysics : Physics {
         )
     }
 
-    override fun applyParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle> {
+    override fun applyCollisionParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle> {
         return mapParticles.map { particle ->
             val nextFrame = particle.frame + 1
             var nextRadius = particle.radius
@@ -210,7 +210,7 @@ class DefaultPhysics : Physics {
             if (particle.radius < Particles.MAX_SQUARE_RADIAL_RADIUS) {
                 nextRadius = particle.radius + 10
                 position =
-                    getParticlePosition(nextRadius.toFloat(), particle.id.toFloat(), particle.originX, particle.originY)
+                    getCollisionParticlePosition(nextRadius.toFloat(), particle.id.toFloat(), particle.originX, particle.originY)
             } else {
                 if (particle.frame <= particle.lifetime) {
                     position = Tuples.of(particle.x.toFloat(), particle.y.toFloat() + GRAVITY.toFloat())
@@ -234,7 +234,7 @@ class DefaultPhysics : Physics {
         }.toCollection(ArrayList())
     }
 
-    private fun getParticlePosition(
+    private fun getCollisionParticlePosition(
         radius: Float,
         angleInDegrees: Float,
         originX: Int,
