@@ -5,12 +5,12 @@
         </encoder>
     </appender>
 
-    <logger name="com.github.adamyork.socketgame.web.ScoreHandler" level="WARN"/>
-    <logger name="com.github.adamyork.socketgame.socket.GameHandler" level="INFO"/>
-    <logger name="com.github.adamyork.socketgame.socket.GameAudioHandler" level="INFO"/>
-    <logger name="com.github.adamyork.socketgame.game.Game" level="INFO"/>
-    <logger name="com.github.adamyork.socketgame.game.engine.DefaultEngine" level="INFO"/>
-    <logger name="com.github.adamyork.socketgame.game.engine.DefaultPhysics" level="DEBUG"/>
+    <logger name="com.github.adamyork.sparrow.web.ScoreHandler" level="WARN"/>
+    <logger name="com.github.adamyork.sparrow.socket.GameHandler" level="INFO"/>
+    <logger name="com.github.adamyork.sparrow.socket.GameAudioHandler" level="INFO"/>
+    <logger name="com.github.adamyork.sparrow.game.Game" level="INFO"/>
+    <logger name="com.github.adamyork.sparrow.game.engine.DefaultEngine" level="INFO"/>
+    <logger name="com.github.adamyork.sparrow.game.engine.DefaultPhysics" level="DEBUG"/>
 
     <root level="info">
         <appender-ref ref="STDOUT"/>
