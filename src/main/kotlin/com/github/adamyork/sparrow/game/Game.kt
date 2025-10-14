@@ -119,7 +119,22 @@ class Game {
     }
 
     private fun startInput(controlAction: ControlAction) {
-        //LOGGER.info("start {}", controlAction)
+        if (controlAction == ControlAction.LEFT && player.direction == Direction.RIGHT) {
+            LOGGER.warn("start player left called before right stopped")
+            player.setPlayerState(
+                false,
+                jumping = player.jumping,
+                direction = Direction.RIGHT
+            )
+        }
+        if (controlAction == ControlAction.RIGHT && player.direction == Direction.LEFT) {
+            LOGGER.warn("start player right called before left stopped")
+            player.setPlayerState(
+                false,
+                jumping = player.jumping,
+                direction = Direction.LEFT
+            )
+        }
         when (controlAction) {
             ControlAction.LEFT -> player.setPlayerState(
                 true,
@@ -135,7 +150,7 @@ class Game {
 
             ControlAction.JUMP -> {
                 if (!player.jumping) {
-                    LOGGER.debug("player is not jumping start a jump")
+                    LOGGER.info("starting player jump")
                     player.setPlayerState(
                         player.moving,
                         jumping = true,
@@ -147,8 +162,12 @@ class Game {
     }
 
     private fun stopInput(controlAction: ControlAction) {
-        //LOGGER.info("stop {}", controlAction)
-        //LOGGER.info("player.direction {}", player.direction)
+        if (controlAction == ControlAction.LEFT && player.direction == Direction.RIGHT) {
+            LOGGER.warn("stop player left called before right started")
+        }
+        if (controlAction == ControlAction.RIGHT && player.direction == Direction.LEFT) {
+            LOGGER.warn("stop player right called before left started")
+        }
         if (controlAction == ControlAction.RIGHT) {
             if (player.direction == Direction.RIGHT) {
                 player.setPlayerState(

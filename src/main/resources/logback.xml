@@ -4,13 +4,19 @@
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-
-    <logger name="com.github.adamyork.sparrow.web.ScoreHandler" level="WARN"/>
-    <logger name="com.github.adamyork.sparrow.socket.GameHandler" level="INFO"/>
-    <logger name="com.github.adamyork.sparrow.socket.GameAudioHandler" level="INFO"/>
-    <logger name="com.github.adamyork.sparrow.game.Game" level="INFO"/>
-    <logger name="com.github.adamyork.sparrow.game.engine.DefaultEngine" level="INFO"/>
-    <logger name="com.github.adamyork.sparrow.game.engine.DefaultPhysics" level="DEBUG"/>
+    <logger name="com.github.adamyork.sparrow" level="INFO"/>
+    <logger name="com.github.adamyork.sparrow.web" level="WARN"/>
+    <logger name="com.github.adamyork.sparrow.socket" level="WARN"/>
+    <logger name="com.github.adamyork.sparrow.game" level="WARN"/>
+    <logger name="com.github.adamyork.sparrow.common" level="WARN"/>
+    <!--    <logger name="com.github.adamyork.sparrow.socket.InputHandler" level="INFO"/>-->
+    <!--    <logger name="com.github.adamyork.sparrow.game.Game" level="INFO"/>-->
+    <!--    <logger name="com.github.adamyork.sparrow.web.ScoreHandler" level="WARN"/>-->
+    <!--    <logger name="com.github.adamyork.sparrow.socket.GameHandler" level="INFO"/>-->
+    <!--    <logger name="com.github.adamyork.sparrow.socket.GameAudioHandler" level="INFO"/>-->
+    <!--    <logger name="com.github.adamyork.sparrow.game.engine.DefaultEngine" level="INFO"/>-->
+    <!--    <logger name="com.github.adamyork.sparrow.game.engine.DefaultPhysics" level="INFO"/>-->
+    <!--    <logger name="com.github.adamyork.sparrow.game.engine.Collision" level="INFO"/>-->
 
     <root level="info">
         <appender-ref ref="STDOUT"/>

@@ -5,6 +5,7 @@ import com.github.adamyork.sparrow.game.Game
 import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.engine.data.Particle
+import com.github.adamyork.sparrow.game.engine.data.ParticleType
 import com.github.adamyork.sparrow.game.engine.data.PhysicsXResult
 import com.github.adamyork.sparrow.game.engine.data.PhysicsYResult
 import org.slf4j.Logger
@@ -203,35 +204,70 @@ class DefaultPhysics : Physics {
     }
 
     override fun applyCollisionParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle> {
-        return mapParticles.map { particle ->
-            val nextFrame = particle.frame + 1
-            var nextRadius = particle.radius
-            var position = Tuples.of(particle.x.toFloat(), particle.y.toFloat())
-            if (particle.radius < Particles.MAX_SQUARE_RADIAL_RADIUS) {
-                nextRadius = particle.radius + 10
-                position =
-                    getCollisionParticlePosition(nextRadius.toFloat(), particle.id.toFloat(), particle.originX, particle.originY)
-            } else {
-                if (particle.frame <= particle.lifetime) {
-                    position = Tuples.of(particle.x.toFloat(), particle.y.toFloat() + GRAVITY.toFloat())
+        return mapParticles
+            .filter { it.type == ParticleType.COLLISION }
+            .map { particle ->
+                val nextFrame = particle.frame + 1
+                var nextRadius = particle.radius
+                var position = Tuples.of(particle.x.toFloat(), particle.y.toFloat())
+                if (particle.radius < Particles.MAX_SQUARE_RADIAL_RADIUS) {
+                    nextRadius = particle.radius + 10
+                    position =
+                        getCollisionParticlePosition(
+                            nextRadius.toFloat(),
+                            particle.id.toFloat(),
+                            particle.originX,
+                            particle.originY
+                        )
+                } else {
+                    if (particle.frame <= particle.lifetime) {
+                        position = Tuples.of(particle.x.toFloat(), particle.y.toFloat() + GRAVITY.toFloat())
+                    }
                 }
-            }
-            Particle(
-                particle.id,
-                position.t1.toInt() + particle.xJitter,
-                position.t2.toInt() + particle.yJitter,
-                particle.originX,
-                particle.originY,
-                particle.width,
-                particle.height,
-                particle.type,
-                nextFrame,
-                particle.lifetime,
-                particle.xJitter,
-                particle.yJitter,
-                nextRadius
-            )
-        }.toCollection(ArrayList())
+                Particle(
+                    particle.id,
+                    position.t1.toInt() + particle.xJitter,
+                    position.t2.toInt() + particle.yJitter,
+                    particle.originX,
+                    particle.originY,
+                    particle.width,
+                    particle.height,
+                    particle.type,
+                    nextFrame,
+                    particle.lifetime,
+                    particle.xJitter,
+                    particle.yJitter,
+                    nextRadius
+                )
+            }.filter { particle -> particle.frame <= particle.lifetime }
+            .toCollection(ArrayList())
+    }
+
+    override fun applyDustParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle> {
+        return mapParticles
+            .filter { it.type == ParticleType.DUST }
+            .map { particle ->
+                val nextFrame = particle.frame + 1
+                val nextWidth = (particle.width + 1).coerceAtMost(40)
+                val nextHeight = (particle.height + 1).coerceAtMost(40)
+                val nextRadius = (particle.radius - 15).coerceAtLeast(0)
+                Particle(
+                    particle.id,
+                    particle.x,
+                    particle.y,
+                    particle.originX,
+                    particle.originY,
+                    nextWidth,
+                    nextHeight,
+                    particle.type,
+                    nextFrame,
+                    particle.lifetime,
+                    particle.xJitter,
+                    particle.yJitter,
+                    nextRadius
+                )
+            }.filter { particle -> particle.frame <= particle.lifetime }
+            .toCollection(ArrayList())
     }
 
     private fun getCollisionParticlePosition(

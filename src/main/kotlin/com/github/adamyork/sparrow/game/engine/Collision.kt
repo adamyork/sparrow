@@ -89,8 +89,7 @@ class Collision {
         player: Player,
         gameMap: GameMap,
         audioQueue: AudioQueue,
-        particles: Particles,
-        physics: Physics
+        particles: Particles
     ): PlayerMapPair {
         var managedMapParticles = gameMap.particles
         var playerIsColliding = false
@@ -101,15 +100,10 @@ class Collision {
             if (playerRect.intersects(enemyRect)) {
                 LOGGER.info("enemy collision !")
                 audioQueue.queue.add(Sounds.PLAYER_COLLISION)
-                if (gameMap.particles.isEmpty()) {
-                    managedMapParticles = particles.createCollisionParticles(enemy.x, enemy.y)
-                }
+                managedMapParticles = particles.createCollisionParticles(enemy.x, enemy.y)
                 isColliding = true
                 playerIsColliding = true
             }
-            managedMapParticles = physics.applyCollisionParticlePhysics(managedMapParticles)
-            managedMapParticles = managedMapParticles.filter { particle -> particle.frame <= particle.lifetime }
-                .toCollection(ArrayList())
             val frameMetadata = enemy.getNextFrameCell()
             MapEnemy(
                 enemy.width,

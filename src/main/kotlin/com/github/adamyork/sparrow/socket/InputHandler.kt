@@ -36,15 +36,17 @@ class InputHandler : WebSocketHandler {
                 val action = if (type == INPUT_KEY_STATE) ControlType.START else ControlType.STOP
                 when (input) {
                     INPUT_KEY_RIGHT -> {
+                        LOGGER.info("right input received action is $action")
                         game.applyInput(action, ControlAction.RIGHT)
                     }
 
                     INPUT_KEY_LEFT -> {
+                        LOGGER.info("left input received action is $action")
                         game.applyInput(action, ControlAction.LEFT)
                     }
 
                     INPUT_KEY_JUMP -> {
-                        LOGGER.debug("jump key received")
+                        LOGGER.info("jump input received action is $action")
                         game.applyInput(action, ControlAction.JUMP)
                     }
                 }
