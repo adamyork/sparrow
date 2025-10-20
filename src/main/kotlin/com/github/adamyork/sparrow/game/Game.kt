@@ -117,6 +117,7 @@ class Game {
         LOGGER.info("reset game")
         player.reset(playerInitialX, playerInitialY)
         gameMap.reset(mapItemAsset, finishItemAsset, mapEnemyAsset, assetService)
+        viewPort = ViewPort(0, 0, 0, 0, 1024, 768)
         scoreService.gameMapItem = gameMap.items
     }
 

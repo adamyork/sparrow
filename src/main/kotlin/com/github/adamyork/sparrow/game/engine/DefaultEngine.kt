@@ -153,7 +153,7 @@ class DefaultEngine : Engine {
         mapItemAsset: Asset,
         finishItemAsset: Asset,
         mapEnemyAsset: Asset
-    ): ByteArray {
+    ): ByteArray {//TODO major clean up
         val compositeImage = BufferedImage(
             viewPort.width, viewPort.height,
             BufferedImage.TYPE_4BYTE_ABGR
@@ -167,10 +167,14 @@ class DefaultEngine : Engine {
         if (midGroundX < 0 || midGroundX > viewPort.width) {
             midGroundX = viewPort.x
         }
-        val farGroundSubImage = map.farGroundAsset.bufferedImage.getSubimage(farGroundX, viewPort.y, 1024, 768)
-        val midGroundSubImage = map.midGroundAsset.bufferedImage.getSubimage(midGroundX, viewPort.y, 1024, 768)
-        val nearFieldSubImage = map.nearFieldAsset.bufferedImage.getSubimage(viewPort.x, viewPort.y, 1024, 768)
-        val collisionSubImage = map.collisionAsset.bufferedImage.getSubimage(viewPort.x, viewPort.y, 1024, 768)
+        val farGroundSubImage =
+            map.farGroundAsset.bufferedImage.getSubimage(farGroundX, viewPort.y, 1024, 768)//TODO Hardcoded
+        val midGroundSubImage =
+            map.midGroundAsset.bufferedImage.getSubimage(midGroundX, viewPort.y, 1024, 768)//TODO Hardcoded
+        val nearFieldSubImage =
+            map.nearFieldAsset.bufferedImage.getSubimage(viewPort.x, viewPort.y, 1024, 768)//TODO Hardcoded
+        val collisionSubImage =
+            map.collisionAsset.bufferedImage.getSubimage(viewPort.x, viewPort.y, 1024, 768)//TODO Hardcoded
         graphics.drawImage(farGroundSubImage, 0, 0, null)
         graphics.drawImage(midGroundSubImage, 0, 0, null)
         graphics.drawImage(nearFieldSubImage, 0, 0, null)
@@ -178,7 +182,7 @@ class DefaultEngine : Engine {
         if (map.state == GameMapState.COMPLETING) {
             val gameScreenMessage = "FIND THE FINISH FLAG"
             graphics.color = Color.BLACK
-            graphics.font = Font("Arial", Font.BOLD, 32)
+            graphics.font = Font("Arial", Font.BOLD, 32)//TODO Hardcoded
             val metrics: FontMetrics? = graphics.getFontMetrics(graphics.font)
             val txtX = (viewPort.width - (metrics?.stringWidth(gameScreenMessage) ?: 0)) / 2
             val txtY = ((viewPort.height - (metrics?.height ?: 0)) / 2) + (metrics?.ascent ?: 0)
@@ -230,10 +234,10 @@ class DefaultEngine : Engine {
             val particleGraphics = particleImage.graphics
             val localCord = viewPort.globalToLocal(particle.x, particle.y)
             if (particle.type == ParticleType.COLLISION) {
-                particleGraphics.color = Color.WHITE
+                particleGraphics.color = Color.WHITE//TODO Hardcoded
                 particleGraphics.fillRect(localCord.first, localCord.second, particle.width, particle.height)
             } else {
-                particleGraphics.color = Color(230, 234, 218, particle.radius)
+                particleGraphics.color = Color(230, 234, 218, particle.radius)//TODO Hardcoded
                 particleGraphics.fillRect(localCord.first, localCord.second, particle.width, particle.height)
             }
         }

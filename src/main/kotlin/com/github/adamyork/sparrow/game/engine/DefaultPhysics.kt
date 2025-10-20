@@ -152,7 +152,7 @@ class DefaultPhysics : Physics {
         var nextPlayerJumping = playerJumping
         var nextPlayerVy = vy
         val playerIsOnFloor = playerY == collisionBoundaries.bottom
-        if (nextPlayerJumping && !playerIsOnFloor && vy == 0.0) {
+        if (nextPlayerJumping && !playerIsOnFloor && vy == 0.0) {//TODO Delta Time
             LOGGER.info("double jump detected")
             nextPlayerJumping = false
         } else {

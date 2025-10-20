@@ -17,11 +17,27 @@ class Particles {
         const val MAX_SQUARE_RADIAL_RADIUS: Int = 45
     }
 
+    final val dustParticleOffsets: HashMap<Int, Pair<Int, Int>> = HashMap()
+
+    constructor() {
+        dustParticleOffsets[0] = Pair(8, 0)
+        dustParticleOffsets[1] = Pair(1, 2)
+        dustParticleOffsets[2] = Pair(10, 4)
+        dustParticleOffsets[3] = Pair(20, 6)
+        dustParticleOffsets[4] = Pair(36, 8)
+        dustParticleOffsets[5] = Pair(44, 8)
+        dustParticleOffsets[7] = Pair(40, 6)
+        dustParticleOffsets[8] = Pair(35, 4)
+        dustParticleOffsets[9] = Pair(21, 4)
+        dustParticleOffsets[10] = Pair(19, 2)
+        dustParticleOffsets[11] = Pair(29, 0)
+    }
+
     fun createCollisionParticles(originX: Int, originY: Int): ArrayList<Particle> {
-        val particles: ArrayList<Particle> = ArrayList()
-        for (i in 0..360) {
-            val particle = Particle(
-                i,
+        val intRange = 0..360
+        return intRange.toList().toIntArray().map {
+            Particle(
+                it,
                 originX,
                 originY,
                 originX,
@@ -35,54 +51,38 @@ class Particles {
                 Random.nextInt(50),
                 1
             )
-            particles.add(particle)
-        }
-        return particles
+        }.toCollection(ArrayList())
     }
 
     fun createDustParticles(player: Player): ArrayList<Particle> {
-        val offsets: HashMap<Int, Pair<Int, Int>> = HashMap()
-        offsets[0] = Pair(8, 0)
-        offsets[1] = Pair(1, 2)
-        offsets[2] = Pair(10, 4)
-        offsets[3] = Pair(20, 6)
-        offsets[4] = Pair(36, 8)
-        offsets[5] = Pair(44, 8)
-        offsets[7] = Pair(40, 6)
-        offsets[8] = Pair(35, 4)
-        offsets[9] = Pair(21, 4)
-        offsets[10] = Pair(19, 2)
-        offsets[11] = Pair(29, 0)
-        val particles: ArrayList<Particle> = ArrayList()
         var startX: Int
-        var startY = player.y + player.height - (player.height / 5)
-        for (i in 0..11) {
+        var startY = player.y + player.height - (player.height / 16)
+        val intRange = 0..11
+        return intRange.toList().toIntArray().map {
             if (player.direction == Direction.LEFT) {
                 startX = player.x + player.width - (player.width / 3)
-                startX += offsets[i]?.first ?: 0
+                startX += dustParticleOffsets[it]?.first ?: 0
             } else {
                 startX = player.x + (player.width / 5)
-                startX -= offsets[i]?.first ?: 0
+                startX -= dustParticleOffsets[it]?.first ?: 0
             }
-            startY -= offsets[i]?.second ?: 0
-            val particle = Particle(
-                i,
+            startY -= dustParticleOffsets[it]?.second ?: 0
+            Particle(
+                it,
                 startX,
                 startY,
                 player.x,
                 player.y,
-                (i * 3).coerceAtMost(30),
-                (i * 3).coerceAtMost(30),
+                (it * 3).coerceAtMost(30),
+                (it * 3).coerceAtMost(30),
                 ParticleType.DUST,
                 0,
                 5,
                 0,
                 0,
-                255 - (i * 15)
+                255 - (it * 15)
             )
-            particles.add(particle)
-        }
-        return particles
+        }.toCollection(ArrayList())
     }
 
 }

@@ -9,10 +9,17 @@ startButton.addEventListener("click", () => {
     let splashContainer = document.getElementById("splashContainer");
     splashContainer.style.display = "none";
 
-    document.game.lastFetchedAudio = Date.now();
-    document.game.lastDrawTime = Date.now();
-    document.game.drawCyclesCompleted = 0;
+    document.game.lastFetchedScore = Date.now();
     document.game.imageLoader = new Image(1024, 168);
+
+    document.game.drawCyclesCompleted = 0;
+    document.game.updateFps = function () {
+        console.log("updating fps")
+        let fpsContainer = document.getElementById("fps");
+        fpsContainer.innerHTML = (document.game.drawCyclesCompleted / 5) + "";
+        document.game.drawCyclesCompleted = 0;
+    }
+    const updateFpsTimer = setInterval(document.game.updateFps, 5000);
 
     document.game.socket = new WebSocket("ws://localhost:8080/game");
     document.game.socket.addEventListener("open", () => {
@@ -30,17 +37,12 @@ startButton.addEventListener("click", () => {
                 URL.revokeObjectURL(document.game.imageLoader.src);
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(document.game.imageLoader, 0, 0);
-                if (Date.now() - document.game.lastDrawTime >= 1000) {
-                    //console.log("FPS : " + document.game.drawCyclesCompleted);
-                    document.game.lastDrawTime = Date.now();
-                    document.game.drawCyclesCompleted = 0;
-                }
                 document.game.socket.send("NEXT");
                 document.game.gameAudioSocket.send("NEXT");
                 document.game.drawCyclesCompleted++;
             };
         });
-        if (Date.now() - document.game.lastFetchedAudio >= 1000) {
+        if (Date.now() - document.game.lastFetchedScore >= 1000) {
             let total = document.getElementById("total");
             let remaining = document.getElementById("remaining");
             const request = new Request("http://localhost:8080/score", {
@@ -52,7 +54,7 @@ startButton.addEventListener("click", () => {
                         let score = JSON.parse(text)
                         total.innerHTML = score["total"];
                         remaining.innerHTML = score["remaining"]
-                        document.game.lastFetchedAudio = Date.now();
+                        document.game.lastFetchedScore = Date.now();
                     })
                 })
         }
