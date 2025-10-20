@@ -76,26 +76,26 @@ class MapEnemy {
         return FrameMetadata(1, Cell(1, 1, width, height))
     }
 
-    fun getNextPosition(xDelta: Int, yDelta: Int): EnemyPosition {
+    fun getNextPosition(): EnemyPosition {
         if (enemyPosition.direction == Direction.LEFT) {
             return if (enemyPosition.x >= originX - MAX_X_MOVEMENT) {
                 EnemyPosition(
-                    enemyPosition.x - MOVEMENT_X_DISTANCE - xDelta,
-                    enemyPosition.y + yDelta,
+                    enemyPosition.x - MOVEMENT_X_DISTANCE,
+                    enemyPosition.y,
                     Direction.LEFT
                 )
             } else {
-                EnemyPosition(enemyPosition.x, enemyPosition.y + yDelta, Direction.RIGHT)
+                EnemyPosition(enemyPosition.x, enemyPosition.y, Direction.RIGHT)
             }
         } else {
             return if (enemyPosition.x <= originX + MAX_X_MOVEMENT) {
                 EnemyPosition(
-                    enemyPosition.x + MOVEMENT_X_DISTANCE - xDelta,
-                    enemyPosition.y + yDelta,
+                    enemyPosition.x + MOVEMENT_X_DISTANCE,
+                    enemyPosition.y,
                     Direction.RIGHT
                 )
             } else {
-                EnemyPosition(enemyPosition.x, enemyPosition.y + yDelta, Direction.LEFT)
+                EnemyPosition(enemyPosition.x, enemyPosition.y, Direction.LEFT)
             }
         }
     }
@@ -112,5 +112,45 @@ class MapEnemy {
         collisionFrames[6] = FrameMetadata(6, Cell(1, 2, width, height))
         collisionFrames[7] = FrameMetadata(7, Cell(1, 1, width, height))
         collisionFrames[8] = FrameMetadata(8, Cell(1, 1, width, height))
+    }
+
+    fun from(
+        frameMetadata: FrameMetadata,
+        isColliding: Boolean
+    ): MapEnemy {
+        return MapEnemy(
+            this.width,
+            this.height,
+            this.x,
+            this.y,
+            this.originX,
+            this.originY,
+            this.state,
+            frameMetadata,
+            this.enemyPosition,
+            isColliding
+        )
+    }
+
+
+    fun from(
+        x: Int,
+        y: Int,
+        frameMetadata: FrameMetadata,
+        nextPosition: EnemyPosition,
+        isColliding: Boolean
+    ): MapEnemy {
+        return MapEnemy(
+            this.width,
+            this.height,
+            x,
+            y,
+            this.originX,
+            this.originY,
+            this.state,
+            frameMetadata,
+            nextPosition,
+            isColliding
+        )
     }
 }

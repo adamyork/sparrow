@@ -1,6 +1,7 @@
 package com.github.adamyork.sparrow.game.engine
 
 import com.github.adamyork.sparrow.game.data.Direction
+import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.engine.data.Particle
 import com.github.adamyork.sparrow.game.engine.data.ParticleType
 import org.slf4j.Logger
@@ -39,13 +40,7 @@ class Particles {
         return particles
     }
 
-    fun createDustParticles(
-        originX: Int,
-        originY: Int,
-        playerWidth: Int,
-        playerHeight: Int,
-        playerDirection: Direction
-    ): ArrayList<Particle> {
+    fun createDustParticles(player: Player): ArrayList<Particle> {
         val offsets: HashMap<Int, Pair<Int, Int>> = HashMap()
         offsets[0] = Pair(8, 0)
         offsets[1] = Pair(1, 2)
@@ -60,13 +55,13 @@ class Particles {
         offsets[11] = Pair(29, 0)
         val particles: ArrayList<Particle> = ArrayList()
         var startX: Int
-        var startY = originY + playerHeight - (playerHeight / 5)
+        var startY = player.y + player.height - (player.height / 5)
         for (i in 0..11) {
-            if (playerDirection == Direction.LEFT) {
-                startX = originX + playerWidth - (playerWidth / 3)
+            if (player.direction == Direction.LEFT) {
+                startX = player.x + player.width - (player.width / 3)
                 startX += offsets[i]?.first ?: 0
             } else {
-                startX = originX + (playerWidth / 5)
+                startX = player.x + (player.width / 5)
                 startX -= offsets[i]?.first ?: 0
             }
             startY -= offsets[i]?.second ?: 0
@@ -74,8 +69,8 @@ class Particles {
                 i,
                 startX,
                 startY,
-                originX,
-                originY,
+                player.x,
+                player.y,
                 (i * 3).coerceAtMost(30),
                 (i * 3).coerceAtMost(30),
                 ParticleType.DUST,

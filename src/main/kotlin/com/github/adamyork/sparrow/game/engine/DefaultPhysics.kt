@@ -1,17 +1,12 @@
 package com.github.adamyork.sparrow.game.engine
 
 import com.github.adamyork.sparrow.common.GameStatusProvider
-import com.github.adamyork.sparrow.game.Game
 import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.Player
-import com.github.adamyork.sparrow.game.engine.data.Particle
-import com.github.adamyork.sparrow.game.engine.data.ParticleType
-import com.github.adamyork.sparrow.game.engine.data.PhysicsXResult
-import com.github.adamyork.sparrow.game.engine.data.PhysicsYResult
+import com.github.adamyork.sparrow.game.data.Player.Companion.JUMP_DISTANCE
+import com.github.adamyork.sparrow.game.engine.data.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import reactor.util.function.Tuple2
-import reactor.util.function.Tuples
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -23,7 +18,6 @@ class DefaultPhysics : Physics {
         val LOGGER: Logger = LoggerFactory.getLogger(DefaultPhysics::class.java)
         const val GRAVITY: Double = 20.0
         const val FRICTION: Double = 0.9
-        const val Y_EASING_COEFFICIENT: Double = 0.1
         const val Y_VELOCITY_COEFFICIENT: Double = 0.5
         const val X_MOVEMENT_DISTANCE: Double = 1.0
         const val X_ACCELERATION_RATE: Double = 2.0
@@ -36,44 +30,35 @@ class DefaultPhysics : Physics {
         this.gameStatusProvider = gameStatusProvider
     }
 
-    override fun applyPlayerPhysics(player: Player): Player {
+    override fun applyPlayerPhysics(
+        player: Player,
+        collisionBoundaries: CollisionBoundaries,
+        collision: Collision
+    ): Player {
         val vx = getXVelocity(player.vx, player.moving)
-        val vy = getYVelocity(player.y, player.jumpDy, player.vy, player.jumping)
-        val xResult = movePlayerX(
-            player.width,
-            player.x,
-            vx,
-            player.moving,
-            player.direction
-        )
+        val vy = getYVelocity(player.y, player.vy, player.jumping, collisionBoundaries)
         val yResult = movePlayerY(
-            player.height,
             player.y,
             vy,
             player.jumping,
-            player.jumpDy,
-            player.jumpReached
+            collisionBoundaries
         )
-        return Player(
-            xResult.x,
-            yResult.y,
-            player.width,
-            player.height,
-            xResult.vx,
-            yResult.vy,
-            yResult.jumping,
-            yResult.jumpDy,
-            yResult.jumpReached,
-            xResult.moving,
+        var adjustedCollisionBoundaries = collisionBoundaries
+        if (player.y != yResult.y) {
+            val nextPlayer = player.from(yResult)
+            adjustedCollisionBoundaries =
+                collision.recomputeXBoundaries(nextPlayer, collisionBoundaries)
+        }
+        val xResult = movePlayerX(
+            player.x,
+            vx,
+            player.moving,
             player.direction,
-            player.frameMetadata,
-            player.colliding,
-            yResult.scanVerticalCeiling,
-            yResult.scanVerticalFloor
+            adjustedCollisionBoundaries
         )
+        return player.from(xResult, yResult)
     }
 
-    @OptIn(ExperimentalAtomicApi::class)
     private fun getXVelocity(playerVx: Double, playerMoving: Boolean): Double {
         var nextVx: Double = playerVx
         if (playerMoving) {
@@ -85,28 +70,31 @@ class DefaultPhysics : Physics {
             if (nextVx > Player.MAX_X_VELOCITY) {
                 nextVx = Player.MAX_X_VELOCITY
             }
-            //LOGGER.debug("incrementing player $nextVx")
         } else {
             if (nextVx > 0.0) {
                 nextVx -= X_DEACCELERATION_RATE
-                //LOGGER.debug("decrementing player $nextVx")
                 if (nextVx < 0) {
                     nextVx = 0.0
                 }
             }
         }
-        //LOGGER.debug("player vx $nextVx")
         return nextVx
     }
 
-    private fun getYVelocity(playerY: Int, playerJumpDy: Int, playerVy: Double, playerJumping: Boolean): Double {
+    private fun getYVelocity(
+        playerY: Int,
+        playerVy: Double,
+        playerJumping: Boolean,
+        collisionBoundaries: CollisionBoundaries
+    ): Double {
+        val playerIsOnFloor = playerY == collisionBoundaries.bottom
         var nextVy: Double = playerVy
         if (playerJumping) {
-            if (nextVy == 0.0) {
-                nextVy += Player.JUMP_DISTANCE / 2
+            if (nextVy == 0.0 && playerIsOnFloor) {
+                LOGGER.info("starting a jump")
+                nextVy += JUMP_DISTANCE / 2
             } else if (nextVy < Player.MAX_Y_VELOCITY) {
-                val distanceToTarget = playerY - playerJumpDy
-                nextVy += (Y_VELOCITY_COEFFICIENT * nextVy) + (distanceToTarget * Y_EASING_COEFFICIENT)
+                nextVy += (Y_VELOCITY_COEFFICIENT * nextVy)
                 if (nextVy > Player.MAX_Y_VELOCITY) {
                     nextVy = Player.MAX_Y_VELOCITY
                 }
@@ -119,153 +107,123 @@ class DefaultPhysics : Physics {
 
     @OptIn(ExperimentalAtomicApi::class)
     private fun movePlayerX(
-        playerWidth: Int,
         playerX: Int,
         playerVx: Double,
         playerMoving: Boolean,
-        playerDirection: Direction
+        playerDirection: Direction,
+        collisionBoundaries: CollisionBoundaries
     ): PhysicsXResult {
         var targetX = playerX
         var deltaTime = (System.currentTimeMillis().toInt() - gameStatusProvider.lastPaintTime.load()) / 60
         if (deltaTime <= 0) {
             deltaTime = 1
         }
-        //LOGGER.info("deltaTime: $deltaTime")
+        if (deltaTime > 2) {
+            LOGGER.info("deltaTime: $deltaTime is huge")
+        }
         if (playerMoving || playerVx != 0.0) {
             if (playerDirection == Direction.LEFT) {
                 targetX -= (playerVx * deltaTime).roundToInt()
-                if (targetX < 0) {
-                    targetX = 0
+                if (targetX <= collisionBoundaries.left) {
+                    LOGGER.info("targetX $targetX less or equal to the left boundary ${collisionBoundaries.left}")
+                    LOGGER.info("(left) playerVx $playerVx and $deltaTime")
+                    targetX = collisionBoundaries.left + 1
                 }
             } else {
                 targetX += (playerVx * deltaTime).roundToInt()
-                if (targetX >= Game.VIEWPORT_WIDTH - playerWidth) {
-                    targetX = Game.VIEWPORT_WIDTH - playerWidth - 1
+                if (targetX >= collisionBoundaries.right) {
+                    LOGGER.info("targetX $targetX greater or equal to the right boundary ${collisionBoundaries.right}")
+                    LOGGER.info("(right) playerVx $playerVx and $deltaTime")
+                    targetX = (collisionBoundaries.right - 1).coerceAtLeast(0)
                 }
             }
         }
         return PhysicsXResult(targetX, playerVx, playerMoving)
     }
 
+    @OptIn(ExperimentalAtomicApi::class)
     private fun movePlayerY(
-        playerHeight: Int,
         playerY: Int,
         vy: Double,
         playerJumping: Boolean,
-        playerJumpDy: Int,
-        playerJumpReached: Boolean
+        collisionBoundaries: CollisionBoundaries
     ): PhysicsYResult {
         var destinationY = playerY + GRAVITY.roundToInt()
-        var jumpDy = playerJumpDy
-        var jumpReached = playerJumpReached
-        var scanVerticalCeiling = false
-        var scanVerticalFloor = false
+        var nextPlayerJumping = playerJumping
+        var nextPlayerVy = vy
+        val playerIsOnFloor = playerY == collisionBoundaries.bottom
+        if (nextPlayerJumping && !playerIsOnFloor && vy == 0.0) {
+            LOGGER.info("double jump detected")
+            nextPlayerJumping = false
+        } else {
+            destinationY -= vy.roundToInt()
+        }
         if (playerJumping) {
-            if (jumpDy == 0 && !jumpReached) {
-                LOGGER.info("starting a jump")
-                jumpDy = destinationY - Player.JUMP_DISTANCE
-                destinationY -= vy.roundToInt()
-                if (destinationY < 0) {
-                    scanVerticalCeiling = true
-                    LOGGER.info("the initial jump destination is beyond the top of the viewport")
-                    destinationY = 0
-                    jumpDy = 0
-                    jumpReached = true
-                }
-            } else if (destinationY > jumpDy && !jumpReached) {
-                destinationY -= vy.roundToInt()
-                if (destinationY <= 0) {
-                    scanVerticalCeiling = true
-                    LOGGER.info("the current jump destination is beyond the top of the viewport")
-                    destinationY = 0
-                    jumpDy = 0
-                    jumpReached = true
-                }
-            } else if (destinationY <= jumpDy && !jumpReached) {
-                LOGGER.info("the jump height has been reached")
-                jumpReached = true
-                jumpDy = 0
+            val jumpBoundary = collisionBoundaries.bottom - JUMP_DISTANCE
+            if (destinationY <= jumpBoundary) {
+                LOGGER.info("jump height reached")
+                nextPlayerJumping = false
+                nextPlayerVy = 0.0
             }
         }
-        if (destinationY > Game.VIEWPORT_HEIGHT - playerHeight) {
-            scanVerticalFloor = true
-            LOGGER.info("the destinationY is beyond the bottom of the viewport")
-            destinationY = Game.VIEWPORT_HEIGHT - playerHeight
+        if (destinationY > collisionBoundaries.bottom) {
+            destinationY = collisionBoundaries.bottom
+        } else if (destinationY < collisionBoundaries.top) {
+            destinationY = collisionBoundaries.top + 1
+            if (nextPlayerJumping) {
+                LOGGER.info("jump height reached because of top of viewport")
+                nextPlayerJumping = false
+                nextPlayerVy = 0.0
+            }
         }
         return PhysicsYResult(
             destinationY,
-            vy,
-            playerJumping,
-            jumpDy,
-            jumpReached,
-            scanVerticalCeiling,
-            scanVerticalFloor
+            nextPlayerVy,
+            nextPlayerJumping
         )
     }
 
     override fun applyCollisionParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle> {
         return mapParticles
-            .filter { it.type == ParticleType.COLLISION }
             .map { particle ->
-                val nextFrame = particle.frame + 1
-                var nextRadius = particle.radius
-                var position = Tuples.of(particle.x.toFloat(), particle.y.toFloat())
-                if (particle.radius < Particles.MAX_SQUARE_RADIAL_RADIUS) {
-                    nextRadius = particle.radius + 10
-                    position =
-                        getCollisionParticlePosition(
-                            nextRadius.toFloat(),
-                            particle.id.toFloat(),
-                            particle.originX,
-                            particle.originY
-                        )
-                } else {
-                    if (particle.frame <= particle.lifetime) {
-                        position = Tuples.of(particle.x.toFloat(), particle.y.toFloat() + GRAVITY.toFloat())
+                if (particle.type == ParticleType.COLLISION) {
+                    val nextFrame = particle.frame + 1
+                    var nextRadius = particle.radius
+                    var position = Pair(particle.x.toFloat(), particle.y.toFloat())
+                    if (particle.radius < Particles.MAX_SQUARE_RADIAL_RADIUS) {
+                        nextRadius = particle.radius + 10
+                        position =
+                            getCollisionParticlePosition(
+                                nextRadius.toFloat(),
+                                particle.id.toFloat(),
+                                particle.originX,
+                                particle.originY
+                            )
+                    } else {
+                        if (particle.frame <= particle.lifetime) {
+                            position = Pair(particle.x.toFloat(), particle.y.toFloat() + GRAVITY.toFloat())
+                        }
                     }
+                    particle.from(position, nextFrame, nextRadius)
+                } else {
+                    particle
                 }
-                Particle(
-                    particle.id,
-                    position.t1.toInt() + particle.xJitter,
-                    position.t2.toInt() + particle.yJitter,
-                    particle.originX,
-                    particle.originY,
-                    particle.width,
-                    particle.height,
-                    particle.type,
-                    nextFrame,
-                    particle.lifetime,
-                    particle.xJitter,
-                    particle.yJitter,
-                    nextRadius
-                )
             }.filter { particle -> particle.frame <= particle.lifetime }
             .toCollection(ArrayList())
     }
 
     override fun applyDustParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle> {
         return mapParticles
-            .filter { it.type == ParticleType.DUST }
             .map { particle ->
-                val nextFrame = particle.frame + 1
-                val nextWidth = (particle.width + 1).coerceAtMost(40)
-                val nextHeight = (particle.height + 1).coerceAtMost(40)
-                val nextRadius = (particle.radius - 15).coerceAtLeast(0)
-                Particle(
-                    particle.id,
-                    particle.x,
-                    particle.y,
-                    particle.originX,
-                    particle.originY,
-                    nextWidth,
-                    nextHeight,
-                    particle.type,
-                    nextFrame,
-                    particle.lifetime,
-                    particle.xJitter,
-                    particle.yJitter,
-                    nextRadius
-                )
+                if (particle.type == ParticleType.DUST) {
+                    val nextFrame = particle.frame + 1
+                    val nextWidth = (particle.width + 1).coerceAtMost(40)
+                    val nextHeight = (particle.height + 1).coerceAtMost(40)
+                    val nextRadius = (particle.radius - 15).coerceAtLeast(0)
+                    particle.from(nextWidth, nextHeight, nextFrame, nextRadius)
+                } else {
+                    particle
+                }
             }.filter { particle -> particle.frame <= particle.lifetime }
             .toCollection(ArrayList())
     }
@@ -275,9 +233,9 @@ class DefaultPhysics : Physics {
         angleInDegrees: Float,
         originX: Int,
         originY: Int
-    ): Tuple2<Float, Float> {
+    ): Pair<Float, Float> {
         val x: Float = (radius * cos(angleInDegrees * Math.PI / 180f)).toFloat() + originX
         val y: Float = (radius * sin(angleInDegrees * Math.PI / 180f)).toFloat() + originY
-        return Tuples.of(x, y)
+        return Pair(x, y)
     }
 }

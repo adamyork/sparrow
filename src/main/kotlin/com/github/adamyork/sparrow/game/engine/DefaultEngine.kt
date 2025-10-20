@@ -1,9 +1,8 @@
 package com.github.adamyork.sparrow.game.engine
 
 import com.github.adamyork.sparrow.common.AudioQueue
-import com.github.adamyork.sparrow.game.Game
 import com.github.adamyork.sparrow.game.data.*
-import com.github.adamyork.sparrow.game.engine.data.Particle
+import com.github.adamyork.sparrow.game.engine.data.CollisionBoundaries
 import com.github.adamyork.sparrow.game.engine.data.ParticleType
 import com.github.adamyork.sparrow.game.engine.data.PlayerMapPair
 import com.github.adamyork.sparrow.game.service.ScoreService
@@ -46,161 +45,109 @@ class DefaultEngine : Engine {
         this.scoreService = scoreService
     }
 
-    override fun managePlayer(player: Player): Player {
-        val physicsAppliedPlayer = physics.applyPlayerPhysics(player)
-        val nextFrameMetadata = player.getNextFrameCell()
-        return Player(
-            physicsAppliedPlayer.x,
-            physicsAppliedPlayer.y,
-            physicsAppliedPlayer.width,
-            physicsAppliedPlayer.height,
-            physicsAppliedPlayer.vx,
-            physicsAppliedPlayer.vy,
-            physicsAppliedPlayer.jumping,
-            physicsAppliedPlayer.jumpDy,
-            physicsAppliedPlayer.jumpReached,
-            physicsAppliedPlayer.moving,
-            physicsAppliedPlayer.direction,
-            nextFrameMetadata,
-            physicsAppliedPlayer.colliding,
-            physicsAppliedPlayer.scanVerticalCeiling,
-            physicsAppliedPlayer.scanVerticalFloor
-        )
+    override fun setCollisionBufferedImage(asset: Asset) {
+        this.collision.collisionImage = asset.bufferedImage
     }
 
-    override fun manageMap(
-        player: Player,
-        gameMap: GameMap
-    ): GameMap {
-        var nextX = gameMap.x
-        var nextY = gameMap.y
-        if (player.moving) {
-            if (player.direction == Direction.RIGHT) {
-                if (player.x + player.width == Game.VIEWPORT_WIDTH - 1) {
-                    nextX += GameMap.VIEWPORT_HORIZONTAL_ADVANCE_RATE
-                }
-                if (nextX > Game.VIEWPORT_WIDTH) {
-                    nextX = Game.VIEWPORT_WIDTH
-                }
-            } else {
-                if (player.x == 0) {
-                    nextX -= GameMap.VIEWPORT_HORIZONTAL_ADVANCE_RATE
-                }
-                if (nextX < 0) {
-                    nextX = 0
-                }
+    override fun getCollisionBoundaries(player: Player, collisionAsset: Asset): CollisionBoundaries {
+        return collision.getCollisionBoundaries(player)
+    }
+
+    override fun managePlayer(player: Player, collisionBoundaries: CollisionBoundaries): Player {
+        val physicsAppliedPlayer = physics.applyPlayerPhysics(player, collisionBoundaries, collision)
+        val nextFrameMetadata = player.getNextFrameCell()
+        return player.from(physicsAppliedPlayer, nextFrameMetadata)
+    }
+
+    override fun manageViewport(player: Player, viewPort: ViewPort): ViewPort {
+        var nextX = viewPort.x
+        var nextY = viewPort.y
+        if (player.direction == Direction.RIGHT) {
+            val adjustedX = player.x + player.width
+            val viewPortRightBoundary = viewPort.x + viewPort.width
+            if (adjustedX > viewPortRightBoundary) {
+                LOGGER.info("move map horizontal right")
+                val diff = adjustedX - viewPortRightBoundary
+                nextX = (nextX + diff).coerceAtMost(2048 - viewPort.width) //TODO hardcoded
+            }
+        } else {
+            val viewPortLeftBoundary = viewPort.x
+            if (player.x < viewPortLeftBoundary) {
+                LOGGER.info("move map horizontal left")
+                val diff = viewPortLeftBoundary - player.x
+                nextX = (nextX - diff).coerceAtLeast(0)
             }
         }
-        if (player.y <= 0) {
+        val playerBottom = player.y + player.height
+        val viewPortBottomBoundary = viewPort.y + viewPort.height
+        if (player.y < viewPort.y) {
             LOGGER.info("move map vertical up")
-            nextY -= GameMap.VIEWPORT_VERTICAL_ADVANCE_RATE
-            if (nextY < 0) {
-                nextY = 0
-            }
-        } else if (player.y + player.height >= Game.VIEWPORT_HEIGHT - 1) {
+            val diff = viewPort.y - player.y
+            nextY = (nextY - diff).coerceAtLeast(0)
+        } else if (playerBottom > viewPortBottomBoundary) {
             LOGGER.info("move map vertical down")
-            nextY += GameMap.VIEWPORT_VERTICAL_ADVANCE_RATE
-            if (nextY > Game.VIEWPORT_HEIGHT) {
-                nextY = Game.VIEWPORT_HEIGHT
-            }
+            val diff = player.y - viewPort.y
+            nextY = (nextY + diff).coerceAtMost(1536 - viewPort.height) //TODO hardcoded
         }
-        val managedMapItems = manageMapItems(gameMap, nextX, nextY)
-        val managedMapEnemies = manageMapEnemies(gameMap, nextX, nextY)
+        val nextViewPort = ViewPort(nextX, nextY, viewPort.x, viewPort.y, viewPort.width, viewPort.height)
+        if (nextX != viewPort.x || nextY != viewPort.y) {
+            LOGGER.info("viewport has changed $nextViewPort")
+        }
+        return nextViewPort
+    }
+
+    override fun manageMap(player: Player, gameMap: GameMap): GameMap {
+        val managedMapItems = manageMapItems(gameMap)
+        val managedMapEnemies = manageMapEnemies(gameMap)
         val managedCollisionParticles = physics.applyCollisionParticlePhysics(gameMap.particles)
-        val dustParticles: ArrayList<Particle> = gameMap.particles
-            .filter { it.type == ParticleType.DUST }.toCollection(ArrayList())
         if (player.moving && !player.jumping) {
-            val nextDustParticles =
-                particles.createDustParticles(player.x, player.y, player.width, player.height, player.direction)
-            dustParticles.addAll(nextDustParticles)
+            val nextDustParticles = particles.createDustParticles(player)
+            managedCollisionParticles.addAll(nextDustParticles)
         }
-        val managedDustParticles = physics.applyDustParticlePhysics(dustParticles)
-        managedCollisionParticles.addAll(managedDustParticles)
+        val managedAllParticles = physics.applyDustParticlePhysics(managedCollisionParticles)
         var mapState = gameMap.state
         if (mapState == GameMapState.COLLECTING && scoreService.allFound()) {
             LOGGER.info("all items found map is in completing mode")
             mapState = GameMapState.COMPLETING
         }
-        return GameMap(
-            mapState,
-            gameMap.farGroundAsset,
-            gameMap.midGroundAsset,
-            gameMap.nearFieldAsset,
-            gameMap.collisionAsset,
-            nextX,
-            nextY,
-            gameMap.width,
-            gameMap.height,
-            managedMapItems,
-            managedMapEnemies,
-            managedCollisionParticles,
-        )
+        return gameMap.from(mapState, managedMapItems, managedMapEnemies, managedAllParticles)
     }
 
-    override fun manageCollision(
+    override fun manageEnemyAndItemCollision(
         player: Player,
-        previousX: Int,
-        previousY: Int,
         map: GameMap,
+        viewPort: ViewPort,
         collisionAsset: Asset
     ): PlayerMapPair {
-        val currentCollisionArea = collisionAsset.bufferedImage.getSubimage(map.x, map.y, 1024, 768)
-        var nextPlayer = collision.checkForPlayerCollision(previousX, previousY, player, currentCollisionArea)
-        var nextMap = collision.checkForItemCollision(nextPlayer, map, audioQueue)
-        val enemyCollisionResult = collision.checkForEnemyCollision(nextPlayer, nextMap, audioQueue, particles)
-        nextPlayer = enemyCollisionResult.player
+        var nextMap = collision.checkForItemCollision(player, map, audioQueue)
+        val enemyCollisionResult =
+            collision.checkForEnemyCollision(player, nextMap, viewPort, audioQueue, particles)
         nextMap = enemyCollisionResult.map
-        return PlayerMapPair(nextPlayer, nextMap)
+        return PlayerMapPair(enemyCollisionResult.player, nextMap)
     }
 
-    private fun manageMapItems(
-        gameMap: GameMap,
-        nextX: Int,
-        nextY: Int
-    ): ArrayList<MapItem> {
-        val lastX = gameMap.x
-        val lastY = gameMap.y
-        val yDelta = lastY - nextY
-        val xDelta = nextX - lastX
+    private fun manageMapItems(gameMap: GameMap): ArrayList<MapItem> {
         return gameMap.items.map { item ->
-            val itemX = item.x - xDelta
-            val itemY = item.y + yDelta
+            val itemX = item.x
+            val itemY = item.y
             val frameMetadata = item.getNextFrameCell()
             MapItem(item.width, item.height, itemX, itemY, item.type, item.state, frameMetadata)
         }.toCollection(ArrayList())
     }
 
-    private fun manageMapEnemies(
-        gameMap: GameMap,
-        nextX: Int,
-        nextY: Int
-    ): ArrayList<MapEnemy> {
-        val lastX = gameMap.x
-        val lastY = gameMap.y
-        val yDelta = lastY - nextY
-        val xDelta = nextX - lastX
+    private fun manageMapEnemies(gameMap: GameMap): ArrayList<MapEnemy> {
         return gameMap.enemies.map { enemy ->
-            val nextPosition = enemy.getNextPosition(xDelta, yDelta)
+            val nextPosition = enemy.getNextPosition()
             val itemX = nextPosition.x
             val itemY = nextPosition.y
             val frameMetadata = enemy.getNextFrameCell()
-            MapEnemy(
-                enemy.width,
-                enemy.height,
-                itemX,
-                itemY,
-                enemy.originX - xDelta,
-                enemy.originY + yDelta,
-                enemy.state,
-                frameMetadata,
-                nextPosition,
-                false
-            )
+            enemy.from(itemX, itemY, frameMetadata, nextPosition, false)
         }.toCollection(ArrayList())
     }
 
     override fun paint(
         map: GameMap,
+        viewPort: ViewPort,
         playerAsset: Asset,
         player: Player,
         mapItemAsset: Asset,
@@ -208,22 +155,22 @@ class DefaultEngine : Engine {
         mapEnemyAsset: Asset
     ): ByteArray {
         val compositeImage = BufferedImage(
-            Game.VIEWPORT_WIDTH, Game.VIEWPORT_HEIGHT,
+            viewPort.width, viewPort.height,
             BufferedImage.TYPE_4BYTE_ABGR
         )
         val graphics = compositeImage.graphics
-        var farGroundX = map.x / GameMap.VIEWPORT_HORIZONTAL_FAR_PARALLAX_OFFSET
-        var midGroundX = map.x / GameMap.VIEWPORT_HORIZONTAL_MID_PARALLAX_OFFSET
-        if (farGroundX < 0 || farGroundX > Game.VIEWPORT_WIDTH) {
-            farGroundX = map.x
+        var farGroundX = viewPort.x / GameMap.VIEWPORT_HORIZONTAL_FAR_PARALLAX_OFFSET
+        var midGroundX = viewPort.x / GameMap.VIEWPORT_HORIZONTAL_MID_PARALLAX_OFFSET
+        if (farGroundX < 0 || farGroundX > viewPort.width) {
+            farGroundX = viewPort.x
         }
-        if (midGroundX < 0 || midGroundX > Game.VIEWPORT_WIDTH) {
-            midGroundX = map.x
+        if (midGroundX < 0 || midGroundX > viewPort.width) {
+            midGroundX = viewPort.x
         }
-        val farGroundSubImage = map.farGroundAsset.bufferedImage.getSubimage(farGroundX, map.y, 1024, 768)
-        val midGroundSubImage = map.midGroundAsset.bufferedImage.getSubimage(midGroundX, map.y, 1024, 768)
-        val nearFieldSubImage = map.nearFieldAsset.bufferedImage.getSubimage(map.x, map.y, 1024, 768)
-        val collisionSubImage = map.collisionAsset.bufferedImage.getSubimage(map.x, map.y, 1024, 768)
+        val farGroundSubImage = map.farGroundAsset.bufferedImage.getSubimage(farGroundX, viewPort.y, 1024, 768)
+        val midGroundSubImage = map.midGroundAsset.bufferedImage.getSubimage(midGroundX, viewPort.y, 1024, 768)
+        val nearFieldSubImage = map.nearFieldAsset.bufferedImage.getSubimage(viewPort.x, viewPort.y, 1024, 768)
+        val collisionSubImage = map.collisionAsset.bufferedImage.getSubimage(viewPort.x, viewPort.y, 1024, 768)
         graphics.drawImage(farGroundSubImage, 0, 0, null)
         graphics.drawImage(midGroundSubImage, 0, 0, null)
         graphics.drawImage(nearFieldSubImage, 0, 0, null)
@@ -233,14 +180,15 @@ class DefaultEngine : Engine {
             graphics.color = Color.BLACK
             graphics.font = Font("Arial", Font.BOLD, 32)
             val metrics: FontMetrics? = graphics.getFontMetrics(graphics.font)
-            val txtX = (Game.VIEWPORT_WIDTH - (metrics?.stringWidth(gameScreenMessage) ?: 0)) / 2
-            val txtY = ((Game.VIEWPORT_HEIGHT - (metrics?.height ?: 0)) / 2) + (metrics?.ascent ?: 0)
+            val txtX = (viewPort.width - (metrics?.stringWidth(gameScreenMessage) ?: 0)) / 2
+            val txtY = ((viewPort.height - (metrics?.height ?: 0)) / 2) + (metrics?.ascent ?: 0)
             graphics.drawString(gameScreenMessage, txtX, txtY)
             map.activateFinish()
         }
 
         map.items.forEach { item ->
             if (item.state != MapItemState.INACTIVE) {
+                val localCord = viewPort.globalToLocal(item.x, item.y)
                 if (item.type == MapItemType.FINISH) {
                     val finishItemSubImage = finishItemAsset.bufferedImage.getSubimage(
                         0,
@@ -248,20 +196,20 @@ class DefaultEngine : Engine {
                         item.width,
                         item.height
                     )
-                    graphics.drawImage(finishItemSubImage, item.x, item.y, null)
+                    graphics.drawImage(finishItemSubImage, localCord.first, localCord.second, null)
                 } else {
-
                     val mapItemSubImage = mapItemAsset.bufferedImage.getSubimage(
                         item.frameMetadata.cell.x,
                         item.frameMetadata.cell.y,
                         item.width,
                         item.height
                     )
-                    graphics.drawImage(mapItemSubImage, item.x, item.y, null)
+                    graphics.drawImage(mapItemSubImage, localCord.first, localCord.second, null)
                 }
             }
         }
         map.enemies.forEach { enemy ->
+            val localCord = viewPort.globalToLocal(enemy.x, enemy.y)
             if (enemy.state != MapItemState.INACTIVE) {
                 val mapEnemySubImage = mapEnemyAsset.bufferedImage.getSubimage(
                     enemy.frameMetadata.cell.x,
@@ -271,24 +219,22 @@ class DefaultEngine : Engine {
                 )
                 graphics.drawImage(
                     transformDirection(mapEnemySubImage, enemy.enemyPosition.direction, enemy.width),
-                    enemy.x,
-                    enemy.y,
+                    localCord.first,
+                    localCord.second,
                     null
                 )
             }
         }
-        val particleImage = BufferedImage(
-            Game.VIEWPORT_WIDTH, Game.VIEWPORT_HEIGHT,
-            BufferedImage.TYPE_4BYTE_ABGR
-        )
+        val particleImage = BufferedImage(viewPort.width, viewPort.height, BufferedImage.TYPE_4BYTE_ABGR)
         map.particles.forEach { particle ->
             val particleGraphics = particleImage.graphics
+            val localCord = viewPort.globalToLocal(particle.x, particle.y)
             if (particle.type == ParticleType.COLLISION) {
                 particleGraphics.color = Color.WHITE
-                particleGraphics.fillRect(particle.x, particle.y, particle.width, particle.height)
+                particleGraphics.fillRect(localCord.first, localCord.second, particle.width, particle.height)
             } else {
                 particleGraphics.color = Color(230, 234, 218, particle.radius)
-                particleGraphics.fillOval(particle.x, particle.y, particle.width, particle.height)
+                particleGraphics.fillRect(localCord.first, localCord.second, particle.width, particle.height)
             }
         }
         graphics.drawImage(particleImage, 0, 0, null)
@@ -300,7 +246,13 @@ class DefaultEngine : Engine {
                 player.width,
                 player.height
             )
-        graphics.drawImage(transformDirection(playerSubImage, player.direction, player.width), player.x, player.y, null)
+        val localCord = viewPort.globalToLocal(player.x, player.y)
+        graphics.drawImage(
+            transformDirection(playerSubImage, player.direction, player.width),
+            localCord.first,
+            localCord.second,
+            null
+        )
         val backgroundBuffer = ByteArrayOutputStream()
         ImageIO.write(compositeImage, "png", backgroundBuffer)
         compositeImage.graphics.dispose()

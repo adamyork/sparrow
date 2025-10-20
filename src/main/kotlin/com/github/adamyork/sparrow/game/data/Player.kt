@@ -1,14 +1,17 @@
 package com.github.adamyork.sparrow.game.data
 
+import com.github.adamyork.sparrow.game.engine.data.PhysicsXResult
+import com.github.adamyork.sparrow.game.engine.data.PhysicsYResult
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class Player {
 
     companion object {
-        val LOGGER: org.slf4j.Logger = LoggerFactory.getLogger(Player::class.java)
+        val LOGGER: Logger = LoggerFactory.getLogger(Player::class.java)
         const val MAX_X_VELOCITY: Double = 24.0
         const val MAX_Y_VELOCITY: Double = 64.0
-        const val JUMP_DISTANCE: Int = 192
+        const val JUMP_DISTANCE: Int = 256
         const val ANIMATION_MOVING_FRAMES = 2
         const val ANIMATION_JUMPING_FRAMES = 8
         const val ANIMATION_COLLISION_FRAMES = 8
@@ -25,14 +28,10 @@ class Player {
     var vx: Double
     var vy: Double
     var jumping: Boolean
-    var jumpDy: Int
-    var jumpReached: Boolean
     var moving: Boolean
     var direction: Direction
     var frameMetadata: FrameMetadata
     var colliding: Boolean
-    var scanVerticalCeiling: Boolean
-    var scanVerticalFloor: Boolean
 
     constructor(xPos: Int, yPos: Int, width: Int, height: Int) {
         this.x = xPos
@@ -42,18 +41,14 @@ class Player {
         this.vx = 0.0
         this.vy = 0.0
         this.jumping = false
-        this.jumpDy = 0
-        this.jumpReached = false
         this.moving = false
         this.direction = Direction.RIGHT
         this.frameMetadata = FrameMetadata(1, Cell(1, 1, width, height))
         this.colliding = false
-        this.scanVerticalCeiling = false
-        this.scanVerticalFloor = false
         generateAnimationFrameIndex()
     }
 
-    constructor(
+    private constructor(
         x: Int,
         y: Int,
         width: Int,
@@ -61,14 +56,10 @@ class Player {
         vx: Double,
         vy: Double,
         jumping: Boolean,
-        jumpDy: Int,
-        jumpReached: Boolean,
         moving: Boolean,
         direction: Direction,
         frame: FrameMetadata,
         colliding: Boolean,
-        scanVerticalCeiling: Boolean,
-        scanVerticalFloor: Boolean,
     ) {
         this.x = x
         this.y = y
@@ -77,14 +68,10 @@ class Player {
         this.vx = vx
         this.vy = vy
         this.jumping = jumping
-        this.jumpDy = jumpDy
-        this.jumpReached = jumpReached
         this.moving = moving
         this.direction = direction
         this.frameMetadata = frame
         this.colliding = colliding
-        this.scanVerticalCeiling = scanVerticalCeiling
-        this.scanVerticalFloor = scanVerticalFloor
         generateAnimationFrameIndex()
     }
 
@@ -107,7 +94,7 @@ class Player {
                 return collisionFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, width, height))
             }
         }
-        if (jumping && !jumpReached) {
+        if (jumping) {
             LOGGER.info("here")
             if (frameMetadata.frame == ANIMATION_JUMPING_FRAMES) {
                 LOGGER.info("here1")
@@ -158,13 +145,73 @@ class Player {
         this.vx = 0.0
         this.vy = 0.0
         this.jumping = false
-        this.jumpDy = 0
-        this.jumpReached = false
         this.moving = false
         this.direction = Direction.RIGHT
         this.frameMetadata = FrameMetadata(1, Cell(1, 1, width, height))
         this.colliding = false
-        this.scanVerticalCeiling = false
-        this.scanVerticalFloor = false
+    }
+
+    fun from(physicsYResult: PhysicsYResult): Player {
+        return Player(
+            this.x,
+            physicsYResult.y,
+            this.width,
+            this.height,
+            this.vx,
+            physicsYResult.vy,
+            physicsYResult.jumping,
+            this.moving,
+            this.direction,
+            this.frameMetadata,
+            this.colliding
+        )
+    }
+
+    fun from(physicsXResult: PhysicsXResult, physicsYResult: PhysicsYResult): Player {
+        return Player(
+            physicsXResult.x,
+            physicsYResult.y,
+            this.width,
+            this.height,
+            physicsXResult.vx,
+            physicsYResult.vy,
+            physicsYResult.jumping,
+            physicsXResult.moving,
+            this.direction,
+            this.frameMetadata,
+            this.colliding
+        )
+    }
+
+    fun from(x: Int, vx: Double, isColliding: Boolean): Player {
+        return Player(
+            x,
+            this.y,
+            this.width,
+            this.height,
+            vx,
+            this.vy,
+            this.jumping,
+            this.moving,
+            this.direction,
+            this.frameMetadata,
+            isColliding,
+        )
+    }
+
+    fun from(player: Player, frameMetadata: FrameMetadata): Player {
+        return Player(
+            player.x,
+            player.y,
+            player.width,
+            player.height,
+            player.vx,
+            player.vy,
+            player.jumping,
+            player.moving,
+            player.direction,
+            frameMetadata,
+            player.colliding
+        )
     }
 }

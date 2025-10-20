@@ -6,6 +6,7 @@ import com.github.adamyork.sparrow.common.GameStatusProvider
 import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.GameMap
 import com.github.adamyork.sparrow.game.data.Player
+import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.engine.Engine
 import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.game.service.ScoreService
@@ -22,8 +23,6 @@ class Game {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(Game::class.java)
-        const val VIEWPORT_WIDTH: Int = 1024
-        const val VIEWPORT_HEIGHT: Int = 768
     }
 
     val assetService: AssetService
@@ -35,6 +34,7 @@ class Game {
     val playerInitialY: Int
 
 
+    lateinit var viewPort: ViewPort
     lateinit var player: Player
     lateinit var gameMap: GameMap
     lateinit var playerAsset: Asset
@@ -66,6 +66,7 @@ class Game {
             assetService.loadItem(1),
             assetService.loadEnemy(0)
         ).map { objects ->
+            viewPort = ViewPort(0, 0, 0, 0, 1024, 768)
             gameMap = objects.t1
             playerAsset = objects.t2
             mapItemAsset = objects.t3
@@ -74,6 +75,7 @@ class Game {
             player = Player(playerInitialX, playerInitialY, playerAsset.width, playerAsset.height)
             gameMap.generateMapItems(mapItemAsset, finishItemAsset, assetService)
             gameMap.generateMapEnemies(mapEnemyAsset, assetService)
+            engine.setCollisionBufferedImage(gameMap.collisionAsset)
             scoreService.gameMapItem = gameMap.items
             isInitialized = true
             LOGGER.info("assets Loaded")
@@ -87,17 +89,17 @@ class Game {
             .collectList()
             .map(Function { _ ->
                 if (gameStatusProvider.running.load()) {
-                    val previousX = player.x
-                    val previousY = player.y
-                    player = engine.managePlayer(player)
+                    val collisionBoundaries = engine.getCollisionBoundaries(player, gameMap.collisionAsset)
+                    player = engine.managePlayer(player, collisionBoundaries)
+                    viewPort = engine.manageViewport(player, viewPort)
                     gameMap = engine.manageMap(player, gameMap)
+                    val nextPlayerAndMap =
+                        engine.manageEnemyAndItemCollision(player, gameMap, viewPort, gameMap.collisionAsset)
+                    player = nextPlayerAndMap.player
+                    gameMap = nextPlayerAndMap.map
                     scoreService.gameMapItem = gameMap.items
-                    val collisionResult =
-                        engine.manageCollision(player, previousX, previousY, gameMap, gameMap.collisionAsset)
-                    player = collisionResult.player
-                    gameMap = collisionResult.map
                     gameStatusProvider.lastPaintTime.store(System.currentTimeMillis().toInt())
-                    engine.paint(gameMap, playerAsset, player, mapItemAsset, finishItemAsset, mapEnemyAsset)
+                    engine.paint(gameMap, viewPort, playerAsset, player, mapItemAsset, finishItemAsset, mapEnemyAsset)
                 } else {
                     ByteArray(0)
                 }
@@ -114,27 +116,11 @@ class Game {
     fun reset() {
         LOGGER.info("reset game")
         player.reset(playerInitialX, playerInitialY)
-        gameMap.reset(0, Game.VIEWPORT_HEIGHT, mapItemAsset, finishItemAsset, mapEnemyAsset, assetService)
+        gameMap.reset(mapItemAsset, finishItemAsset, mapEnemyAsset, assetService)
         scoreService.gameMapItem = gameMap.items
     }
 
     private fun startInput(controlAction: ControlAction) {
-        if (controlAction == ControlAction.LEFT && player.direction == Direction.RIGHT) {
-            LOGGER.warn("start player left called before right stopped")
-            player.setPlayerState(
-                false,
-                jumping = player.jumping,
-                direction = Direction.RIGHT
-            )
-        }
-        if (controlAction == ControlAction.RIGHT && player.direction == Direction.LEFT) {
-            LOGGER.warn("start player right called before left stopped")
-            player.setPlayerState(
-                false,
-                jumping = player.jumping,
-                direction = Direction.LEFT
-            )
-        }
         when (controlAction) {
             ControlAction.LEFT -> player.setPlayerState(
                 true,

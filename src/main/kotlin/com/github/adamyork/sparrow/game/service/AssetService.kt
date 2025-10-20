@@ -1,7 +1,6 @@
 package com.github.adamyork.sparrow.game.service
 
 import com.github.adamyork.sparrow.common.Sounds
-import com.github.adamyork.sparrow.game.Game
 import com.github.adamyork.sparrow.game.data.GameMap
 import com.github.adamyork.sparrow.game.data.GameMapState
 import com.github.adamyork.sparrow.game.service.data.Asset
@@ -186,8 +185,6 @@ class AssetService {
                     mapAssetMap[id + 1]!!,
                     mapAssetMap[id + 2]!!,
                     mapAssetMap[id + 3]!!,
-                    0,
-                    Game.VIEWPORT_HEIGHT,
                     mapAssetMap[id + 3]!!.width,
                     mapAssetMap[id + 3]!!.height,
                     ArrayList(),

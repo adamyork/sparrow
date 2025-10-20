@@ -10,8 +10,6 @@ data class GameMap(
     val midGroundAsset: Asset,
     val nearFieldAsset: Asset,
     val collisionAsset: Asset,
-    var x: Int,
-    var y: Int,
     val width: Int,
     val height: Int,
     var items: ArrayList<MapItem>,
@@ -20,8 +18,6 @@ data class GameMap(
 ) {
 
     companion object {
-        const val VIEWPORT_HORIZONTAL_ADVANCE_RATE: Int = 10
-        const val VIEWPORT_VERTICAL_ADVANCE_RATE: Int = 128
         const val VIEWPORT_HORIZONTAL_FAR_PARALLAX_OFFSET: Int = 4
         const val VIEWPORT_HORIZONTAL_MID_PARALLAX_OFFSET: Int = 2
     }
@@ -70,16 +66,12 @@ data class GameMap(
     }
 
     fun reset(
-        xPos: Int,
-        yPos: Int,
         collectibleItemAsset: Asset,
         finishItemAsset: Asset,
         enemyAsset: Asset,
         assetService: AssetService
     ) {
         this.state = GameMapState.COLLECTING
-        this.x = xPos
-        this.y = yPos
         this.items = ArrayList()
         this.enemies = ArrayList()
         this.particles = ArrayList()
@@ -91,6 +83,56 @@ data class GameMap(
         val finishItem = this.items
             .find { it.type == MapItemType.FINISH }
         finishItem?.state = MapItemState.ACTIVE
+    }
+
+    fun from(managedMapEnemies: ArrayList<MapEnemy>, managedMapParticles: ArrayList<Particle>): GameMap {
+        return GameMap(
+            this.state,
+            this.farGroundAsset,
+            this.midGroundAsset,
+            this.nearFieldAsset,
+            this.collisionAsset,
+            this.width,
+            this.height,
+            this.items,
+            managedMapEnemies,
+            managedMapParticles
+        )
+    }
+
+    fun from(gameMapState: GameMapState, managedMapItems: ArrayList<MapItem>): GameMap {
+        return GameMap(
+            gameMapState,
+            this.farGroundAsset,
+            this.midGroundAsset,
+            this.nearFieldAsset,
+            this.collisionAsset,
+            this.width,
+            this.height,
+            managedMapItems,
+            this.enemies,
+            this.particles
+        )
+    }
+
+    fun from(
+        gameMapState: GameMapState,
+        managedMapItems: ArrayList<MapItem>,
+        managedMapEnemies: ArrayList<MapEnemy>,
+        managedMapParticles: ArrayList<Particle>
+    ): GameMap {
+        return GameMap(
+            gameMapState,
+            this.farGroundAsset,
+            this.midGroundAsset,
+            this.nearFieldAsset,
+            this.collisionAsset,
+            this.width,
+            this.height,
+            managedMapItems,
+            managedMapEnemies,
+            managedMapParticles
+        )
     }
 
 }
