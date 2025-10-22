@@ -33,10 +33,12 @@ startButton.addEventListener("click", () => {
             let ctx = canvas.getContext("2d");
             document.game.imageLoader.src = URL.createObjectURL(blob);
             document.game.imageLoader.onload = function () {
+                console.log("one game tick" + (Date.now() - document.game.sendTime));
                 document.game.loadedTime = Date.now();
                 URL.revokeObjectURL(document.game.imageLoader.src);
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(document.game.imageLoader, 0, 0);
+                document.game.sendTime = Date.now();
                 document.game.socket.send("NEXT");
                 document.game.gameAudioSocket.send("NEXT");
                 document.game.drawCyclesCompleted++;
@@ -78,9 +80,9 @@ startButton.addEventListener("click", () => {
     document.game.inputAudioSocket = new WebSocket("ws://localhost:8080/input-audio");
     document.game.inputAudioSocket.addEventListener("open", () => {
         console.log("START AUDIO");
-        let bgAudio = document.getElementById("bg-music");
-        bgAudio.loop = true;
-        bgAudio.play();
+        // let bgAudio = document.getElementById("bg-music");
+        // bgAudio.loop = true;
+        // bgAudio.play();
     });
     document.game.inputAudioSocket.addEventListener("message", (event) => {
         let blob = new Blob([event.data], {'type': 'audio/wav'});
@@ -104,6 +106,25 @@ startButton.addEventListener("click", () => {
             let player = document.getElementById("fx-player");
             player.addEventListener("ended", () => {
                 URL.revokeObjectURL(this.src);
+            })
+            player.src = window.URL.createObjectURL(blob);
+            if (!player.duration > 0) {
+                player.play();
+            }
+        }
+    });
+
+    document.game.backgroundMusicAudioSocket = new WebSocket("ws://localhost:8080/background-audio");
+    document.game.backgroundMusicAudioSocket.addEventListener("open", () => {
+        document.game.backgroundMusicAudioSocket.send("NEXT");
+    });
+    document.game.backgroundMusicAudioSocket.addEventListener("message", (event) => {
+        let blob = new Blob([event.data], {'type': 'audio/wav'});
+        if (blob.size !== 0) {
+            let player = document.getElementById("bg-music");
+            player.addEventListener("ended", () => {
+                URL.revokeObjectURL(this.src);
+                document.game.backgroundMusicAudioSocket.send("NEXT");
             })
             player.src = window.URL.createObjectURL(blob);
             if (!player.duration > 0) {

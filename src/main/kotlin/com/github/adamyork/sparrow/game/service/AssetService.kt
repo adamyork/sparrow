@@ -26,10 +26,23 @@ class AssetService {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(AssetService::class.java)
+        fun getBytes(file: File): ByteArray {
+            val byteArray = ByteArray(file.length().toInt())
+            FileInputStream(file).use { fis ->
+                val bytesRead = fis.read(byteArray)
+                if (bytesRead != byteArray.size) {
+                    throw IOException("file only partially read: `${file.path}`")
+                }
+            }
+            return byteArray
+        }
     }
+
+    final val wavChunkService: WavChunkService
 
     //sounds
     final val soundBytesMap: HashMap<Sounds, ByteArray> = HashMap()
+    final var backgroundMusicBytesMap: HashMap<Int, ByteArray> = HashMap()
 
     //player
     private final val playerWidth: Int
@@ -62,6 +75,7 @@ class AssetService {
     final val enemyPositions: YamlMap
 
     constructor(
+        wavChunkService: WavChunkService,
         @Value("\${map.width}") mapWidth: Int,
         @Value("\${map.height}") mapHeight: Int,
         @Value("\${map.bg}") mapBackgroundPath: String,
@@ -82,6 +96,7 @@ class AssetService {
         @Value("\${audio.player.collision}") audioPlayerCollisionPath: String,
         @Value("\${audio.item.collect}") audioItemCollectPath: String
     ) {
+        this.wavChunkService = wavChunkService
         this.mapWidth = mapWidth
         this.mapHeight = mapHeight
         this.mapBackgroundPath = mapBackgroundPath
@@ -120,6 +135,9 @@ class AssetService {
         mapUrlMap[1] = this::class.java.classLoader.getResource(mapMiddleGroundPath)
         mapUrlMap[2] = this::class.java.classLoader.getResource(mapForGroundPath)
         mapUrlMap[3] = this::class.java.classLoader.getResource(mapCollisionPath)
+
+        val backgroundMusicFile = urlToFile(this::class.java.classLoader.getResource("static/level-1-music.wav"))
+        backgroundMusicBytesMap = wavChunkService.chunk(backgroundMusicFile, 25000)
     }
 
     private fun parseEnemyPositions(file: File): YamlMap {
@@ -257,17 +275,5 @@ class AssetService {
         val file = urlToFile(url)
         return getBytes(file)
     }
-
-    private fun getBytes(file: File): ByteArray {
-        val byteArray = ByteArray(file.length().toInt())
-        FileInputStream(file).use { fis ->
-            val bytesRead = fis.read(byteArray)
-            if (bytesRead != byteArray.size) {
-                throw IOException("file only partially read: `${file.path}`")
-            }
-        }
-        return byteArray
-    }
-
 
 }

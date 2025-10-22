@@ -68,7 +68,7 @@ class DefaultEngine : Engine {
             if (adjustedX > viewPortRightBoundary) {
                 LOGGER.info("move map horizontal right")
                 val diff = adjustedX - viewPortRightBoundary
-                nextX = (nextX + diff).coerceAtMost(2048 - viewPort.width) //TODO hardcoded
+                nextX = (nextX + diff).coerceAtMost(collision.collisionImage.width - viewPort.width)
             }
         } else {
             val viewPortLeftBoundary = viewPort.x
@@ -87,7 +87,7 @@ class DefaultEngine : Engine {
         } else if (playerBottom > viewPortBottomBoundary) {
             LOGGER.info("move map vertical down")
             val diff = player.y - viewPort.y
-            nextY = (nextY + diff).coerceAtMost(1536 - viewPort.height) //TODO hardcoded
+            nextY = (nextY + diff).coerceAtMost(collision.collisionImage.height - viewPort.height)
         }
         val nextViewPort = ViewPort(nextX, nextY, viewPort.x, viewPort.y, viewPort.width, viewPort.height)
         if (nextX != viewPort.x || nextY != viewPort.y) {
@@ -156,7 +156,7 @@ class DefaultEngine : Engine {
     ): ByteArray {//TODO major clean up
         val compositeImage = BufferedImage(
             viewPort.width, viewPort.height,
-            BufferedImage.TYPE_4BYTE_ABGR
+            BufferedImage.TYPE_BYTE_INDEXED
         )
         val graphics = compositeImage.graphics
         var farGroundX = viewPort.x / GameMap.VIEWPORT_HORIZONTAL_FAR_PARALLAX_OFFSET
@@ -168,13 +168,13 @@ class DefaultEngine : Engine {
             midGroundX = viewPort.x
         }
         val farGroundSubImage =
-            map.farGroundAsset.bufferedImage.getSubimage(farGroundX, viewPort.y, 1024, 768)//TODO Hardcoded
+            map.farGroundAsset.bufferedImage.getSubimage(farGroundX, viewPort.y, viewPort.width, viewPort.height)
         val midGroundSubImage =
-            map.midGroundAsset.bufferedImage.getSubimage(midGroundX, viewPort.y, 1024, 768)//TODO Hardcoded
+            map.midGroundAsset.bufferedImage.getSubimage(midGroundX, viewPort.y, viewPort.width, viewPort.height)
         val nearFieldSubImage =
-            map.nearFieldAsset.bufferedImage.getSubimage(viewPort.x, viewPort.y, 1024, 768)//TODO Hardcoded
+            map.nearFieldAsset.bufferedImage.getSubimage(viewPort.x, viewPort.y, viewPort.width, viewPort.height)
         val collisionSubImage =
-            map.collisionAsset.bufferedImage.getSubimage(viewPort.x, viewPort.y, 1024, 768)//TODO Hardcoded
+            map.collisionAsset.bufferedImage.getSubimage(viewPort.x, viewPort.y, viewPort.width, viewPort.height)
         graphics.drawImage(farGroundSubImage, 0, 0, null)
         graphics.drawImage(midGroundSubImage, 0, 0, null)
         graphics.drawImage(nearFieldSubImage, 0, 0, null)
@@ -258,7 +258,7 @@ class DefaultEngine : Engine {
             null
         )
         val backgroundBuffer = ByteArrayOutputStream()
-        ImageIO.write(compositeImage, "png", backgroundBuffer)
+        ImageIO.write(compositeImage, "bmp", backgroundBuffer)
         compositeImage.graphics.dispose()
         val gameBytes = backgroundBuffer.toByteArray()
         backgroundBuffer.reset()

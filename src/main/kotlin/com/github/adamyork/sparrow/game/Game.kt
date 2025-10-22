@@ -32,6 +32,10 @@ class Game {
     var isInitialized: Boolean = false
     val playerInitialX: Int
     val playerInitialY: Int
+    val viewPortInitialX: Int
+    val viewPortInitialY: Int
+    val viewPortWidth: Int
+    val viewPortHeight: Int
 
 
     lateinit var viewPort: ViewPort
@@ -48,7 +52,11 @@ class Game {
         scoreService: ScoreService,
         gameStatusProvider: GameStatusProvider,
         playerInitialX: Int,
-        playerInitialY: Int
+        playerInitialY: Int,
+        viewPortInitialX: Int,
+        viewPortInitialY: Int,
+        viewPortWidth: Int,
+        viewPortHeight: Int,
     ) {
         this.assetService = assetService
         this.engine = engine
@@ -56,6 +64,10 @@ class Game {
         this.gameStatusProvider = gameStatusProvider
         this.playerInitialX = playerInitialX
         this.playerInitialY = playerInitialY
+        this.viewPortInitialX = viewPortInitialX
+        this.viewPortInitialY = viewPortInitialY
+        this.viewPortWidth = viewPortWidth
+        this.viewPortHeight = viewPortHeight
     }
 
     fun init(): Mono<Boolean> {
@@ -66,7 +78,7 @@ class Game {
             assetService.loadItem(1),
             assetService.loadEnemy(0)
         ).map { objects ->
-            viewPort = ViewPort(0, 0, 0, 0, 1024, 768)
+            viewPort = ViewPort(viewPortInitialX, viewPortInitialY, 0, 0, viewPortWidth, viewPortHeight)
             gameMap = objects.t1
             playerAsset = objects.t2
             mapItemAsset = objects.t3
@@ -117,7 +129,7 @@ class Game {
         LOGGER.info("reset game")
         player.reset(playerInitialX, playerInitialY)
         gameMap.reset(mapItemAsset, finishItemAsset, mapEnemyAsset, assetService)
-        viewPort = ViewPort(0, 0, 0, 0, 1024, 768)
+        viewPort = ViewPort(viewPortInitialX, viewPortInitialY, 0, 0, viewPortWidth, viewPortHeight)
         scoreService.gameMapItem = gameMap.items
     }
 

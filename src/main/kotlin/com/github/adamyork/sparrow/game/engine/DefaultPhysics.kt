@@ -7,7 +7,6 @@ import com.github.adamyork.sparrow.game.data.Player.Companion.JUMP_DISTANCE
 import com.github.adamyork.sparrow.game.engine.data.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -105,7 +104,6 @@ class DefaultPhysics : Physics {
         return nextVy
     }
 
-    @OptIn(ExperimentalAtomicApi::class)
     private fun movePlayerX(
         playerX: Int,
         playerVx: Double,
@@ -114,13 +112,7 @@ class DefaultPhysics : Physics {
         collisionBoundaries: CollisionBoundaries
     ): PhysicsXResult {
         var targetX = playerX
-        var deltaTime = (System.currentTimeMillis().toInt() - gameStatusProvider.lastPaintTime.load()) / 60
-        if (deltaTime <= 0) {
-            deltaTime = 1
-        }
-        if (deltaTime > 2) {
-            LOGGER.info("deltaTime: $deltaTime is huge")
-        }
+        val deltaTime = gameStatusProvider.getDeltaTime()
         if (playerMoving || playerVx != 0.0) {
             if (playerDirection == Direction.LEFT) {
                 targetX -= (playerVx * deltaTime).roundToInt()
@@ -141,7 +133,6 @@ class DefaultPhysics : Physics {
         return PhysicsXResult(targetX, playerVx, playerMoving)
     }
 
-    @OptIn(ExperimentalAtomicApi::class)
     private fun movePlayerY(
         playerY: Int,
         vy: Double,
@@ -152,11 +143,12 @@ class DefaultPhysics : Physics {
         var nextPlayerJumping = playerJumping
         var nextPlayerVy = vy
         val playerIsOnFloor = playerY == collisionBoundaries.bottom
-        if (nextPlayerJumping && !playerIsOnFloor && vy == 0.0) {//TODO Delta Time
+        if (nextPlayerJumping && !playerIsOnFloor && vy == 0.0) {
             LOGGER.info("double jump detected")
             nextPlayerJumping = false
         } else {
-            destinationY -= vy.roundToInt()
+            val deltaTime = gameStatusProvider.getDeltaTime()
+            destinationY -= (vy * deltaTime).roundToInt()
         }
         if (playerJumping) {
             val jumpBoundary = collisionBoundaries.bottom - JUMP_DISTANCE

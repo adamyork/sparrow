@@ -1,3 +1,8 @@
+viewport:
+  x: 0
+  y: 0
+  width: 1024
+  height: 768
 player:
   asset:
     path: "game/sparrow-comp.png"

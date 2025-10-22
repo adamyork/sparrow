@@ -32,17 +32,33 @@ class SocketConfig {
         audioQueue: AudioQueue,
         gameStatusProvider: GameStatusProvider,
         @Value("\${player.x}") playerInitialX: Int,
-        @Value("\${player.y}") playerInitialY: Int
+        @Value("\${player.y}") playerInitialY: Int,
+        @Value("\${viewport.x}") viewPortInitialX: Int,
+        @Value("\${viewport.y}") viewPortInitialY: Int,
+        @Value("\${viewport.width}") viewPortWidth: Int,
+        @Value("\${viewport.height}") viewPortHeight: Int,
     ): HandlerMapping {
-        val map: MutableMap<String?, WebSocketHandler?> = HashMap()
-        val game = Game(assetService, engine, scoreService, gameStatusProvider, playerInitialX, playerInitialY)
+        val handlers: MutableMap<String?, WebSocketHandler?> = HashMap()
+        val game = Game(
+            assetService,
+            engine,
+            scoreService,
+            gameStatusProvider,
+            playerInitialX,
+            playerInitialY,
+            viewPortInitialX,
+            viewPortInitialY,
+            viewPortWidth,
+            viewPortHeight
+        )
         val gameAudio = GameAudio(assetService, audioQueue)
-        map["/game"] = GameHandler(game, assetService, engine, scoreService, gameStatusProvider)
-        map["/input"] = InputHandler(game)
-        map["/input-audio"] = InputAudioHandler(assetService, gameStatusProvider)
-        map["/game-audio"] = GameAudioHandler(gameAudio, assetService, audioQueue)
+        handlers["/game"] = GameHandler(game, assetService, engine, scoreService, gameStatusProvider)
+        handlers["/input"] = InputHandler(game)
+        handlers["/input-audio"] = InputAudioHandler(assetService, gameStatusProvider)
+        handlers["/game-audio"] = GameAudioHandler(gameAudio, assetService, audioQueue)
+        handlers["/background-audio"] = BackgroundAudioHandler(assetService, gameStatusProvider)
         val mapping = SimpleUrlHandlerMapping()
-        mapping.urlMap = map
+        mapping.urlMap = handlers
         mapping.order = Ordered.HIGHEST_PRECEDENCE
         return mapping
     }
