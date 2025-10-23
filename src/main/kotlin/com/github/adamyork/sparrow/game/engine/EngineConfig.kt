@@ -2,6 +2,7 @@ package com.github.adamyork.sparrow.game.engine
 
 import com.github.adamyork.sparrow.common.AudioQueue
 import com.github.adamyork.sparrow.common.GameStatusProvider
+import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.game.service.ScoreService
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -18,9 +19,10 @@ class EngineConfig {
         collision: Collision,
         particles: Particles,
         audioQueue: AudioQueue,
-        scoreService: ScoreService
+        scoreService: ScoreService,
+        assetService: AssetService
     ): Engine {
-        return DefaultEngine(physics, collision, particles, audioQueue, scoreService)
+        return DefaultEngine(physics, collision, particles, audioQueue, scoreService, assetService)
     }
 
 }

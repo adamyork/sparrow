@@ -5,13 +5,12 @@ import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.engine.data.CollisionBoundaries
 import com.github.adamyork.sparrow.game.engine.data.ParticleType
 import com.github.adamyork.sparrow.game.engine.data.PlayerMapPair
+import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.game.service.ScoreService
 import com.github.adamyork.sparrow.game.service.data.Asset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.Color
-import java.awt.Font
-import java.awt.FontMetrics
 import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
 import java.awt.image.BufferedImage
@@ -30,19 +29,22 @@ class DefaultEngine : Engine {
     val particles: Particles
     val audioQueue: AudioQueue
     val scoreService: ScoreService
+    val assetService: AssetService
 
     constructor(
         physics: Physics,
         collision: Collision,
         particles: Particles,
         audioQueue: AudioQueue,
-        scoreService: ScoreService
+        scoreService: ScoreService,
+        assetService: AssetService
     ) {
         this.physics = physics
         this.particles = particles
         this.audioQueue = audioQueue
         this.collision = collision
         this.scoreService = scoreService
+        this.assetService = assetService
     }
 
     override fun setCollisionBufferedImage(asset: Asset) {
@@ -179,16 +181,10 @@ class DefaultEngine : Engine {
         graphics.drawImage(midGroundSubImage, 0, 0, null)
         graphics.drawImage(nearFieldSubImage, 0, 0, null)
         graphics.drawImage(collisionSubImage, 0, 0, null)
-        if (map.state == GameMapState.COMPLETING) {
-            val gameScreenMessage = "FIND THE FINISH FLAG"
-            graphics.color = Color.BLACK
-            graphics.font = Font("Arial", Font.BOLD, 32)//TODO Hardcoded
-            val metrics: FontMetrics? = graphics.getFontMetrics(graphics.font)
-            val txtX = (viewPort.width - (metrics?.stringWidth(gameScreenMessage) ?: 0)) / 2
-            val txtY = ((viewPort.height - (metrics?.height ?: 0)) / 2) + (metrics?.ascent ?: 0)
-            graphics.drawString(gameScreenMessage, txtX, txtY)
-            map.activateFinish()
-        }
+
+        val gameStatusTextImage = assetService.getTextAsset(map.state)
+        graphics.drawImage(gameStatusTextImage.image, 0, 0, null)
+        //map.activateFinish()TODO Activate finish
 
         map.items.forEach { item ->
             if (item.state != MapItemState.INACTIVE) {
@@ -212,6 +208,7 @@ class DefaultEngine : Engine {
                 }
             }
         }
+
         map.enemies.forEach { enemy ->
             val localCord = viewPort.globalToLocal(enemy.x, enemy.y)
             if (enemy.state != MapItemState.INACTIVE) {
@@ -258,6 +255,7 @@ class DefaultEngine : Engine {
             null
         )
         val backgroundBuffer = ByteArrayOutputStream()
+        ImageIO.setUseCache(false)
         ImageIO.write(compositeImage, "bmp", backgroundBuffer)
         compositeImage.graphics.dispose()
         val gameBytes = backgroundBuffer.toByteArray()

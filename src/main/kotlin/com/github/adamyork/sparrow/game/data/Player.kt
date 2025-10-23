@@ -9,10 +9,10 @@ class Player {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(Player::class.java)
-        const val MAX_X_VELOCITY: Double = 24.0
-        const val MAX_Y_VELOCITY: Double = 64.0
+        const val MAX_X_VELOCITY: Double = 16.0
+        const val MAX_Y_VELOCITY: Double = 32.0
         const val JUMP_DISTANCE: Int = 256
-        const val ANIMATION_MOVING_FRAMES = 2
+        const val ANIMATION_MOVING_FRAMES = 4
         const val ANIMATION_JUMPING_FRAMES = 8
         const val ANIMATION_COLLISION_FRAMES = 8
     }
@@ -118,7 +118,9 @@ class Player {
 
     private fun generateAnimationFrameIndex() {
         movingFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
-        movingFrames[2] = FrameMetadata(2, Cell(1, 2, width, height))
+        movingFrames[2] = FrameMetadata(2, Cell(1, 1, width, height))
+        movingFrames[3] = FrameMetadata(3, Cell(1, 2, width, height))
+        movingFrames[4] = FrameMetadata(4, Cell(1, 2, width, height))
 
         jumpingFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
         jumpingFrames[2] = FrameMetadata(2, Cell(1, 2, width, height))

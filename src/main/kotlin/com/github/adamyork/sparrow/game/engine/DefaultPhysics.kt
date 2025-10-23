@@ -19,7 +19,7 @@ class DefaultPhysics : Physics {
         const val FRICTION: Double = 0.9
         const val Y_VELOCITY_COEFFICIENT: Double = 0.5
         const val X_MOVEMENT_DISTANCE: Double = 1.0
-        const val X_ACCELERATION_RATE: Double = 2.0
+        const val X_ACCELERATION_RATE: Double = 1.5
         const val X_DEACCELERATION_RATE: Double = 4.0
     }
 

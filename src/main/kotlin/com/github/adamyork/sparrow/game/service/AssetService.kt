@@ -5,6 +5,7 @@ import com.github.adamyork.sparrow.game.data.GameMap
 import com.github.adamyork.sparrow.game.data.GameMapState
 import com.github.adamyork.sparrow.game.service.data.Asset
 import com.github.adamyork.sparrow.game.service.data.ItemPositionAndType
+import com.github.adamyork.sparrow.game.service.data.TextAsset
 import kotlinx.coroutines.reactor.mono
 import net.mamoe.yamlkt.YamlMap
 import org.slf4j.Logger
@@ -12,6 +13,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
+import java.awt.Color
+import java.awt.Font
+import java.awt.FontMetrics
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.FileInputStream
@@ -38,11 +42,15 @@ class AssetService {
         }
     }
 
-    final val wavChunkService: WavChunkService
+    final val wavService: WavService
 
     //sounds
     final val soundBytesMap: HashMap<Sounds, ByteArray> = HashMap()
     final var backgroundMusicBytesMap: HashMap<Int, ByteArray> = HashMap()
+
+    //viewport
+    private final val viewPortWidth: Int
+    private final val viewPortHeight: Int
 
     //player
     private final val playerWidth: Int
@@ -74,8 +82,13 @@ class AssetService {
     final val enemyUrlMap: HashMap<Int, URL?> = HashMap()
     final val enemyPositions: YamlMap
 
+    //text
+    final val textAssetMap: HashMap<GameMapState, TextAsset> = HashMap()
+
     constructor(
-        wavChunkService: WavChunkService,
+        wavService: WavService,
+        @Value("\${viewport.width}") viewPortWidth: Int,
+        @Value("\${viewport.height}") viewPortHeight: Int,
         @Value("\${map.width}") mapWidth: Int,
         @Value("\${map.height}") mapHeight: Int,
         @Value("\${map.bg}") mapBackgroundPath: String,
@@ -96,7 +109,9 @@ class AssetService {
         @Value("\${audio.player.collision}") audioPlayerCollisionPath: String,
         @Value("\${audio.item.collect}") audioItemCollectPath: String
     ) {
-        this.wavChunkService = wavChunkService
+        this.wavService = wavService
+        this.viewPortWidth = viewPortWidth
+        this.viewPortHeight = viewPortHeight
         this.mapWidth = mapWidth
         this.mapHeight = mapHeight
         this.mapBackgroundPath = mapBackgroundPath
@@ -136,8 +151,30 @@ class AssetService {
         mapUrlMap[2] = this::class.java.classLoader.getResource(mapForGroundPath)
         mapUrlMap[3] = this::class.java.classLoader.getResource(mapCollisionPath)
 
-        val backgroundMusicFile = urlToFile(this::class.java.classLoader.getResource("static/level-1-music.wav"))
-        backgroundMusicBytesMap = wavChunkService.chunk(backgroundMusicFile, 25000)
+        val backgroundMusicFile =
+            urlToFile(this::class.java.classLoader.getResource("static/level-1-music.wav"))//TODO Hardcoded
+        backgroundMusicBytesMap = wavService.chunk(backgroundMusicFile, 25000)
+
+        val collectItemsAssetText = buildTextAsset(
+            viewPortWidth,
+            viewPortHeight,
+            Font("Arial", Font.BOLD, 32),
+            Color.BLACK,
+            "Collect all the greenies!",
+            centerX = true,
+            centerY = false,
+        )
+        val finishGameTextAsset = buildTextAsset(
+            viewPortWidth,
+            viewPortHeight,
+            Font("Arial", Font.BOLD, 32),
+            Color.BLACK,
+            "Find the finish flag!",
+            centerX = true,
+            centerY = false,
+        )
+        textAssetMap[GameMapState.COLLECTING] = collectItemsAssetText
+        textAssetMap[GameMapState.COMPLETING] = finishGameTextAsset
     }
 
     private fun parseEnemyPositions(file: File): YamlMap {
@@ -264,6 +301,51 @@ class AssetService {
 
     fun getSoundStream(sound: Sounds): ByteArray {
         return soundBytesMap.getOrElse(sound) { byteArrayOf() }
+    }
+
+    private fun buildTextAsset(
+        viewPortWidth: Int,
+        viewPortHeight: Int,
+        font: Font,
+        color: Color,
+        message: String,
+        centerX: Boolean,
+        centerY: Boolean
+    ): TextAsset {
+        val textImage = BufferedImage(
+            viewPortWidth, viewPortHeight,
+            BufferedImage.TYPE_4BYTE_ABGR
+        )
+        val graphics = textImage.graphics
+        graphics.font = font
+        val metrics: FontMetrics? = graphics.getFontMetrics(graphics.font)
+        val textWidth = metrics?.stringWidth(message) ?: 0
+        val textHeight = metrics?.height ?: 0
+        val textAscent: Int = metrics?.ascent ?: 0
+        val x: Int = if (centerX) {
+            (viewPortWidth - textWidth) / 2
+        } else {
+            0
+        }
+        val y: Int = if (centerY) {
+            ((viewPortHeight - textHeight) / 2) + textAscent
+        } else {
+            0 + textAscent
+        }
+        graphics.color = Color.WHITE
+        graphics.fillRect(
+            (x - 5).coerceAtLeast(0),
+            (y - textAscent).coerceAtLeast(0),
+            textWidth + 10,
+            textHeight
+        )
+        graphics.color = color
+        graphics.drawString(message, x, y)
+        return TextAsset(textImage)
+    }
+
+    fun getTextAsset(gameMapState: GameMapState): TextAsset {
+        return textAssetMap[gameMapState] ?: TextAsset(BufferedImage(0, 0, 0))
     }
 
     private fun urlToFile(url: URL?): File {

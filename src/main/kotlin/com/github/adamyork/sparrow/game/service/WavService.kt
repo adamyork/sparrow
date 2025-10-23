@@ -11,10 +11,10 @@ import javax.sound.sampled.AudioInputStream
 import javax.sound.sampled.AudioSystem
 
 @Service
-class WavChunkService {
+class WavService {
 
     companion object {
-        val LOGGER: Logger = LoggerFactory.getLogger(WavChunkService::class.java)
+        val LOGGER: Logger = LoggerFactory.getLogger(WavService::class.java)
     }
 
     fun chunk(file: File, chunkMs: Int): HashMap<Int, ByteArray> {
