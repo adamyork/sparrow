@@ -3,7 +3,7 @@ package com.github.adamyork.sparrow.game.data
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class MapItem {
+open class MapItem {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(MapItem::class.java)
@@ -51,7 +51,7 @@ class MapItem {
         generateAnimationFrameIndex()
     }
 
-    fun getNextFrameCell(): FrameMetadata {
+     open fun getNextFrameCell(): FrameMetadata {
         if (state == MapItemState.DEACTIVATING) {
             if (frameMetadata.frame == ANIMATION_DEACTIVATING_FRAMES) {
                 LOGGER.info("deactivating complete 0")
@@ -79,7 +79,7 @@ class MapItem {
     }
 
     @Suppress("DuplicatedCode")
-    private fun generateAnimationFrameIndex() {
+    protected open fun generateAnimationFrameIndex() {
         activeFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
         activeFrames[2] = FrameMetadata(2, Cell(1, 1, width, height))
         activeFrames[3] = FrameMetadata(3, Cell(1, 1, width, height))

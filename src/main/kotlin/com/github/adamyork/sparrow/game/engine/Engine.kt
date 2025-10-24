@@ -4,16 +4,15 @@ import com.github.adamyork.sparrow.game.data.GameMap
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.engine.data.CollisionBoundaries
-import com.github.adamyork.sparrow.game.engine.data.PlayerMapPair
-import com.github.adamyork.sparrow.game.service.data.Asset
+import com.github.adamyork.sparrow.game.service.data.ImageAsset
 
 interface Engine {
 
-    fun setCollisionBufferedImage(asset: Asset)
+    fun setCollisionBufferedImage(asset: ImageAsset)
 
     fun getCollisionBoundaries(
         player: Player,
-        collisionAsset: Asset
+        collisionAsset: ImageAsset
     ): CollisionBoundaries
 
     fun managePlayer(player: Player, collisionBoundaries: CollisionBoundaries): Player
@@ -26,17 +25,17 @@ interface Engine {
         player: Player,
         map: GameMap,
         viewPort: ViewPort,
-        collisionAsset: Asset
-    ): PlayerMapPair
+        collisionAsset: ImageAsset
+    ): Pair<Player, GameMap>
 
     fun paint(
         map: GameMap,
         viewPort: ViewPort,
-        playerAsset: Asset,
+        playerAsset: ImageAsset,
         player: Player,
-        mapItemAsset: Asset,
-        finishItemAsset: Asset,
-        mapEnemyAsset: Asset
+        mapItemAsset: ImageAsset,
+        finishItemAsset: ImageAsset,
+        mapEnemyAsset: ImageAsset
     ): ByteArray
 
 }

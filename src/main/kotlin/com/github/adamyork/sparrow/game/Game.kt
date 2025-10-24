@@ -10,7 +10,7 @@ import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.engine.Engine
 import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.game.service.ScoreService
-import com.github.adamyork.sparrow.game.service.data.Asset
+import com.github.adamyork.sparrow.game.service.data.ImageAsset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
@@ -41,10 +41,10 @@ class Game {
     lateinit var viewPort: ViewPort
     lateinit var player: Player
     lateinit var gameMap: GameMap
-    lateinit var playerAsset: Asset
-    lateinit var mapItemAsset: Asset
-    lateinit var finishItemAsset: Asset
-    lateinit var mapEnemyAsset: Asset
+    lateinit var playerAsset: ImageAsset
+    lateinit var mapItemAsset: ImageAsset
+    lateinit var finishItemAsset: ImageAsset
+    lateinit var mapEnemyAsset: ImageAsset
 
     constructor(
         assetService: AssetService,
@@ -107,8 +107,8 @@ class Game {
                     gameMap = engine.manageMap(player, gameMap)
                     val nextPlayerAndMap =
                         engine.manageEnemyAndItemCollision(player, gameMap, viewPort, gameMap.collisionAsset)
-                    player = nextPlayerAndMap.player
-                    gameMap = nextPlayerAndMap.map
+                    player = nextPlayerAndMap.first
+                    gameMap = nextPlayerAndMap.second
                     scoreService.gameMapItem = gameMap.items
                     gameStatusProvider.lastPaintTime.store(System.currentTimeMillis().toInt())
                     engine.paint(gameMap, viewPort, playerAsset, player, mapItemAsset, finishItemAsset, mapEnemyAsset)

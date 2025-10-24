@@ -2,14 +2,14 @@ package com.github.adamyork.sparrow.game.data
 
 import com.github.adamyork.sparrow.game.engine.data.Particle
 import com.github.adamyork.sparrow.game.service.AssetService
-import com.github.adamyork.sparrow.game.service.data.Asset
+import com.github.adamyork.sparrow.game.service.data.ImageAsset
 
 data class GameMap(
     var state: GameMapState,
-    val farGroundAsset: Asset,
-    val midGroundAsset: Asset,
-    val nearFieldAsset: Asset,
-    val collisionAsset: Asset,
+    val farGroundAsset: ImageAsset,
+    val midGroundAsset: ImageAsset,
+    val nearFieldAsset: ImageAsset,
+    val collisionAsset: ImageAsset,
     val width: Int,
     val height: Int,
     var items: ArrayList<MapItem>,
@@ -22,12 +22,12 @@ data class GameMap(
         const val VIEWPORT_HORIZONTAL_MID_PARALLAX_OFFSET: Int = 2
     }
 
-    fun generateMapItems(collectibleItemAsset: Asset, finishItemAsset: Asset, assetService: AssetService) {
+    fun generateMapItems(collectibleItemAsset: ImageAsset, finishItemAsset: ImageAsset, assetService: AssetService) {
         for (i in 0..<assetService.getTotalItems()) {
             val itemType = MapItemType.from(assetService.getItemPosition(i).type)
             if (itemType == MapItemType.FINISH) {
                 items.add(
-                    MapItem(
+                    MapFinishItem(
                         finishItemAsset.width,
                         finishItemAsset.height,
                         assetService.getItemPosition(i).x,
@@ -51,7 +51,7 @@ data class GameMap(
         }
     }
 
-    fun generateMapEnemies(asset: Asset, assetService: AssetService) {
+    fun generateMapEnemies(asset: ImageAsset, assetService: AssetService) {
         for (i in 0..<assetService.getTotalEnemies()) {
             enemies.add(
                 MapEnemy(
@@ -66,9 +66,9 @@ data class GameMap(
     }
 
     fun reset(
-        collectibleItemAsset: Asset,
-        finishItemAsset: Asset,
-        enemyAsset: Asset,
+        collectibleItemAsset: ImageAsset,
+        finishItemAsset: ImageAsset,
+        enemyAsset: ImageAsset,
         assetService: AssetService
     ) {
         this.state = GameMapState.COLLECTING
@@ -77,12 +77,6 @@ data class GameMap(
         this.particles = ArrayList()
         generateMapItems(collectibleItemAsset, finishItemAsset, assetService)
         generateMapEnemies(enemyAsset, assetService)
-    }
-
-    fun activateFinish() {
-        val finishItem = this.items
-            .find { it.type == MapItemType.FINISH }
-        finishItem?.state = MapItemState.ACTIVE
     }
 
     fun from(managedMapEnemies: ArrayList<MapEnemy>, managedMapParticles: ArrayList<Particle>): GameMap {

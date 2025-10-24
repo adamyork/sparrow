@@ -3,7 +3,7 @@ package com.github.adamyork.sparrow.game.service
 import com.github.adamyork.sparrow.common.Sounds
 import com.github.adamyork.sparrow.game.data.GameMap
 import com.github.adamyork.sparrow.game.data.GameMapState
-import com.github.adamyork.sparrow.game.service.data.Asset
+import com.github.adamyork.sparrow.game.service.data.ImageAsset
 import com.github.adamyork.sparrow.game.service.data.ItemPositionAndType
 import com.github.adamyork.sparrow.game.service.data.TextAsset
 import kotlinx.coroutines.reactor.mono
@@ -59,7 +59,7 @@ class AssetService {
 
     //maps
     final val mapUrlMap: HashMap<Int, URL?> = HashMap()
-    final val mapAssetMap: HashMap<Int, Asset> = HashMap()
+    final val mapAssetMap: HashMap<Int, ImageAsset> = HashMap()
     private final val mapWidth: Int
     private final val mapHeight: Int
     private final val mapBackgroundPath: String
@@ -173,8 +173,18 @@ class AssetService {
             centerX = true,
             centerY = false,
         )
+        val gameCompleteTextAsset = buildTextAsset(
+            viewPortWidth,
+            viewPortHeight,
+            Font("Arial", Font.BOLD, 32),
+            Color.BLACK,
+            "You won!",
+            centerX = true,
+            centerY = false,
+        )
         textAssetMap[GameMapState.COLLECTING] = collectItemsAssetText
         textAssetMap[GameMapState.COMPLETING] = finishGameTextAsset
+        textAssetMap[GameMapState.COMPLETED] = gameCompleteTextAsset
     }
 
     private fun parseEnemyPositions(file: File): YamlMap {
@@ -230,10 +240,10 @@ class AssetService {
 
         return Mono.zip(farGroundMono, midGroundMono, nearFieldMono, collisionMono)
             .map { objects ->
-                mapAssetMap[id] = Asset(mapWidth, mapHeight, objects.t1)
-                mapAssetMap[id + 1] = Asset(mapWidth, mapHeight, objects.t2)
-                mapAssetMap[id + 2] = Asset(mapWidth, mapHeight, objects.t3)
-                mapAssetMap[id + 3] = Asset(mapWidth, mapHeight, objects.t4)
+                mapAssetMap[id] = ImageAsset(mapWidth, mapHeight, objects.t1)
+                mapAssetMap[id + 1] = ImageAsset(mapWidth, mapHeight, objects.t2)
+                mapAssetMap[id + 2] = ImageAsset(mapWidth, mapHeight, objects.t3)
+                mapAssetMap[id + 3] = ImageAsset(mapWidth, mapHeight, objects.t4)
                 GameMap(
                     GameMapState.COLLECTING,
                     mapAssetMap[id]!!,
@@ -249,25 +259,25 @@ class AssetService {
             }
     }
 
-    fun loadItem(id: Int): Mono<Asset> {
+    fun loadItem(id: Int): Mono<ImageAsset> {
         val itemMono = mono {
             val itemUrl = itemUrlMap[id]
             val itemFile = urlToFile(itemUrl)
             loadBufferedImageAsync(itemFile)
         }
         return itemMono.map { image ->
-            Asset(mapItemWidth, mapItemHeight, image)
+            ImageAsset(mapItemWidth, mapItemHeight, image)
         }
     }
 
-    fun loadEnemy(id: Int): Mono<Asset> {
+    fun loadEnemy(id: Int): Mono<ImageAsset> {
         val enemyMono = mono {
             val enemyUrl = enemyUrlMap[id]
             val enemyFile = urlToFile(enemyUrl)
             loadBufferedImageAsync(enemyFile)
         }
         return enemyMono.map { image ->
-            Asset(mapEnemyWidth, mapEnemyHeight, image)
+            ImageAsset(mapEnemyWidth, mapEnemyHeight, image)
         }
     }
 
@@ -289,13 +299,13 @@ class AssetService {
         return ItemPositionAndType(item.getInt("x"), item.getInt("y"), item.getString("type"))
     }
 
-    fun loadPlayer(): Mono<Asset> {
+    fun loadPlayer(): Mono<ImageAsset> {
         val playerFile = urlToFile(this::class.java.classLoader.getResource(playerAssetPath))
         val playerMono = mono {
             loadBufferedImageAsync(playerFile)
         }
         return playerMono.map { image ->
-            Asset(playerWidth, playerHeight, image)
+            ImageAsset(playerWidth, playerHeight, image)
         }
     }
 

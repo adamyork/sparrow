@@ -4,10 +4,9 @@ import com.github.adamyork.sparrow.common.AudioQueue
 import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.engine.data.CollisionBoundaries
 import com.github.adamyork.sparrow.game.engine.data.ParticleType
-import com.github.adamyork.sparrow.game.engine.data.PlayerMapPair
 import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.game.service.ScoreService
-import com.github.adamyork.sparrow.game.service.data.Asset
+import com.github.adamyork.sparrow.game.service.data.ImageAsset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.Color
@@ -47,11 +46,11 @@ class DefaultEngine : Engine {
         this.assetService = assetService
     }
 
-    override fun setCollisionBufferedImage(asset: Asset) {
+    override fun setCollisionBufferedImage(asset: ImageAsset) {
         this.collision.collisionImage = asset.bufferedImage
     }
 
-    override fun getCollisionBoundaries(player: Player, collisionAsset: Asset): CollisionBoundaries {
+    override fun getCollisionBoundaries(player: Player, collisionAsset: ImageAsset): CollisionBoundaries {
         return collision.getCollisionBoundaries(player)
     }
 
@@ -119,13 +118,12 @@ class DefaultEngine : Engine {
         player: Player,
         map: GameMap,
         viewPort: ViewPort,
-        collisionAsset: Asset
-    ): PlayerMapPair {
-        var nextMap = collision.checkForItemCollision(player, map, audioQueue)
+        collisionAsset: ImageAsset
+    ): Pair<Player, GameMap> {
+        val nextMap = collision.checkForItemCollision(player, map, audioQueue)
         val enemyCollisionResult =
             collision.checkForEnemyCollision(player, nextMap, viewPort, audioQueue, particles)
-        nextMap = enemyCollisionResult.map
-        return PlayerMapPair(enemyCollisionResult.player, nextMap)
+        return Pair(enemyCollisionResult.first, enemyCollisionResult.second)
     }
 
     private fun manageMapItems(gameMap: GameMap): ArrayList<MapItem> {
@@ -133,7 +131,15 @@ class DefaultEngine : Engine {
             val itemX = item.x
             val itemY = item.y
             val frameMetadata = item.getNextFrameCell()
-            MapItem(item.width, item.height, itemX, itemY, item.type, item.state, frameMetadata)
+            if (item.type == MapItemType.FINISH) {
+                var nextState = item.state
+                if (gameMap.state == GameMapState.COMPLETING && item.state == MapItemState.INACTIVE) {
+                    nextState = MapItemState.ACTIVE
+                }
+                MapFinishItem(item.width, item.height, itemX, itemY, item.type, nextState, frameMetadata)
+            } else {
+                MapItem(item.width, item.height, itemX, itemY, item.type, item.state, frameMetadata)
+            }
         }.toCollection(ArrayList())
     }
 
@@ -150,11 +156,11 @@ class DefaultEngine : Engine {
     override fun paint(
         map: GameMap,
         viewPort: ViewPort,
-        playerAsset: Asset,
+        playerAsset: ImageAsset,
         player: Player,
-        mapItemAsset: Asset,
-        finishItemAsset: Asset,
-        mapEnemyAsset: Asset
+        mapItemAsset: ImageAsset,
+        finishItemAsset: ImageAsset,
+        mapEnemyAsset: ImageAsset
     ): ByteArray {//TODO major clean up
         val compositeImage = BufferedImage(
             viewPort.width, viewPort.height,
@@ -184,7 +190,6 @@ class DefaultEngine : Engine {
 
         val gameStatusTextImage = assetService.getTextAsset(map.state)
         graphics.drawImage(gameStatusTextImage.image, 0, 0, null)
-        //map.activateFinish()TODO Activate finish
 
         map.items.forEach { item ->
             if (item.state != MapItemState.INACTIVE) {

@@ -4,7 +4,6 @@ import com.github.adamyork.sparrow.common.AudioQueue
 import com.github.adamyork.sparrow.common.Sounds
 import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.engine.data.CollisionBoundaries
-import com.github.adamyork.sparrow.game.engine.data.PlayerMapPair
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -61,7 +60,11 @@ class Collision {
                     nextFrameMetaData = item.getFirstDeactivatingFrame()
                 }
             }
-            MapItem(item.width, item.height, item.x, item.y, item.type, nextItemState, nextFrameMetaData)
+            if (item.type == MapItemType.FINISH) {
+                MapFinishItem(item.width, item.height, item.x, item.y, item.type, nextItemState, nextFrameMetaData)
+            } else {
+                MapItem(item.width, item.height, item.x, item.y, item.type, nextItemState, nextFrameMetaData)
+            }
         }.toCollection(ArrayList())
         return gameMap.from(gameState, managedMapItems)
     }
@@ -72,7 +75,7 @@ class Collision {
         viewPort: ViewPort,
         audioQueue: AudioQueue,
         particles: Particles
-    ): PlayerMapPair {
+    ): Pair<Player, GameMap> {
         var managedMapParticles = gameMap.particles
         var playerIsColliding = false
         val managedMapEnemies = gameMap.enemies.map { enemy ->
@@ -107,7 +110,7 @@ class Collision {
             }
             nextVx = 0.0
         }
-        return PlayerMapPair(
+        return Pair(
             player.from(nextX, nextVx, playerIsColliding),
             gameMap.from(managedMapEnemies, managedMapParticles)
         )
