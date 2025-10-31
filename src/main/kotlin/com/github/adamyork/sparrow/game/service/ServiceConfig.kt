@@ -42,7 +42,8 @@ class ServiceConfig {
         @Value("\${map.enemy.asset.two.height}") mapEnemyTwoHeight: Int,
         @Value("\${audio.player.jump}") audioPlayerJumpPath: String,
         @Value("\${audio.player.collision}") audioPlayerCollisionPath: String,
-        @Value("\${audio.item.collect}") audioItemCollectPath: String
+        @Value("\${audio.item.collect}") audioItemCollectPath: String,
+        @Value("\${audio.background}") audioBackgroundMusicPath: String,
     ): AssetService {
         return DefaultAssetService(
             wavService,
@@ -69,7 +70,8 @@ class ServiceConfig {
             mapEnemyTwoHeight,
             audioPlayerJumpPath,
             audioPlayerCollisionPath,
-            audioItemCollectPath
+            audioItemCollectPath,
+            audioBackgroundMusicPath
         )
     }
 

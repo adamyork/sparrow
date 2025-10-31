@@ -30,6 +30,8 @@ class DefaultAssetService : AssetService {
         val LOGGER: Logger = LoggerFactory.getLogger(DefaultAssetService::class.java)
     }
 
+    override var applicationYamlFile: File
+
     val wavService: WavService
 
     //sounds
@@ -101,7 +103,8 @@ class DefaultAssetService : AssetService {
         mapEnemyTwoHeight: Int,
         audioPlayerJumpPath: String,
         audioPlayerCollisionPath: String,
-        audioItemCollectPath: String
+        audioItemCollectPath: String,
+        audioBackgroundMusicPath: String
     ) {
         this.wavService = wavService
         this.viewPortWidth = viewPortWidth
@@ -126,7 +129,7 @@ class DefaultAssetService : AssetService {
         this.mapEnemyAssetOnePath = mapEnemyAssetOnePath
         this.mapEnemyAssetTwoPath = mapEnemyAssetTwoPath
 
-        val applicationYamlFile = urlToFile(this::class.java.classLoader.getResource("application.yml"))
+        applicationYamlFile = urlToFile(this::class.java.classLoader.getResource("application.yml"))
         enemyPositions = parseEnemyPositions(applicationYamlFile)
         itemPositions = parseItemPositions(applicationYamlFile)
 
@@ -149,8 +152,7 @@ class DefaultAssetService : AssetService {
         mapUrlMap[2] = this::class.java.classLoader.getResource(mapForGroundPath)
         mapUrlMap[3] = this::class.java.classLoader.getResource(mapCollisionPath)
 
-        val backgroundMusicFile =
-            urlToFile(this::class.java.classLoader.getResource("static/level-1-music.wav"))//TODO Hardcoded
+        val backgroundMusicFile = urlToFile(this::class.java.classLoader.getResource(audioBackgroundMusicPath))
         backgroundMusicBytesMap = wavService.chunk(backgroundMusicFile, 25000)
 
         val collectItemsAssetText = buildTextAsset(

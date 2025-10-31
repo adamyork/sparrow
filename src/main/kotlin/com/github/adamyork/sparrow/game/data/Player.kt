@@ -216,4 +216,20 @@ class Player {
             player.colliding
         )
     }
+
+    fun from(colliding: Boolean): Player {
+        return Player(
+            this.x,
+            this.y,
+            this.width,
+            this.height,
+            this.vx,
+            this.vy,
+            this.jumping,
+            this.moving,
+            this.direction,
+            this.frameMetadata,
+            colliding
+        )
+    }
 }

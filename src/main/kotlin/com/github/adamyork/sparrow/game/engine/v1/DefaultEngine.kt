@@ -17,13 +17,11 @@ import com.github.adamyork.sparrow.game.engine.Engine
 import com.github.adamyork.sparrow.game.engine.Particles
 import com.github.adamyork.sparrow.game.engine.Physics
 import com.github.adamyork.sparrow.game.engine.data.CollisionBoundaries
-import com.github.adamyork.sparrow.game.engine.data.ParticleType
 import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.game.service.ScoreService
 import com.github.adamyork.sparrow.game.service.data.ImageAsset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.awt.Color
 import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
 import java.awt.image.BufferedImage
@@ -190,7 +188,7 @@ class DefaultEngine : Engine {
         finishItemAsset: ImageAsset,
         mapEnemyVacuumAsset: ImageAsset,
         mapEnemyBotAsset: ImageAsset
-    ): ByteArray {//TODO major clean up
+    ): ByteArray {//TODO major clean up (ifs in maps)
         val compositeImage = BufferedImage(
             viewPort.width, viewPort.height,
             BufferedImage.TYPE_BYTE_INDEXED
@@ -274,16 +272,8 @@ class DefaultEngine : Engine {
         map.particles.forEach { particle ->
             val particleGraphics = particleImage.graphics
             val localCord = viewPort.globalToLocal(particle.x, particle.y)
-            if (particle.type == ParticleType.COLLISION) {
-                particleGraphics.color = Color.WHITE//TODO Hardcoded
-                particleGraphics.fillRect(localCord.first, localCord.second, particle.width, particle.height)
-            } else if (particle.type == ParticleType.DUST) {
-                particleGraphics.color = Color(230, 234, 218, particle.radius)//TODO Hardcoded
-                particleGraphics.fillRect(localCord.first, localCord.second, particle.width, particle.height)
-            } else {
-                particleGraphics.color = Color.BLUE//TODO Hardcoded
-                particleGraphics.fillRect(localCord.first, localCord.second, particle.width, particle.height)
-            }
+            particleGraphics.color = particle.color
+            particleGraphics.fillRect(localCord.first, localCord.second, particle.width, particle.height)
         }
         graphics.drawImage(particleImage, 0, 0, null)
         particleImage.graphics.dispose()

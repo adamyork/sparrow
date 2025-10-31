@@ -28,6 +28,7 @@ interface AssetService {
     }
 
     var backgroundMusicBytesMap: HashMap<Int, ByteArray>
+    var applicationYamlFile: File
 
     suspend fun loadBufferedImageAsync(file: File): BufferedImage
 

@@ -65,9 +65,31 @@ map:
         y: 683
         # noinspection SpringBootApplicationYaml
         type: "deebot"
+particle:
+  player:
+    movement:
+      color:
+        r: 230
+        g: 234
+        b: 218
+        a: 255
+    collision:
+      color:
+        r: 255
+        g: 255
+        b: 255
+        a: 255
+  enemy:
+    projectile:
+      color:
+        r: 0
+        g: 0
+        b: 255
+        a: 255
 audio:
   player:
     jump: "game/jump-sound.wav"
     collision: "game/player-collision.wav"
   item:
     collect: "game/item-collect.wav"
+  background: "game/level-1-music.wav"

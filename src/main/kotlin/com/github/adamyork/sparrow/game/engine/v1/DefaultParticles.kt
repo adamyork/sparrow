@@ -6,24 +6,29 @@ import com.github.adamyork.sparrow.game.data.enemy.MapEnemy
 import com.github.adamyork.sparrow.game.engine.Particles
 import com.github.adamyork.sparrow.game.engine.data.Particle
 import com.github.adamyork.sparrow.game.engine.data.ParticleType
+import com.github.adamyork.sparrow.game.service.AssetService
+import net.mamoe.yamlkt.Yaml
+import net.mamoe.yamlkt.YamlMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
+import java.awt.Color
+import java.io.File
 import kotlin.math.abs
 import kotlin.random.Random
 
-@Component
 class DefaultParticles : Particles {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(DefaultParticles::class.java)
         const val MAX_SQUARE_RADIAL_RADIUS: Int = 45
-        const val MAX_ACTIVE_PROJECTILES: Int = 1
+        const val MAX_ACTIVE_PROJECTILES: Int = 2
     }
 
-    final val dustParticleOffsets: HashMap<Int, Pair<Int, Int>> = HashMap()
+    val dustParticleOffsets: HashMap<Int, Pair<Int, Int>> = HashMap()
+    val colorMap: HashMap<ParticleType, Color>
 
-    constructor() {
+    constructor(assetService: AssetService) {
+        colorMap = parseParticleColorMap(assetService.applicationYamlFile)
         dustParticleOffsets[0] = Pair(8, 0)
         dustParticleOffsets[1] = Pair(1, 2)
         dustParticleOffsets[2] = Pair(10, 4)
@@ -53,7 +58,8 @@ class DefaultParticles : Particles {
                 20,
                 Random.nextInt(50),
                 Random.nextInt(50),
-                1
+                1,
+                colorMap[ParticleType.COLLISION] ?: Color.WHITE
             )
         }.toCollection(ArrayList())
     }
@@ -71,6 +77,8 @@ class DefaultParticles : Particles {
                 startX -= dustParticleOffsets[it]?.first ?: 0
             }
             startY -= dustParticleOffsets[it]?.second ?: 0
+            val color = colorMap[ParticleType.DUST] ?: Color.WHITE
+            val adjustedAlphaColor = Color(color.red, color.green, color.blue, color.alpha - (it * 23))
             Particle(
                 it,
                 startX,
@@ -84,7 +92,8 @@ class DefaultParticles : Particles {
                 5,
                 0,
                 0,
-                255 - (it * 15)
+                0,
+                adjustedAlphaColor
             )
         }.toCollection(ArrayList())
     }
@@ -116,11 +125,49 @@ class DefaultParticles : Particles {
                     10,
                     xIncrement,
                     yIncrement,
-                    1
+                    1,
+                    colorMap[ParticleType.FURBALL] ?: Color.WHITE
                 )
             )
         }
         return particles
+    }
+
+    private fun parseParticleColorMap(file: File): HashMap<ParticleType, Color> {
+        val colorMap: HashMap<ParticleType, Color> = HashMap()
+        val yamlDefault = Yaml.Default
+        val properties = yamlDefault.decodeFromString(YamlMap.serializer(), file.readText())
+        val map = properties["particle"] as YamlMap
+        val player = map["player"] as YamlMap
+        val enemy = map["enemy"] as YamlMap
+        val playerMovement = player["movement"] as YamlMap
+        val playerCollision = player["collision"] as YamlMap
+        val enemyProjectile = enemy["projectile"] as YamlMap
+        val playerMovementParticleColorMap = playerMovement["color"] as YamlMap
+        val playerCollisionParticleColorMap = playerCollision["color"] as YamlMap
+        val enemyProjectileParticleColorMap = enemyProjectile["color"] as YamlMap
+        val playerMovementParticleColor = Color(
+            playerMovementParticleColorMap["r"]?.content.toString().toInt(),
+            playerMovementParticleColorMap["g"]?.content.toString().toInt(),
+            playerMovementParticleColorMap["b"]?.content.toString().toInt(),
+            playerMovementParticleColorMap["a"]?.content.toString().toInt()
+        )
+        val playerCollisionParticleColor = Color(
+            playerCollisionParticleColorMap["r"]?.content.toString().toInt(),
+            playerCollisionParticleColorMap["g"]?.content.toString().toInt(),
+            playerCollisionParticleColorMap["b"]?.content.toString().toInt(),
+            playerCollisionParticleColorMap["a"]?.content.toString().toInt()
+        )
+        val enemyProjectileParticleColor = Color(
+            enemyProjectileParticleColorMap["r"]?.content.toString().toInt(),
+            enemyProjectileParticleColorMap["g"]?.content.toString().toInt(),
+            enemyProjectileParticleColorMap["b"]?.content.toString().toInt(),
+            enemyProjectileParticleColorMap["a"]?.content.toString().toInt()
+        )
+        colorMap[ParticleType.DUST] = playerMovementParticleColor
+        colorMap[ParticleType.COLLISION] = playerCollisionParticleColor
+        colorMap[ParticleType.FURBALL] = enemyProjectileParticleColor
+        return colorMap
     }
 
 }

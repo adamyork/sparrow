@@ -14,6 +14,7 @@ import com.github.adamyork.sparrow.game.data.map.GameMap
 import com.github.adamyork.sparrow.game.data.map.GameMapState
 import com.github.adamyork.sparrow.game.engine.Collision
 import com.github.adamyork.sparrow.game.engine.Particles
+import com.github.adamyork.sparrow.game.engine.Physics
 import com.github.adamyork.sparrow.game.engine.data.CollisionBoundaries
 import com.github.adamyork.sparrow.game.engine.data.ParticleType
 import org.slf4j.Logger
@@ -27,6 +28,12 @@ class DefaultCollision : Collision {
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(DefaultCollision::class.java)
         const val COLLISION_COLOR_VALUE: Int = -16711906
+    }
+
+    val physics: Physics
+
+    constructor(physics: Physics) {
+        this.physics = physics
     }
 
     override lateinit var collisionImage: BufferedImage
@@ -123,25 +130,13 @@ class DefaultCollision : Collision {
                 enemy
             }
         }.toCollection(ArrayList())
-        var nextX = player.x
-        var nextVx = player.vx
-        if (playerIsColliding) {//TODO this should go in physics
-            val collisionRebound: Int = player.width
-            if (player.direction == Direction.LEFT) {
-                nextX += collisionRebound
-                if (nextX >= viewPort.width - player.width) {
-                    nextX = viewPort.width - player.width - 1
-                }
-            } else {
-                nextX -= collisionRebound
-                if (nextX < 0) {
-                    nextX = 0
-                }
-            }
-            nextVx = 0.0
+        val nextPlayer: Player = if (playerIsColliding) {
+            physics.applyPlayerCollisionPhysics(player, viewPort)
+        } else {
+            player.from(false)
         }
         return Pair(
-            player.from(nextX, nextVx, playerIsColliding),
+            nextPlayer,
             gameMap.from(managedMapEnemies, managedMapParticles)
         )
     }
@@ -174,25 +169,13 @@ class DefaultCollision : Collision {
             val collisionParticles = particles.createCollisionParticles(player.x, player.y)
             managedMapParticles.addAll(collisionParticles)
         }
-        var nextX = player.x
-        var nextVx = player.vx
-        if (playerIsColliding) {//TODO this should go in physics
-            val collisionRebound: Int = player.width
-            if (player.direction == Direction.LEFT) {
-                nextX += collisionRebound
-                if (nextX >= viewPort.width - player.width) {
-                    nextX = viewPort.width - player.width - 1
-                }
-            } else {
-                nextX -= collisionRebound
-                if (nextX < 0) {
-                    nextX = 0
-                }
-            }
-            nextVx = 0.0
+        val nextPlayer: Player = if (playerIsColliding) {
+            physics.applyPlayerCollisionPhysics(player, viewPort)
+        } else {
+            player.from(false)
         }
         return Pair(
-            player.from(nextX, nextVx, playerIsColliding),
+            nextPlayer,
             gameMap.from(gameMap.enemies, managedMapParticles)
         )
     }
@@ -252,7 +235,7 @@ class DefaultCollision : Collision {
         }
     }
 
-    override fun testForColorCollision(
+    private fun testForColorCollision(
         x: Int,
         y: Int,
         width: Int,

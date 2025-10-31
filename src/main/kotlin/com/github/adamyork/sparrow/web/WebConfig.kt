@@ -48,7 +48,7 @@ class WebConfig : WebFluxConfigurer {
     @Bean
     fun wavRouter() =
         router {
-            val index = ClassPathResource("static/level-1-music.wav")
+            val index = ClassPathResource("game/level-1-music.wav")
             val extensions = listOf("js", "css", "html", "png")
             val spaPredicate = !(path("/score") or
                     pathExtension(extensions::contains))

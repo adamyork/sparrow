@@ -1,5 +1,7 @@
 package com.github.adamyork.sparrow.game.engine.data
 
+import java.awt.Color
+
 data class Particle(
     val id: Int,
     val x: Int,
@@ -13,7 +15,8 @@ data class Particle(
     val lifetime: Int,
     val xJitter: Int,
     val yJitter: Int,
-    val radius: Int
+    val radius: Int,
+    val color: Color
 ) {
 
     fun from(nextX: Int, nextY: Int, nextFrame: Int): Particle {
@@ -30,7 +33,8 @@ data class Particle(
             this.lifetime,
             this.xJitter,
             this.yJitter,
-            this.radius
+            this.radius,
+            this.color
         )
     }
 
@@ -48,7 +52,8 @@ data class Particle(
             this.lifetime,
             this.xJitter,
             this.yJitter,
-            nextRadius
+            nextRadius,
+            this.color
         )
     }
 
@@ -66,7 +71,8 @@ data class Particle(
             this.lifetime,
             this.xJitter,
             this.yJitter,
-            nextRadius
+            nextRadius,
+            this.color
         )
     }
 
@@ -84,7 +90,8 @@ data class Particle(
             this.lifetime,
             this.xJitter,
             this.yJitter,
-            this.radius
+            this.radius,
+            this.color
         )
     }
 

@@ -4,6 +4,7 @@ import com.github.adamyork.sparrow.common.GameStatusProvider
 import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.Player.Companion.JUMP_DISTANCE
+import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.engine.Collision
 import com.github.adamyork.sparrow.game.engine.Physics
 import com.github.adamyork.sparrow.game.engine.data.*
@@ -58,6 +59,22 @@ class DefaultPhysics : Physics {
             adjustedCollisionBoundaries
         )
         return player.from(xResult, yResult)
+    }
+
+    override fun applyPlayerCollisionPhysics(player: Player, viewPort: ViewPort): Player {
+        var nextX = player.x
+        if (player.direction == Direction.LEFT) {
+            nextX += player.width
+            if (nextX >= viewPort.width - player.width) {
+                nextX = viewPort.width - player.width - 1
+            }
+        } else {
+            nextX -= player.width
+            if (nextX < 0) {
+                nextX = 0
+            }
+        }
+        return player.from(nextX, 0.0, isColliding = true)
     }
 
     private fun getXVelocity(playerVx: Double, playerMoving: Boolean): Double {

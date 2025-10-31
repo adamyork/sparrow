@@ -15,13 +15,13 @@ import org.springframework.context.annotation.Configuration
 class EngineConfig {
 
     @Bean
-    fun physics(gameStatusProvider: GameStatusProvider): DefaultPhysics = DefaultPhysics(gameStatusProvider)
+    fun physics(gameStatusProvider: GameStatusProvider): Physics = DefaultPhysics(gameStatusProvider)
 
     @Bean
-    fun collision(): Collision = DefaultCollision()
+    fun collision(physics: Physics): Collision = DefaultCollision(physics)
 
     @Bean
-    fun particles(): Particles = DefaultParticles()
+    fun particles(assetService: AssetService): Particles = DefaultParticles(assetService)
 
     @Bean
     fun engine(

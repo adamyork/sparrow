@@ -40,11 +40,4 @@ interface Collision {
         particles: Particles
     ): Pair<Player, GameMap>
 
-    fun testForColorCollision(
-        x: Int,
-        y: Int,
-        width: Int,
-        height: Int,
-        collisionImage: BufferedImage
-    ): Boolean
 }
