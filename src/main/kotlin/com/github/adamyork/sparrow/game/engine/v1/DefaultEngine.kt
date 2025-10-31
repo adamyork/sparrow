@@ -1,7 +1,21 @@
-package com.github.adamyork.sparrow.game.engine
+package com.github.adamyork.sparrow.game.engine.v1
 
 import com.github.adamyork.sparrow.common.AudioQueue
-import com.github.adamyork.sparrow.game.data.*
+import com.github.adamyork.sparrow.game.data.Direction
+import com.github.adamyork.sparrow.game.data.Player
+import com.github.adamyork.sparrow.game.data.ViewPort
+import com.github.adamyork.sparrow.game.data.enemy.MapEnemy
+import com.github.adamyork.sparrow.game.data.enemy.MapEnemyType
+import com.github.adamyork.sparrow.game.data.item.MapFinishItem
+import com.github.adamyork.sparrow.game.data.item.MapItem
+import com.github.adamyork.sparrow.game.data.item.MapItemState
+import com.github.adamyork.sparrow.game.data.item.MapItemType
+import com.github.adamyork.sparrow.game.data.map.GameMap
+import com.github.adamyork.sparrow.game.data.map.GameMapState
+import com.github.adamyork.sparrow.game.engine.Collision
+import com.github.adamyork.sparrow.game.engine.Engine
+import com.github.adamyork.sparrow.game.engine.Particles
+import com.github.adamyork.sparrow.game.engine.Physics
 import com.github.adamyork.sparrow.game.engine.data.CollisionBoundaries
 import com.github.adamyork.sparrow.game.engine.data.ParticleType
 import com.github.adamyork.sparrow.game.service.AssetService
@@ -97,15 +111,16 @@ class DefaultEngine : Engine {
         return nextViewPort
     }
 
-    override fun manageMap(player: Player, gameMap: GameMap): GameMap {
+    override fun manageMap(player: Player, gameMap: GameMap, viewPort: ViewPort): GameMap {
         val managedMapItems = manageMapItems(gameMap)
-        val managedMapEnemies = manageMapEnemies(gameMap)
+        val managedMapEnemies = manageMapEnemies(gameMap, player, viewPort)
         val managedCollisionParticles = physics.applyCollisionParticlePhysics(gameMap.particles)
         if (player.moving && !player.jumping) {
             val nextDustParticles = particles.createDustParticles(player)
             managedCollisionParticles.addAll(nextDustParticles)
         }
-        val managedAllParticles = physics.applyDustParticlePhysics(managedCollisionParticles)
+        val managedDustParticles = physics.applyDustParticlePhysics(managedCollisionParticles)
+        val managedAllParticles = physics.applyProjectileParticlePhysics(managedDustParticles)
         var mapState = gameMap.state
         if (mapState == GameMapState.COLLECTING && scoreService.allFound()) {
             LOGGER.info("all items found map is in completing mode")
@@ -122,8 +137,16 @@ class DefaultEngine : Engine {
     ): Pair<Player, GameMap> {
         val nextMap = collision.checkForItemCollision(player, map, audioQueue)
         val enemyCollisionResult =
-            collision.checkForEnemyCollision(player, nextMap, viewPort, audioQueue, particles)
-        return Pair(enemyCollisionResult.first, enemyCollisionResult.second)
+            collision.checkForEnemyCollisionAndProximity(player, nextMap, viewPort, audioQueue, particles)
+        val projectTileCollisionResult =
+            collision.checkForProjectileCollision(
+                enemyCollisionResult.first,
+                enemyCollisionResult.second,
+                viewPort,
+                audioQueue,
+                particles
+            )
+        return Pair(projectTileCollisionResult.first, projectTileCollisionResult.second)
     }
 
     private fun manageMapItems(gameMap: GameMap): ArrayList<MapItem> {
@@ -143,13 +166,18 @@ class DefaultEngine : Engine {
         }.toCollection(ArrayList())
     }
 
-    private fun manageMapEnemies(gameMap: GameMap): ArrayList<MapEnemy> {
+    private fun manageMapEnemies(gameMap: GameMap, player: Player, viewPort: ViewPort): ArrayList<MapEnemy> {
         return gameMap.enemies.map { enemy ->
-            val nextPosition = enemy.getNextPosition()
-            val itemX = nextPosition.x
-            val itemY = nextPosition.y
-            val frameMetadata = enemy.getNextFrameCell()
-            enemy.from(itemX, itemY, frameMetadata, nextPosition, false)
+            val nextState = enemy.getNextEnemyState(player)
+            if (nextState != MapItemState.INACTIVE) {
+                val nextPosition = enemy.getNextPosition(player, viewPort)
+                val itemX = nextPosition.x
+                val itemY = nextPosition.y
+                val frameMetadata = enemy.getNextFrameCell()
+                enemy.from(itemX, itemY, nextState, frameMetadata, nextPosition, false)
+            } else {
+                enemy
+            }
         }.toCollection(ArrayList())
     }
 
@@ -160,7 +188,8 @@ class DefaultEngine : Engine {
         player: Player,
         mapItemAsset: ImageAsset,
         finishItemAsset: ImageAsset,
-        mapEnemyAsset: ImageAsset
+        mapEnemyVacuumAsset: ImageAsset,
+        mapEnemyBotAsset: ImageAsset
     ): ByteArray {//TODO major clean up
         val compositeImage = BufferedImage(
             viewPort.width, viewPort.height,
@@ -217,12 +246,22 @@ class DefaultEngine : Engine {
         map.enemies.forEach { enemy ->
             val localCord = viewPort.globalToLocal(enemy.x, enemy.y)
             if (enemy.state != MapItemState.INACTIVE) {
-                val mapEnemySubImage = mapEnemyAsset.bufferedImage.getSubimage(
-                    enemy.frameMetadata.cell.x,
-                    enemy.frameMetadata.cell.y,
-                    enemy.width,
-                    enemy.height
-                )
+                val mapEnemySubImage: BufferedImage
+                if (enemy.type == MapEnemyType.VACUUM) {
+                    mapEnemySubImage = mapEnemyVacuumAsset.bufferedImage.getSubimage(
+                        enemy.frameMetadata.cell.x,
+                        enemy.frameMetadata.cell.y,
+                        enemy.width,
+                        enemy.height
+                    )
+                } else {
+                    mapEnemySubImage = mapEnemyBotAsset.bufferedImage.getSubimage(
+                        enemy.frameMetadata.cell.x,
+                        enemy.frameMetadata.cell.y,
+                        enemy.width,
+                        enemy.height
+                    )
+                }
                 graphics.drawImage(
                     transformDirection(mapEnemySubImage, enemy.enemyPosition.direction, enemy.width),
                     localCord.first,
@@ -238,8 +277,11 @@ class DefaultEngine : Engine {
             if (particle.type == ParticleType.COLLISION) {
                 particleGraphics.color = Color.WHITE//TODO Hardcoded
                 particleGraphics.fillRect(localCord.first, localCord.second, particle.width, particle.height)
-            } else {
+            } else if (particle.type == ParticleType.DUST) {
                 particleGraphics.color = Color(230, 234, 218, particle.radius)//TODO Hardcoded
+                particleGraphics.fillRect(localCord.first, localCord.second, particle.width, particle.height)
+            } else {
+                particleGraphics.color = Color.BLUE//TODO Hardcoded
                 particleGraphics.fillRect(localCord.first, localCord.second, particle.width, particle.height)
             }
         }

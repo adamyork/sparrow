@@ -4,9 +4,9 @@ import com.github.adamyork.sparrow.common.ControlAction
 import com.github.adamyork.sparrow.common.ControlType
 import com.github.adamyork.sparrow.common.GameStatusProvider
 import com.github.adamyork.sparrow.game.data.Direction
-import com.github.adamyork.sparrow.game.data.GameMap
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.ViewPort
+import com.github.adamyork.sparrow.game.data.map.GameMap
 import com.github.adamyork.sparrow.game.engine.Engine
 import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.game.service.ScoreService
@@ -42,9 +42,10 @@ class Game {
     lateinit var player: Player
     lateinit var gameMap: GameMap
     lateinit var playerAsset: ImageAsset
-    lateinit var mapItemAsset: ImageAsset
-    lateinit var finishItemAsset: ImageAsset
-    lateinit var mapEnemyAsset: ImageAsset
+    lateinit var mapItemGreenieAsset: ImageAsset
+    lateinit var mapItemFinishAsset: ImageAsset
+    lateinit var mapEnemyVacuumAsset: ImageAsset
+    lateinit var mapEnemyBotAsset: ImageAsset
 
     constructor(
         assetService: AssetService,
@@ -76,21 +77,25 @@ class Game {
             assetService.loadPlayer(),
             assetService.loadItem(0),
             assetService.loadItem(1),
-            assetService.loadEnemy(0)
+            assetService.loadEnemy(0),
+            assetService.loadEnemy(1)
         ).map { objects ->
+            LOGGER.info("assets Loaded")
             viewPort = ViewPort(viewPortInitialX, viewPortInitialY, 0, 0, viewPortWidth, viewPortHeight)
             gameMap = objects.t1
             playerAsset = objects.t2
-            mapItemAsset = objects.t3
-            finishItemAsset = objects.t4
-            mapEnemyAsset = objects.t5
+            mapItemGreenieAsset = objects.t3
+            mapItemFinishAsset = objects.t4
+            mapEnemyVacuumAsset = objects.t5
+            mapEnemyBotAsset = objects.t6
             player = Player(playerInitialX, playerInitialY, playerAsset.width, playerAsset.height)
-            gameMap.generateMapItems(mapItemAsset, finishItemAsset, assetService)
-            gameMap.generateMapEnemies(mapEnemyAsset, assetService)
+            gameMap.generateMapItems(mapItemGreenieAsset, mapItemFinishAsset, assetService)
+            LOGGER.info("map items generated")
+            gameMap.generateMapEnemies(mapEnemyVacuumAsset, mapEnemyBotAsset, assetService)
+            LOGGER.info("enemy items generated")
             engine.setCollisionBufferedImage(gameMap.collisionAsset)
             scoreService.gameMapItem = gameMap.items
             isInitialized = true
-            LOGGER.info("assets Loaded")
             true
         }.onErrorReturn(false)
     }
@@ -104,14 +109,23 @@ class Game {
                     val collisionBoundaries = engine.getCollisionBoundaries(player, gameMap.collisionAsset)
                     player = engine.managePlayer(player, collisionBoundaries)
                     viewPort = engine.manageViewport(player, viewPort)
-                    gameMap = engine.manageMap(player, gameMap)
+                    gameMap = engine.manageMap(player, gameMap, viewPort)
                     val nextPlayerAndMap =
                         engine.manageEnemyAndItemCollision(player, gameMap, viewPort, gameMap.collisionAsset)
                     player = nextPlayerAndMap.first
                     gameMap = nextPlayerAndMap.second
                     scoreService.gameMapItem = gameMap.items
                     gameStatusProvider.lastPaintTime.store(System.currentTimeMillis().toInt())
-                    engine.paint(gameMap, viewPort, playerAsset, player, mapItemAsset, finishItemAsset, mapEnemyAsset)
+                    engine.paint(
+                        gameMap,
+                        viewPort,
+                        playerAsset,
+                        player,
+                        mapItemGreenieAsset,
+                        mapItemFinishAsset,
+                        mapEnemyVacuumAsset,
+                        mapEnemyBotAsset
+                    )
                 } else {
                     ByteArray(0)
                 }
@@ -128,7 +142,7 @@ class Game {
     fun reset() {
         LOGGER.info("reset game")
         player.reset(playerInitialX, playerInitialY)
-        gameMap.reset(mapItemAsset, finishItemAsset, mapEnemyAsset, assetService)
+        gameMap.reset(mapItemGreenieAsset, mapItemFinishAsset, mapEnemyVacuumAsset, mapEnemyBotAsset, assetService)
         viewPort = ViewPort(viewPortInitialX, viewPortInitialY, 0, 0, viewPortWidth, viewPortHeight)
         scoreService.gameMapItem = gameMap.items
     }

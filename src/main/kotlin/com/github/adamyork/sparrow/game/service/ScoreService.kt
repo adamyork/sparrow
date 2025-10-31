@@ -1,28 +1,14 @@
 package com.github.adamyork.sparrow.game.service
 
-import com.github.adamyork.sparrow.game.data.MapItem
-import com.github.adamyork.sparrow.game.data.MapItemState
-import com.github.adamyork.sparrow.game.data.MapItemType
-import org.springframework.stereotype.Service
+import com.github.adamyork.sparrow.game.data.item.MapItem
 
-@Service
-class ScoreService {
+interface ScoreService {
 
-    var gameMapItem: ArrayList<MapItem> = ArrayList()
+    var gameMapItem: ArrayList<MapItem>
 
-    fun getTotal(): Int {
-        return gameMapItem
-            .filter { it.type == MapItemType.COLLECTABLE }
-            .size
-    }
+    fun getTotal(): Int
 
-    fun getRemaining(): Int {
-        return gameMapItem
-            .filter { it.type == MapItemType.COLLECTABLE }
-            .count { it.state == MapItemState.ACTIVE }
-    }
+    fun getRemaining(): Int
 
-    fun allFound(): Boolean {
-        return getRemaining() == 0
-    }
+    fun allFound(): Boolean
 }

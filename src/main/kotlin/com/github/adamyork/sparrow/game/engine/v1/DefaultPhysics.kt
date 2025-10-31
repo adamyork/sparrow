@@ -1,9 +1,11 @@
-package com.github.adamyork.sparrow.game.engine
+package com.github.adamyork.sparrow.game.engine.v1
 
 import com.github.adamyork.sparrow.common.GameStatusProvider
 import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.Player.Companion.JUMP_DISTANCE
+import com.github.adamyork.sparrow.game.engine.Collision
+import com.github.adamyork.sparrow.game.engine.Physics
 import com.github.adamyork.sparrow.game.engine.data.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -182,7 +184,7 @@ class DefaultPhysics : Physics {
                     val nextFrame = particle.frame + 1
                     var nextRadius = particle.radius
                     var position = Pair(particle.x.toFloat(), particle.y.toFloat())
-                    if (particle.radius < Particles.MAX_SQUARE_RADIAL_RADIUS) {
+                    if (particle.radius < DefaultParticles.MAX_SQUARE_RADIAL_RADIUS) {
                         nextRadius = particle.radius + 10
                         position =
                             getCollisionParticlePosition(
@@ -213,6 +215,33 @@ class DefaultPhysics : Physics {
                     val nextHeight = (particle.height + 1).coerceAtMost(40)
                     val nextRadius = (particle.radius - 15).coerceAtLeast(0)
                     particle.from(nextWidth, nextHeight, nextFrame, nextRadius)
+                } else {
+                    particle
+                }
+            }.filter { particle -> particle.frame <= particle.lifetime }
+            .toCollection(ArrayList())
+    }
+
+    override fun applyProjectileParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle> {
+        return mapParticles
+            .map { particle ->
+                if (particle.type == ParticleType.FURBALL) {
+                    val nextFrame = particle.frame + 1
+                    val nextX: Int = if (particle.originX == particle.x) {
+                        particle.x
+                    } else if (particle.originX < particle.x) {
+                        particle.x - particle.xJitter
+                    } else {
+                        particle.x + particle.xJitter
+                    }
+                    val nextY: Int = if (particle.originY == particle.y) {
+                        particle.y
+                    } else if (particle.originY < particle.y) {
+                        particle.y - particle.yJitter
+                    } else {
+                        particle.y + particle.yJitter
+                    }
+                    particle.from(nextX, nextY, nextFrame)
                 } else {
                     particle
                 }

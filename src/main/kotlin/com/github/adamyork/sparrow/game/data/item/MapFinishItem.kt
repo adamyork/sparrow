@@ -1,5 +1,7 @@
-package com.github.adamyork.sparrow.game.data
+package com.github.adamyork.sparrow.game.data.item
 
+import com.github.adamyork.sparrow.game.data.Cell
+import com.github.adamyork.sparrow.game.data.FrameMetadata
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 

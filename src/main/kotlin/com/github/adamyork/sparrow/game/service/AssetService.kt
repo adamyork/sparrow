@@ -1,35 +1,20 @@
 package com.github.adamyork.sparrow.game.service
 
 import com.github.adamyork.sparrow.common.Sounds
-import com.github.adamyork.sparrow.game.data.GameMap
-import com.github.adamyork.sparrow.game.data.GameMapState
+import com.github.adamyork.sparrow.game.data.map.GameMap
+import com.github.adamyork.sparrow.game.data.map.GameMapState
 import com.github.adamyork.sparrow.game.service.data.ImageAsset
 import com.github.adamyork.sparrow.game.service.data.ItemPositionAndType
 import com.github.adamyork.sparrow.game.service.data.TextAsset
-import kotlinx.coroutines.reactor.mono
-import net.mamoe.yamlkt.YamlMap
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
-import java.awt.Color
-import java.awt.Font
-import java.awt.FontMetrics
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
-import java.net.URI
-import java.net.URL
-import javax.imageio.ImageIO
 
-
-@Service
-class AssetService {
+interface AssetService {
 
     companion object {
-        val LOGGER: Logger = LoggerFactory.getLogger(AssetService::class.java)
         fun getBytes(file: File): ByteArray {
             val byteArray = ByteArray(file.length().toInt())
             FileInputStream(file).use { fis ->
@@ -42,330 +27,28 @@ class AssetService {
         }
     }
 
-    final val wavService: WavService
+    var backgroundMusicBytesMap: HashMap<Int, ByteArray>
 
-    //sounds
-    final val soundBytesMap: HashMap<Sounds, ByteArray> = HashMap()
-    final var backgroundMusicBytesMap: HashMap<Int, ByteArray> = HashMap()
+    suspend fun loadBufferedImageAsync(file: File): BufferedImage
 
-    //viewport
-    private final val viewPortWidth: Int
-    private final val viewPortHeight: Int
+    fun loadMap(id: Int): Mono<GameMap>
 
-    //player
-    private final val playerWidth: Int
-    private final val playerHeight: Int
-    private final val playerAssetPath: String
+    fun loadItem(id: Int): Mono<ImageAsset>
 
-    //maps
-    final val mapUrlMap: HashMap<Int, URL?> = HashMap()
-    final val mapAssetMap: HashMap<Int, ImageAsset> = HashMap()
-    private final val mapWidth: Int
-    private final val mapHeight: Int
-    private final val mapBackgroundPath: String
-    private final val mapMiddleGroundPath: String
-    private final val mapForGroundPath: String
-    private final val mapCollisionPath: String
+    fun loadEnemy(id: Int): Mono<ImageAsset>
 
-    //items
-    final val itemUrlMap: HashMap<Int, URL?> = HashMap()
-    final val itemPositions: YamlMap
-    private final val mapItemWidth: Int
-    private final val mapItemHeight: Int
-    private final val mapItemAssetOnePath: String
-    private final val mapItemAssetTwoPath: String
+    fun getTotalEnemies(): Int
 
-    //enemies
-    private final val mapEnemyWidth: Int
-    private final val mapEnemyHeight: Int
-    private final val mapEnemyAssetPath: String
-    final val enemyUrlMap: HashMap<Int, URL?> = HashMap()
-    final val enemyPositions: YamlMap
+    fun getEnemyPosition(id: Int): ItemPositionAndType
 
-    //text
-    final val textAssetMap: HashMap<GameMapState, TextAsset> = HashMap()
+    fun getTotalItems(): Int
 
-    constructor(
-        wavService: WavService,
-        @Value("\${viewport.width}") viewPortWidth: Int,
-        @Value("\${viewport.height}") viewPortHeight: Int,
-        @Value("\${map.width}") mapWidth: Int,
-        @Value("\${map.height}") mapHeight: Int,
-        @Value("\${map.bg}") mapBackgroundPath: String,
-        @Value("\${map.mg}") mapMiddleGroundPath: String,
-        @Value("\${map.fg}") mapForGroundPath: String,
-        @Value("\${map.col}") mapCollisionPath: String,
-        @Value("\${player.width}") playerWidth: Int,
-        @Value("\${player.height}") playerHeight: Int,
-        @Value("\${player.asset.path}") playerAssetPath: String,
-        @Value("\${map.item.width}") mapItemWidth: Int,
-        @Value("\${map.item.height}") mapItemHeight: Int,
-        @Value("\${map.item.asset.one.path}") mapItemAssetOnePath: String,
-        @Value("\${map.item.asset.two.path}") mapItemAssetTwoPath: String,
-        @Value("\${map.enemy.width}") mapEnemyWidth: Int,
-        @Value("\${map.enemy.height}") mapEnemyHeight: Int,
-        @Value("\${map.enemy.asset.path}") mapEnemyAssetPath: String,
-        @Value("\${audio.player.jump}") audioPlayerJumpPath: String,
-        @Value("\${audio.player.collision}") audioPlayerCollisionPath: String,
-        @Value("\${audio.item.collect}") audioItemCollectPath: String
-    ) {
-        this.wavService = wavService
-        this.viewPortWidth = viewPortWidth
-        this.viewPortHeight = viewPortHeight
-        this.mapWidth = mapWidth
-        this.mapHeight = mapHeight
-        this.mapBackgroundPath = mapBackgroundPath
-        this.mapMiddleGroundPath = mapMiddleGroundPath
-        this.mapForGroundPath = mapForGroundPath
-        this.mapCollisionPath = mapCollisionPath
-        this.playerWidth = playerWidth
-        this.playerHeight = playerHeight
-        this.playerAssetPath = playerAssetPath
-        this.mapItemWidth = mapItemWidth
-        this.mapItemHeight = mapItemHeight
-        this.mapItemAssetOnePath = mapItemAssetOnePath
-        this.mapItemAssetTwoPath = mapItemAssetTwoPath
-        this.mapEnemyWidth = mapEnemyWidth
-        this.mapEnemyHeight = mapEnemyHeight
-        this.mapEnemyAssetPath = mapEnemyAssetPath
+    fun getItemPosition(id: Int): ItemPositionAndType
 
-        val applicationYamlFile = urlToFile(this::class.java.classLoader.getResource("application.yml"))
-        enemyPositions = parseEnemyPositions(applicationYamlFile)
-        itemPositions = parseItemPositions(applicationYamlFile)
+    fun loadPlayer(): Mono<ImageAsset>
 
-        val jumpSoundBytes = urlToBytes(this::class.java.classLoader.getResource(audioPlayerJumpPath))
-        val itemCollectSoundBytes = urlToBytes(this::class.java.classLoader.getResource(audioItemCollectPath))
-        val playerCollisionSoundBytes = urlToBytes(this::class.java.classLoader.getResource(audioPlayerCollisionPath))
+    fun getSoundStream(sound: Sounds): ByteArray
 
-        soundBytesMap[Sounds.JUMP] = jumpSoundBytes
-        soundBytesMap[Sounds.ITEM_COLLECT] = itemCollectSoundBytes
-        soundBytesMap[Sounds.PLAYER_COLLISION] = playerCollisionSoundBytes
-
-        itemUrlMap[0] = this::class.java.classLoader.getResource(mapItemAssetOnePath)
-        itemUrlMap[1] = this::class.java.classLoader.getResource(mapItemAssetTwoPath)
-
-        enemyUrlMap[0] = this::class.java.classLoader.getResource(mapEnemyAssetPath)
-
-        mapUrlMap[0] = this::class.java.classLoader.getResource(mapBackgroundPath)
-        mapUrlMap[1] = this::class.java.classLoader.getResource(mapMiddleGroundPath)
-        mapUrlMap[2] = this::class.java.classLoader.getResource(mapForGroundPath)
-        mapUrlMap[3] = this::class.java.classLoader.getResource(mapCollisionPath)
-
-        val backgroundMusicFile =
-            urlToFile(this::class.java.classLoader.getResource("static/level-1-music.wav"))//TODO Hardcoded
-        backgroundMusicBytesMap = wavService.chunk(backgroundMusicFile, 25000)
-
-        val collectItemsAssetText = buildTextAsset(
-            viewPortWidth,
-            viewPortHeight,
-            Font("Arial", Font.BOLD, 32),
-            Color.BLACK,
-            "Collect all the greenies!",
-            centerX = true,
-            centerY = false,
-        )
-        val finishGameTextAsset = buildTextAsset(
-            viewPortWidth,
-            viewPortHeight,
-            Font("Arial", Font.BOLD, 32),
-            Color.BLACK,
-            "Find the finish flag!",
-            centerX = true,
-            centerY = false,
-        )
-        val gameCompleteTextAsset = buildTextAsset(
-            viewPortWidth,
-            viewPortHeight,
-            Font("Arial", Font.BOLD, 32),
-            Color.BLACK,
-            "You won!",
-            centerX = true,
-            centerY = false,
-        )
-        textAssetMap[GameMapState.COLLECTING] = collectItemsAssetText
-        textAssetMap[GameMapState.COMPLETING] = finishGameTextAsset
-        textAssetMap[GameMapState.COMPLETED] = gameCompleteTextAsset
-    }
-
-    private fun parseEnemyPositions(file: File): YamlMap {
-        val yamlDefault = net.mamoe.yamlkt.Yaml.Default
-        val properties = yamlDefault.decodeFromString(YamlMap.serializer(), file.readText())
-        val map = properties["map"] as YamlMap
-        val enemy = map["enemy"] as YamlMap
-        return enemy["position"] as YamlMap
-    }
-
-    private fun parseItemPositions(file: File): YamlMap {
-        val yamlDefault = net.mamoe.yamlkt.Yaml.Default
-        val properties = yamlDefault.decodeFromString(YamlMap.serializer(), file.readText())
-        val map = properties["map"] as YamlMap
-        val item = map["item"] as YamlMap
-        return item["position"] as YamlMap
-    }
-
-    suspend fun loadBufferedImageAsync(file: File): BufferedImage {
-        return ImageIO.read(file)
-    }
-
-    fun loadMap(id: Int): Mono<GameMap> {
-        val farGroundFile = urlToFile(mapUrlMap[id])
-        val midGroundFile = urlToFile(mapUrlMap[id + 1])
-        val nearFieldFile = urlToFile(mapUrlMap[id + 2])
-        val collisionFile = urlToFile(mapUrlMap[id + 3])
-
-        val farGroundMono = mono {
-            loadBufferedImageAsync(farGroundFile)
-        }.onErrorMap {
-            LOGGER.error("cant load the far ground image")
-            RuntimeException("cant load an image")
-        }
-        val midGroundMono = mono {
-            loadBufferedImageAsync(midGroundFile)
-        }.onErrorMap {
-            LOGGER.error("cant load the mid ground image")
-            RuntimeException("cant load an image")
-        }
-        val nearFieldMono = mono {
-            loadBufferedImageAsync(nearFieldFile)
-        }.onErrorMap {
-            LOGGER.error("cant load the near field image")
-            RuntimeException("cant load an image")
-        }
-        val collisionMono = mono {
-            loadBufferedImageAsync(collisionFile)
-        }.onErrorMap {
-            LOGGER.error("cant load the collision image")
-            RuntimeException("cant load an image")
-        }
-
-        return Mono.zip(farGroundMono, midGroundMono, nearFieldMono, collisionMono)
-            .map { objects ->
-                mapAssetMap[id] = ImageAsset(mapWidth, mapHeight, objects.t1)
-                mapAssetMap[id + 1] = ImageAsset(mapWidth, mapHeight, objects.t2)
-                mapAssetMap[id + 2] = ImageAsset(mapWidth, mapHeight, objects.t3)
-                mapAssetMap[id + 3] = ImageAsset(mapWidth, mapHeight, objects.t4)
-                GameMap(
-                    GameMapState.COLLECTING,
-                    mapAssetMap[id]!!,
-                    mapAssetMap[id + 1]!!,
-                    mapAssetMap[id + 2]!!,
-                    mapAssetMap[id + 3]!!,
-                    mapAssetMap[id + 3]!!.width,
-                    mapAssetMap[id + 3]!!.height,
-                    ArrayList(),
-                    ArrayList(),
-                    ArrayList()
-                )
-            }
-    }
-
-    fun loadItem(id: Int): Mono<ImageAsset> {
-        val itemMono = mono {
-            val itemUrl = itemUrlMap[id]
-            val itemFile = urlToFile(itemUrl)
-            loadBufferedImageAsync(itemFile)
-        }
-        return itemMono.map { image ->
-            ImageAsset(mapItemWidth, mapItemHeight, image)
-        }
-    }
-
-    fun loadEnemy(id: Int): Mono<ImageAsset> {
-        val enemyMono = mono {
-            val enemyUrl = enemyUrlMap[id]
-            val enemyFile = urlToFile(enemyUrl)
-            loadBufferedImageAsync(enemyFile)
-        }
-        return enemyMono.map { image ->
-            ImageAsset(mapEnemyWidth, mapEnemyHeight, image)
-        }
-    }
-
-    fun getTotalEnemies(): Int {
-        return enemyPositions.keys.size
-    }
-
-    fun getEnemyPosition(id: Int): Pair<Int, Int> {
-        val item: YamlMap = enemyPositions[id.toString()] as YamlMap
-        return Pair(item.getInt("x"), item.getInt("y"))
-    }
-
-    fun getTotalItems(): Int {
-        return itemPositions.keys.size
-    }
-
-    fun getItemPosition(id: Int): ItemPositionAndType {
-        val item: YamlMap = itemPositions[id.toString()] as YamlMap
-        return ItemPositionAndType(item.getInt("x"), item.getInt("y"), item.getString("type"))
-    }
-
-    fun loadPlayer(): Mono<ImageAsset> {
-        val playerFile = urlToFile(this::class.java.classLoader.getResource(playerAssetPath))
-        val playerMono = mono {
-            loadBufferedImageAsync(playerFile)
-        }
-        return playerMono.map { image ->
-            ImageAsset(playerWidth, playerHeight, image)
-        }
-    }
-
-    fun getSoundStream(sound: Sounds): ByteArray {
-        return soundBytesMap.getOrElse(sound) { byteArrayOf() }
-    }
-
-    private fun buildTextAsset(
-        viewPortWidth: Int,
-        viewPortHeight: Int,
-        font: Font,
-        color: Color,
-        message: String,
-        centerX: Boolean,
-        centerY: Boolean
-    ): TextAsset {
-        val textImage = BufferedImage(
-            viewPortWidth, viewPortHeight,
-            BufferedImage.TYPE_4BYTE_ABGR
-        )
-        val graphics = textImage.graphics
-        graphics.font = font
-        val metrics: FontMetrics? = graphics.getFontMetrics(graphics.font)
-        val textWidth = metrics?.stringWidth(message) ?: 0
-        val textHeight = metrics?.height ?: 0
-        val textAscent: Int = metrics?.ascent ?: 0
-        val x: Int = if (centerX) {
-            (viewPortWidth - textWidth) / 2
-        } else {
-            0
-        }
-        val y: Int = if (centerY) {
-            ((viewPortHeight - textHeight) / 2) + textAscent
-        } else {
-            0 + textAscent
-        }
-        graphics.color = Color.WHITE
-        graphics.fillRect(
-            (x - 5).coerceAtLeast(0),
-            (y - textAscent).coerceAtLeast(0),
-            textWidth + 10,
-            textHeight
-        )
-        graphics.color = color
-        graphics.drawString(message, x, y)
-        return TextAsset(textImage)
-    }
-
-    fun getTextAsset(gameMapState: GameMapState): TextAsset {
-        return textAssetMap[gameMapState] ?: TextAsset(BufferedImage(0, 0, 0))
-    }
-
-    private fun urlToFile(url: URL?): File {
-        val uri: URI = url?.toURI() ?: URI("")
-        return File(uri.path)
-    }
-
-    private fun urlToBytes(url: URL?): ByteArray {
-        val file = urlToFile(url)
-        return getBytes(file)
-    }
+    fun getTextAsset(gameMapState: GameMapState): TextAsset
 
 }

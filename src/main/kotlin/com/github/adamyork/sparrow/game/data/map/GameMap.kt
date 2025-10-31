@@ -1,5 +1,12 @@
-package com.github.adamyork.sparrow.game.data
+package com.github.adamyork.sparrow.game.data.map
 
+import com.github.adamyork.sparrow.game.data.enemy.MapEnemy
+import com.github.adamyork.sparrow.game.data.enemy.MapEnemyType
+import com.github.adamyork.sparrow.game.data.enemy.MapShooterEnemy
+import com.github.adamyork.sparrow.game.data.item.MapFinishItem
+import com.github.adamyork.sparrow.game.data.item.MapItem
+import com.github.adamyork.sparrow.game.data.item.MapItemState
+import com.github.adamyork.sparrow.game.data.item.MapItemType
 import com.github.adamyork.sparrow.game.engine.data.Particle
 import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.game.service.data.ImageAsset
@@ -22,7 +29,7 @@ data class GameMap(
         const val VIEWPORT_HORIZONTAL_MID_PARALLAX_OFFSET: Int = 2
     }
 
-    fun generateMapItems(collectibleItemAsset: ImageAsset, finishItemAsset: ImageAsset, assetService: AssetService) {
+    fun generateMapItems(greenieItemAsset: ImageAsset, finishItemAsset: ImageAsset, assetService: AssetService) {
         for (i in 0..<assetService.getTotalItems()) {
             val itemType = MapItemType.from(assetService.getItemPosition(i).type)
             if (itemType == MapItemType.FINISH) {
@@ -39,8 +46,8 @@ data class GameMap(
             } else {
                 items.add(
                     MapItem(
-                        collectibleItemAsset.width,
-                        collectibleItemAsset.height,
+                        greenieItemAsset.width,
+                        greenieItemAsset.height,
                         assetService.getItemPosition(i).x,
                         assetService.getItemPosition(i).y,
                         MapItemType.COLLECTABLE,
@@ -51,32 +58,48 @@ data class GameMap(
         }
     }
 
-    fun generateMapEnemies(asset: ImageAsset, assetService: AssetService) {
+    fun generateMapEnemies(vacuumEnemyAsset: ImageAsset, botEnemyAsset: ImageAsset, assetService: AssetService) {
         for (i in 0..<assetService.getTotalEnemies()) {
-            enemies.add(
-                MapEnemy(
-                    asset.width,
-                    asset.height,
-                    assetService.getEnemyPosition(i).first,
-                    assetService.getEnemyPosition(i).second,
-                    MapItemState.ACTIVE
+            val itemType = MapEnemyType.from(assetService.getEnemyPosition(i).type)
+            if (itemType == MapEnemyType.VACUUM) {
+                enemies.add(
+                    MapEnemy(
+                        vacuumEnemyAsset.width,
+                        vacuumEnemyAsset.height,
+                        assetService.getEnemyPosition(i).x,
+                        assetService.getEnemyPosition(i).y,
+                        MapEnemyType.VACUUM,
+                        MapItemState.ACTIVE
+                    )
                 )
-            )
+            } else {
+                enemies.add(
+                    MapShooterEnemy(
+                        botEnemyAsset.width,
+                        botEnemyAsset.height,
+                        assetService.getEnemyPosition(i).x,
+                        assetService.getEnemyPosition(i).y,
+                        MapEnemyType.BOT,
+                        MapItemState.INACTIVE
+                    )
+                )
+            }
         }
     }
 
     fun reset(
-        collectibleItemAsset: ImageAsset,
+        greenieItemAsset: ImageAsset,
         finishItemAsset: ImageAsset,
-        enemyAsset: ImageAsset,
+        vacuumEnemyAsset: ImageAsset,
+        botEnemyAsset: ImageAsset,
         assetService: AssetService
     ) {
         this.state = GameMapState.COLLECTING
         this.items = ArrayList()
         this.enemies = ArrayList()
         this.particles = ArrayList()
-        generateMapItems(collectibleItemAsset, finishItemAsset, assetService)
-        generateMapEnemies(enemyAsset, assetService)
+        generateMapItems(greenieItemAsset, finishItemAsset, assetService)
+        generateMapEnemies(vacuumEnemyAsset, botEnemyAsset, assetService)
     }
 
     fun from(managedMapEnemies: ArrayList<MapEnemy>, managedMapParticles: ArrayList<Particle>): GameMap {

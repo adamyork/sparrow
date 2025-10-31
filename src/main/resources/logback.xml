@@ -14,9 +14,9 @@
     <!--    <logger name="com.github.adamyork.sparrow.web.ScoreHandler" level="WARN"/>-->
     <!--    <logger name="com.github.adamyork.sparrow.socket.GameHandler" level="INFO"/>-->
     <!--    <logger name="com.github.adamyork.sparrow.socket.GameAudioHandler" level="INFO"/>-->
-    <logger name="com.github.adamyork.sparrow.game.engine.DefaultEngine" level="INFO"/>
-    <logger name="com.github.adamyork.sparrow.game.engine.DefaultPhysics" level="INFO"/>
-    <logger name="com.github.adamyork.sparrow.game.engine.Collision" level="INFO"/>
+    <logger name="com.github.adamyork.sparrow.game.engine.v1.DefaultEngine" level="INFO"/>
+    <logger name="com.github.adamyork.sparrow.game.engine.v1.DefaultPhysics" level="INFO"/>
+    <logger name="com.github.adamyork.sparrow.game.engine.v1.DefaultCollision" level="INFO"/>
 
     <root level="info">
         <appender-ref ref="STDOUT"/>

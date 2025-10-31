@@ -1,14 +1,16 @@
-package com.github.adamyork.sparrow.game.data
+package com.github.adamyork.sparrow.game.data.enemy
 
+import com.github.adamyork.sparrow.game.data.*
+import com.github.adamyork.sparrow.game.data.item.MapItemState
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class MapEnemy {
+open class MapEnemy {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(MapEnemy::class.java)
         const val ANIMATION_COLLISION_FRAMES = 8
-        const val MAX_X_MOVEMENT = 10
+        const val MAX_X_MOVEMENT = 50
         const val MOVEMENT_X_DISTANCE = 10
     }
 
@@ -18,6 +20,7 @@ class MapEnemy {
     var y: Int
     var originX: Int
     var originY: Int
+    var type: MapEnemyType
     var state: MapItemState
     var animatingFrames: HashMap<Int, FrameMetadata> = HashMap()
     var collisionFrames: HashMap<Int, FrameMetadata> = HashMap()
@@ -25,13 +28,14 @@ class MapEnemy {
     var enemyPosition: EnemyPosition
     var colliding: Boolean
 
-    constructor(width: Int, height: Int, x: Int, y: Int, state: MapItemState) {
+    constructor(width: Int, height: Int, x: Int, y: Int, type: MapEnemyType, state: MapItemState) {
         this.width = width
         this.height = height
         this.x = x
         this.y = y
         this.originX = x
         this.originY = y
+        this.type = type
         this.state = state
         this.enemyPosition = EnemyPosition(this.x, this.y, Direction.LEFT)
         this.colliding = false
@@ -46,6 +50,7 @@ class MapEnemy {
         y: Int,
         originX: Int,
         originY: Int,
+        type: MapEnemyType,
         state: MapItemState,
         frameMetadata: FrameMetadata,
         enemyPosition: EnemyPosition,
@@ -57,6 +62,7 @@ class MapEnemy {
         this.y = y
         this.originX = originX
         this.originY = originY
+        this.type = type
         this.state = state
         this.frameMetadata = frameMetadata
         this.enemyPosition = enemyPosition
@@ -76,7 +82,7 @@ class MapEnemy {
         return FrameMetadata(1, Cell(1, 1, width, height))
     }
 
-    fun getNextPosition(): EnemyPosition {
+    open fun getNextPosition(player: Player, viewPort: ViewPort): EnemyPosition {
         if (enemyPosition.direction == Direction.LEFT) {
             return if (enemyPosition.x >= originX - MAX_X_MOVEMENT) {
                 EnemyPosition(
@@ -100,6 +106,10 @@ class MapEnemy {
         }
     }
 
+    open fun getNextEnemyState(player: Player): MapItemState {
+        return this.state
+    }
+
     @Suppress("DuplicatedCode")
     private fun generateAnimationFrameIndex() {
         animatingFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
@@ -114,7 +124,7 @@ class MapEnemy {
         collisionFrames[8] = FrameMetadata(8, Cell(1, 1, width, height))
     }
 
-    fun from(
+    open fun from(
         frameMetadata: FrameMetadata,
         isColliding: Boolean
     ): MapEnemy {
@@ -125,6 +135,7 @@ class MapEnemy {
             this.y,
             this.originX,
             this.originY,
+            this.type,
             this.state,
             frameMetadata,
             this.enemyPosition,
@@ -133,9 +144,10 @@ class MapEnemy {
     }
 
 
-    fun from(
+    open fun from(
         x: Int,
         y: Int,
+        state: MapItemState,
         frameMetadata: FrameMetadata,
         nextPosition: EnemyPosition,
         isColliding: Boolean
@@ -147,7 +159,8 @@ class MapEnemy {
             y,
             this.originX,
             this.originY,
-            this.state,
+            this.type,
+            state,
             frameMetadata,
             nextPosition,
             isColliding

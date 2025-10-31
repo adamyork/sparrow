@@ -41,26 +41,30 @@ map:
         # noinspection SpringBootApplicationYaml
         type: "finish"
   enemy:
-    width: 128
-    height: 128
     asset:
-      path: "game/vacuum.png"
+      one:
+        width: 128
+        height: 128
+        path: "game/vacuum.png"
+      two:
+        width: 128
+        height: 64
+        path: "game/deebot-full.png"
     position:
-      #      0:
-      #        # noinspection SpringBootApplicationYaml
-      #        x: 400
-      #        # noinspection SpringBootApplicationYaml
-      #        y: 583
-      #      1:
-      #        # noinspection SpringBootApplicationYaml
-      #        x: 600
-      #        # noinspection SpringBootApplicationYaml
-      #        y: 450
       0:
         # noinspection SpringBootApplicationYaml
         x: 1024
         # noinspection SpringBootApplicationYaml
         y: 450
+        # noinspection SpringBootApplicationYaml
+        type: "vacuum"
+      1:
+        # noinspection SpringBootApplicationYaml
+        x: 800
+        # noinspection SpringBootApplicationYaml
+        y: 683
+        # noinspection SpringBootApplicationYaml
+        type: "deebot"
 audio:
   player:
     jump: "game/jump-sound.wav"

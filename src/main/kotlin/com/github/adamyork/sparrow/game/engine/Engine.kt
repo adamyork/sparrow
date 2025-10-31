@@ -1,8 +1,8 @@
 package com.github.adamyork.sparrow.game.engine
 
-import com.github.adamyork.sparrow.game.data.GameMap
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.ViewPort
+import com.github.adamyork.sparrow.game.data.map.GameMap
 import com.github.adamyork.sparrow.game.engine.data.CollisionBoundaries
 import com.github.adamyork.sparrow.game.service.data.ImageAsset
 
@@ -19,7 +19,7 @@ interface Engine {
 
     fun manageViewport(player: Player, viewPort: ViewPort): ViewPort
 
-    fun manageMap(player: Player, gameMap: GameMap): GameMap
+    fun manageMap(player: Player, gameMap: GameMap, viewPort: ViewPort): GameMap
 
     fun manageEnemyAndItemCollision(
         player: Player,
@@ -35,7 +35,8 @@ interface Engine {
         player: Player,
         mapItemAsset: ImageAsset,
         finishItemAsset: ImageAsset,
-        mapEnemyAsset: ImageAsset
+        mapEnemyVacuumAsset: ImageAsset,
+        mapEnemyBotAsset: ImageAsset
     ): ByteArray
 
 }

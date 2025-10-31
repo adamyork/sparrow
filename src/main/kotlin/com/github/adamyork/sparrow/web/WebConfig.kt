@@ -1,5 +1,6 @@
 package com.github.adamyork.sparrow.web
 
+import com.github.adamyork.sparrow.game.service.ScoreService
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.ClassPathResource
@@ -11,11 +12,8 @@ import org.springframework.web.reactive.function.server.router
 @EnableWebFlux
 class WebConfig : WebFluxConfigurer {
 
-    final val scoreHandler: ScoreHandler
-
-    constructor(scoreHandler: ScoreHandler) {
-        this.scoreHandler = scoreHandler
-    }
+    @Bean
+    fun scoreHandler(scoreService: ScoreService): ScoreHandler = ScoreHandler(scoreService)
 
     @Bean
     fun rootRouter() =
@@ -68,7 +66,7 @@ class WebConfig : WebFluxConfigurer {
         }
 
     @Bean
-    fun scoreRouter() =
+    fun scoreRouter(scoreHandler: ScoreHandler) =
         router {
             GET("/score", scoreHandler::getScore)
         }

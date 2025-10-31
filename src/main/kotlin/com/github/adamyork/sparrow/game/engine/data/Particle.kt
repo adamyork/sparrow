@@ -16,6 +16,24 @@ data class Particle(
     val radius: Int
 ) {
 
+    fun from(nextX: Int, nextY: Int, nextFrame: Int): Particle {
+        return Particle(
+            this.id,
+            nextX,
+            nextY,
+            this.originX,
+            this.originY,
+            this.width,
+            this.height,
+            this.type,
+            nextFrame,
+            this.lifetime,
+            this.xJitter,
+            this.yJitter,
+            this.radius
+        )
+    }
+
     fun from(coords: Pair<Float, Float>, nextFrame: Int, nextRadius: Int): Particle {
         return Particle(
             this.id,
@@ -49,6 +67,24 @@ data class Particle(
             this.xJitter,
             this.yJitter,
             nextRadius
+        )
+    }
+
+    fun from(nextFrame: Int): Particle {
+        return Particle(
+            this.id,
+            this.x,
+            this.y,
+            this.originX,
+            this.originY,
+            this.width,
+            this.height,
+            this.type,
+            nextFrame,
+            this.lifetime,
+            this.xJitter,
+            this.yJitter,
+            this.radius
         )
     }
 

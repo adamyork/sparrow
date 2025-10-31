@@ -1,4 +1,4 @@
-package com.github.adamyork.sparrow.game.data
+package com.github.adamyork.sparrow.game.data.item
 
 enum class MapItemType {
     COLLECTABLE,

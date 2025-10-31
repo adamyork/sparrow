@@ -15,4 +15,6 @@ interface Physics {
     fun applyCollisionParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle>
 
     fun applyDustParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle>
+
+    fun applyProjectileParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle>
 }
