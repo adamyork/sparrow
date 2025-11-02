@@ -116,7 +116,7 @@ class Game {
                     gameMap = nextPlayerAndMap.second
                     scoreService.gameMapItem = gameMap.items
                     gameStatusProvider.lastPaintTime.store(System.currentTimeMillis().toInt())
-                    engine.paint(
+                    engine.draw(
                         gameMap,
                         viewPort,
                         playerAsset,

@@ -1,5 +1,6 @@
 package com.github.adamyork.sparrow.game.data.map
 
+import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.data.enemy.MapEnemy
 import com.github.adamyork.sparrow.game.data.enemy.MapEnemyType
 import com.github.adamyork.sparrow.game.data.enemy.MapShooterEnemy
@@ -27,6 +28,22 @@ data class GameMap(
     companion object {
         const val VIEWPORT_HORIZONTAL_FAR_PARALLAX_OFFSET: Int = 4
         const val VIEWPORT_HORIZONTAL_MID_PARALLAX_OFFSET: Int = 2
+    }
+
+    fun getFarGroundX(viewPort: ViewPort): Int {
+        var x = viewPort.x / VIEWPORT_HORIZONTAL_FAR_PARALLAX_OFFSET
+        if (x < 0 || x > viewPort.width) {
+            x = viewPort.x
+        }
+        return x
+    }
+
+    fun getMidGroundX(viewPort: ViewPort): Int {
+        var x = viewPort.x / VIEWPORT_HORIZONTAL_MID_PARALLAX_OFFSET
+        if (x < 0 || x > viewPort.width) {
+            x = viewPort.x
+        }
+        return x
     }
 
     fun generateMapItems(greenieItemAsset: ImageAsset, finishItemAsset: ImageAsset, assetService: AssetService) {

@@ -22,6 +22,7 @@ import com.github.adamyork.sparrow.game.service.ScoreService
 import com.github.adamyork.sparrow.game.service.data.ImageAsset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.awt.Graphics
 import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
 import java.awt.image.BufferedImage
@@ -179,7 +180,7 @@ class DefaultEngine : Engine {
         }.toCollection(ArrayList())
     }
 
-    override fun paint(
+    override fun draw(
         map: GameMap,
         viewPort: ViewPort,
         playerAsset: ImageAsset,
@@ -188,95 +189,60 @@ class DefaultEngine : Engine {
         finishItemAsset: ImageAsset,
         mapEnemyVacuumAsset: ImageAsset,
         mapEnemyBotAsset: ImageAsset
-    ): ByteArray {//TODO major clean up (ifs in maps)
-        val compositeImage = BufferedImage(
-            viewPort.width, viewPort.height,
-            BufferedImage.TYPE_BYTE_INDEXED
-        )
+    ): ByteArray {
+        val mapItemImageAssetMap: HashMap<MapItemType, ImageAsset> = HashMap()
+        mapItemImageAssetMap[MapItemType.COLLECTABLE] = mapItemAsset
+        mapItemImageAssetMap[MapItemType.FINISH] = finishItemAsset
+
+        val mapEnemyImageAssetMap: HashMap<MapEnemyType, ImageAsset> = HashMap()
+        mapEnemyImageAssetMap[MapEnemyType.VACUUM] = mapEnemyVacuumAsset
+        mapEnemyImageAssetMap[MapEnemyType.BOT] = mapEnemyBotAsset
+
+        val compositeImage = BufferedImage(viewPort.width, viewPort.height, BufferedImage.TYPE_BYTE_INDEXED)
         val graphics = compositeImage.graphics
-        var farGroundX = viewPort.x / GameMap.VIEWPORT_HORIZONTAL_FAR_PARALLAX_OFFSET
-        var midGroundX = viewPort.x / GameMap.VIEWPORT_HORIZONTAL_MID_PARALLAX_OFFSET
-        if (farGroundX < 0 || farGroundX > viewPort.width) {
-            farGroundX = viewPort.x
-        }
-        if (midGroundX < 0 || midGroundX > viewPort.width) {
-            midGroundX = viewPort.x
-        }
-        val farGroundSubImage =
-            map.farGroundAsset.bufferedImage.getSubimage(farGroundX, viewPort.y, viewPort.width, viewPort.height)
-        val midGroundSubImage =
-            map.midGroundAsset.bufferedImage.getSubimage(midGroundX, viewPort.y, viewPort.width, viewPort.height)
+
+        drawBackground(map, viewPort, graphics)
+        drawStatusText(map, graphics)
+        drawMapItems(map, viewPort, graphics, mapItemImageAssetMap)
+        drawMapEnemies(map, viewPort, graphics, mapEnemyImageAssetMap)
+        drawParticles(map, viewPort, graphics)
+        drawPlayer(player, viewPort, graphics, playerAsset)
+
+        val backgroundBuffer = ByteArrayOutputStream()
+        ImageIO.setUseCache(false)
+        ImageIO.write(compositeImage, "bmp", backgroundBuffer)
+        compositeImage.graphics.dispose()
+        val gameBytes = backgroundBuffer.toByteArray()
+        backgroundBuffer.reset()
+        return gameBytes
+    }
+
+    private fun drawBackground(map: GameMap, viewPort: ViewPort, graphics: Graphics) {
+        val farGroundSubImage = getSubImage(
+            map.farGroundAsset.bufferedImage,
+            map.getFarGroundX(viewPort),
+            viewPort.y,
+            viewPort.width,
+            viewPort.height
+        )
+        val midGroundSubImage = getSubImage(
+            map.midGroundAsset.bufferedImage,
+            map.getMidGroundX(viewPort),
+            viewPort.y,
+            viewPort.width,
+            viewPort.height
+        )
         val nearFieldSubImage =
-            map.nearFieldAsset.bufferedImage.getSubimage(viewPort.x, viewPort.y, viewPort.width, viewPort.height)
+            getSubImage(map.nearFieldAsset.bufferedImage, viewPort.x, viewPort.y, viewPort.width, viewPort.height)
         val collisionSubImage =
-            map.collisionAsset.bufferedImage.getSubimage(viewPort.x, viewPort.y, viewPort.width, viewPort.height)
+            getSubImage(map.collisionAsset.bufferedImage, viewPort.x, viewPort.y, viewPort.width, viewPort.height)
         graphics.drawImage(farGroundSubImage, 0, 0, null)
         graphics.drawImage(midGroundSubImage, 0, 0, null)
         graphics.drawImage(nearFieldSubImage, 0, 0, null)
         graphics.drawImage(collisionSubImage, 0, 0, null)
+    }
 
-        val gameStatusTextImage = assetService.getTextAsset(map.state)
-        graphics.drawImage(gameStatusTextImage.image, 0, 0, null)
-
-        map.items.forEach { item ->
-            if (item.state != MapItemState.INACTIVE) {
-                val localCord = viewPort.globalToLocal(item.x, item.y)
-                if (item.type == MapItemType.FINISH) {
-                    val finishItemSubImage = finishItemAsset.bufferedImage.getSubimage(
-                        0,
-                        0,
-                        item.width,
-                        item.height
-                    )
-                    graphics.drawImage(finishItemSubImage, localCord.first, localCord.second, null)
-                } else {
-                    val mapItemSubImage = mapItemAsset.bufferedImage.getSubimage(
-                        item.frameMetadata.cell.x,
-                        item.frameMetadata.cell.y,
-                        item.width,
-                        item.height
-                    )
-                    graphics.drawImage(mapItemSubImage, localCord.first, localCord.second, null)
-                }
-            }
-        }
-
-        map.enemies.forEach { enemy ->
-            val localCord = viewPort.globalToLocal(enemy.x, enemy.y)
-            if (enemy.state != MapItemState.INACTIVE) {
-                val mapEnemySubImage: BufferedImage
-                if (enemy.type == MapEnemyType.VACUUM) {
-                    mapEnemySubImage = mapEnemyVacuumAsset.bufferedImage.getSubimage(
-                        enemy.frameMetadata.cell.x,
-                        enemy.frameMetadata.cell.y,
-                        enemy.width,
-                        enemy.height
-                    )
-                } else {
-                    mapEnemySubImage = mapEnemyBotAsset.bufferedImage.getSubimage(
-                        enemy.frameMetadata.cell.x,
-                        enemy.frameMetadata.cell.y,
-                        enemy.width,
-                        enemy.height
-                    )
-                }
-                graphics.drawImage(
-                    transformDirection(mapEnemySubImage, enemy.enemyPosition.direction, enemy.width),
-                    localCord.first,
-                    localCord.second,
-                    null
-                )
-            }
-        }
-        val particleImage = BufferedImage(viewPort.width, viewPort.height, BufferedImage.TYPE_4BYTE_ABGR)
-        map.particles.forEach { particle ->
-            val particleGraphics = particleImage.graphics
-            val localCord = viewPort.globalToLocal(particle.x, particle.y)
-            particleGraphics.color = particle.color
-            particleGraphics.fillRect(localCord.first, localCord.second, particle.width, particle.height)
-        }
-        graphics.drawImage(particleImage, 0, 0, null)
-        particleImage.graphics.dispose()
+    private fun drawPlayer(player: Player, viewPort: ViewPort, graphics: Graphics, playerAsset: ImageAsset) {
         val playerSubImage =
             playerAsset.bufferedImage.getSubimage(
                 player.frameMetadata.cell.x,
@@ -291,13 +257,77 @@ class DefaultEngine : Engine {
             localCord.second,
             null
         )
-        val backgroundBuffer = ByteArrayOutputStream()
-        ImageIO.setUseCache(false)
-        ImageIO.write(compositeImage, "bmp", backgroundBuffer)
-        compositeImage.graphics.dispose()
-        val gameBytes = backgroundBuffer.toByteArray()
-        backgroundBuffer.reset()
-        return gameBytes
+    }
+
+    private fun drawParticles(map: GameMap, viewPort: ViewPort, graphics: Graphics) {
+        val particleImage = BufferedImage(viewPort.width, viewPort.height, BufferedImage.TYPE_4BYTE_ABGR)
+        val particleGraphics = particleImage.graphics
+        map.particles.forEach { particle ->
+            val localCord = viewPort.globalToLocal(particle.x, particle.y)
+            particleGraphics.color = particle.color
+            particleGraphics.fillRect(
+                localCord.first,
+                localCord.second,
+                particle.width,
+                particle.height
+            )//TODO make shape variable
+        }
+        graphics.drawImage(particleImage, 0, 0, null)
+        particleImage.graphics.dispose()
+    }
+
+    private fun drawStatusText(map: GameMap, graphics: Graphics) {
+        val gameStatusTextImage = assetService.getTextAsset(map.state)
+        graphics.drawImage(gameStatusTextImage.image, 0, 0, null)
+    }
+
+    private fun drawMapItems(
+        map: GameMap,
+        viewPort: ViewPort,
+        graphics: Graphics,
+        assetMap: HashMap<MapItemType, ImageAsset>
+    ) {
+        map.items.forEach { item ->
+            if (item.state != MapItemState.INACTIVE) {
+                val localCord = viewPort.globalToLocal(item.x, item.y)
+                val itemSubImage = assetMap[item.type]?.bufferedImage?.getSubimage(
+                    item.frameMetadata.cell.x,
+                    item.frameMetadata.cell.y,
+                    item.width,
+                    item.height
+                )
+                graphics.drawImage(itemSubImage, localCord.first, localCord.second, null)
+            }
+        }
+    }
+
+    private fun drawMapEnemies(
+        map: GameMap,
+        viewPort: ViewPort,
+        graphics: Graphics,
+        assetMap: HashMap<MapEnemyType, ImageAsset>
+    ) {
+        map.enemies.forEach { enemy ->
+            val localCord = viewPort.globalToLocal(enemy.x, enemy.y)
+            if (enemy.state != MapItemState.INACTIVE) {
+                val itemSubImage = assetMap[enemy.type]?.bufferedImage?.getSubimage(
+                    enemy.frameMetadata.cell.x,
+                    enemy.frameMetadata.cell.y,
+                    enemy.width,
+                    enemy.height
+                ) ?: BufferedImage(0, 0, 0)
+                graphics.drawImage(
+                    transformDirection(itemSubImage, enemy.enemyPosition.direction, enemy.width),
+                    localCord.first,
+                    localCord.second,
+                    null
+                )
+            }
+        }
+    }
+
+    private fun getSubImage(bufferedImage: BufferedImage, x: Int, y: Int, width: Int, height: Int): BufferedImage {
+        return bufferedImage.getSubimage(x, y, width, height)
     }
 
     private fun transformDirection(playerImage: BufferedImage, direction: Direction, width: Int): BufferedImage {

@@ -28,7 +28,7 @@ interface Engine {
         collisionAsset: ImageAsset
     ): Pair<Player, GameMap>
 
-    fun paint(
+    fun draw(
         map: GameMap,
         viewPort: ViewPort,
         playerAsset: ImageAsset,
