@@ -4,6 +4,7 @@ import com.github.adamyork.sparrow.game.data.Cell
 import com.github.adamyork.sparrow.game.data.FrameMetadata
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.awt.image.BufferedImage
 
 open class MapItem {
 
@@ -22,14 +23,24 @@ open class MapItem {
     var activeFrames: HashMap<Int, FrameMetadata> = HashMap()
     var deactivatingFrames: HashMap<Int, FrameMetadata> = HashMap()
     var frameMetadata: FrameMetadata
+    var bufferedImage: BufferedImage
 
-    constructor(width: Int, height: Int, x: Int, y: Int, type: MapItemType, state: MapItemState) {
+    constructor(
+        width: Int,
+        height: Int,
+        x: Int,
+        y: Int,
+        type: MapItemType,
+        state: MapItemState,
+        bufferedImage: BufferedImage
+    ) {
         this.width = width
         this.height = height
         this.x = x
         this.y = y
         this.type = type
         this.state = state
+        this.bufferedImage = bufferedImage
         this.frameMetadata = FrameMetadata(1, Cell(1, 1, width, height))
         generateAnimationFrameIndex()
     }
@@ -41,6 +52,7 @@ open class MapItem {
         y: Int,
         type: MapItemType,
         state: MapItemState,
+        bufferedImage: BufferedImage,
         frameMetadata: FrameMetadata
     ) {
         this.width = width
@@ -49,11 +61,12 @@ open class MapItem {
         this.y = y
         this.type = type
         this.state = state
+        this.bufferedImage = bufferedImage
         this.frameMetadata = frameMetadata
         generateAnimationFrameIndex()
     }
 
-     open fun getNextFrameCell(): FrameMetadata {
+    open fun getNextFrameCell(): FrameMetadata {
         if (state == MapItemState.DEACTIVATING) {
             if (frameMetadata.frame == ANIMATION_DEACTIVATING_FRAMES) {
                 LOGGER.info("deactivating complete 0")
@@ -103,5 +116,31 @@ open class MapItem {
         deactivatingFrames[2] = FrameMetadata(2, Cell(1, 6, width, height))
         deactivatingFrames[3] = FrameMetadata(3, Cell(1, 7, width, height))
         deactivatingFrames[4] = FrameMetadata(4, Cell(1, 8, width, height))
+    }
+
+    open fun from(state: MapItemState, frameMetadata: FrameMetadata): MapItem {
+        return MapItem(
+            this.width,
+            this.height,
+            this.x,
+            this.y,
+            this.type,
+            state,
+            this.bufferedImage,
+            frameMetadata
+        )
+    }
+
+    open fun from(x: Int, y: Int, state: MapItemState, frameMetadata: FrameMetadata): MapItem {
+        return MapItem(
+            this.width,
+            this.height,
+            x,
+            y,
+            this.type,
+            state,
+            this.bufferedImage,
+            frameMetadata
+        )
     }
 }

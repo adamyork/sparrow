@@ -88,7 +88,8 @@ class Game {
             mapItemFinishAsset = objects.t4
             mapEnemyVacuumAsset = objects.t5
             mapEnemyBotAsset = objects.t6
-            player = Player(playerInitialX, playerInitialY, playerAsset.width, playerAsset.height)
+            player =
+                Player(playerInitialX, playerInitialY, playerAsset.width, playerAsset.height, playerAsset.bufferedImage)
             gameMap.generateMapItems(mapItemGreenieAsset, mapItemFinishAsset, assetService)
             LOGGER.info("map items generated")
             gameMap.generateMapEnemies(mapEnemyVacuumAsset, mapEnemyBotAsset, assetService)
@@ -116,16 +117,7 @@ class Game {
                     gameMap = nextPlayerAndMap.second
                     scoreService.gameMapItem = gameMap.items
                     gameStatusProvider.lastPaintTime.store(System.currentTimeMillis().toInt())
-                    engine.draw(
-                        gameMap,
-                        viewPort,
-                        playerAsset,
-                        player,
-                        mapItemGreenieAsset,
-                        mapItemFinishAsset,
-                        mapEnemyVacuumAsset,
-                        mapEnemyBotAsset
-                    )
+                    engine.draw(gameMap, viewPort, player)
                 } else {
                     ByteArray(0)
                 }

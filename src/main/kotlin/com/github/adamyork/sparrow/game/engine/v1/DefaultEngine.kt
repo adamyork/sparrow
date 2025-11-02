@@ -5,8 +5,6 @@ import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.data.enemy.MapEnemy
-import com.github.adamyork.sparrow.game.data.enemy.MapEnemyType
-import com.github.adamyork.sparrow.game.data.item.MapFinishItem
 import com.github.adamyork.sparrow.game.data.item.MapItem
 import com.github.adamyork.sparrow.game.data.item.MapItemState
 import com.github.adamyork.sparrow.game.data.item.MapItemType
@@ -153,14 +151,14 @@ class DefaultEngine : Engine {
             val itemX = item.x
             val itemY = item.y
             val frameMetadata = item.getNextFrameCell()
-            if (item.type == MapItemType.FINISH) {
+            if (item.type == MapItemType.FINISH) {//TODO Simplify if
                 var nextState = item.state
                 if (gameMap.state == GameMapState.COMPLETING && item.state == MapItemState.INACTIVE) {
                     nextState = MapItemState.ACTIVE
                 }
-                MapFinishItem(item.width, item.height, itemX, itemY, item.type, nextState, frameMetadata)
+                item.from(itemX, itemY, nextState, frameMetadata)
             } else {
-                MapItem(item.width, item.height, itemX, itemY, item.type, item.state, frameMetadata)
+                item.from(itemX, itemY, item.state, frameMetadata)
             }
         }.toCollection(ArrayList())
     }
@@ -183,30 +181,17 @@ class DefaultEngine : Engine {
     override fun draw(
         map: GameMap,
         viewPort: ViewPort,
-        playerAsset: ImageAsset,
-        player: Player,
-        mapItemAsset: ImageAsset,
-        finishItemAsset: ImageAsset,
-        mapEnemyVacuumAsset: ImageAsset,
-        mapEnemyBotAsset: ImageAsset
+        player: Player
     ): ByteArray {
-        val mapItemImageAssetMap: HashMap<MapItemType, ImageAsset> = HashMap()
-        mapItemImageAssetMap[MapItemType.COLLECTABLE] = mapItemAsset
-        mapItemImageAssetMap[MapItemType.FINISH] = finishItemAsset
-
-        val mapEnemyImageAssetMap: HashMap<MapEnemyType, ImageAsset> = HashMap()
-        mapEnemyImageAssetMap[MapEnemyType.VACUUM] = mapEnemyVacuumAsset
-        mapEnemyImageAssetMap[MapEnemyType.BOT] = mapEnemyBotAsset
-
         val compositeImage = BufferedImage(viewPort.width, viewPort.height, BufferedImage.TYPE_BYTE_INDEXED)
         val graphics = compositeImage.graphics
 
         drawBackground(map, viewPort, graphics)
         drawStatusText(map, graphics)
-        drawMapItems(map, viewPort, graphics, mapItemImageAssetMap)
-        drawMapEnemies(map, viewPort, graphics, mapEnemyImageAssetMap)
+        drawMapItems(map, viewPort, graphics)
+        drawMapEnemies(map, viewPort, graphics)
         drawParticles(map, viewPort, graphics)
-        drawPlayer(player, viewPort, graphics, playerAsset)
+        drawPlayer(player, viewPort, graphics)
 
         val backgroundBuffer = ByteArrayOutputStream()
         ImageIO.setUseCache(false)
@@ -242,14 +227,13 @@ class DefaultEngine : Engine {
         graphics.drawImage(collisionSubImage, 0, 0, null)
     }
 
-    private fun drawPlayer(player: Player, viewPort: ViewPort, graphics: Graphics, playerAsset: ImageAsset) {
-        val playerSubImage =
-            playerAsset.bufferedImage.getSubimage(
-                player.frameMetadata.cell.x,
-                player.frameMetadata.cell.y,
-                player.width,
-                player.height
-            )
+    private fun drawPlayer(player: Player, viewPort: ViewPort, graphics: Graphics) {
+        val playerSubImage = player.bufferedImage.getSubimage(
+            player.frameMetadata.cell.x,
+            player.frameMetadata.cell.y,
+            player.width,
+            player.height
+        )
         val localCord = viewPort.globalToLocal(player.x, player.y)
         graphics.drawImage(
             transformDirection(playerSubImage, player.direction, player.width),
@@ -284,13 +268,12 @@ class DefaultEngine : Engine {
     private fun drawMapItems(
         map: GameMap,
         viewPort: ViewPort,
-        graphics: Graphics,
-        assetMap: HashMap<MapItemType, ImageAsset>
+        graphics: Graphics
     ) {
         map.items.forEach { item ->
             if (item.state != MapItemState.INACTIVE) {
                 val localCord = viewPort.globalToLocal(item.x, item.y)
-                val itemSubImage = assetMap[item.type]?.bufferedImage?.getSubimage(
+                val itemSubImage = item.bufferedImage.getSubimage(
                     item.frameMetadata.cell.x,
                     item.frameMetadata.cell.y,
                     item.width,
@@ -304,18 +287,17 @@ class DefaultEngine : Engine {
     private fun drawMapEnemies(
         map: GameMap,
         viewPort: ViewPort,
-        graphics: Graphics,
-        assetMap: HashMap<MapEnemyType, ImageAsset>
+        graphics: Graphics
     ) {
         map.enemies.forEach { enemy ->
             val localCord = viewPort.globalToLocal(enemy.x, enemy.y)
             if (enemy.state != MapItemState.INACTIVE) {
-                val itemSubImage = assetMap[enemy.type]?.bufferedImage?.getSubimage(
+                val itemSubImage = enemy.bufferedImage.getSubimage(
                     enemy.frameMetadata.cell.x,
                     enemy.frameMetadata.cell.y,
                     enemy.width,
                     enemy.height
-                ) ?: BufferedImage(0, 0, 0)
+                )
                 graphics.drawImage(
                     transformDirection(itemSubImage, enemy.enemyPosition.direction, enemy.width),
                     localCord.first,

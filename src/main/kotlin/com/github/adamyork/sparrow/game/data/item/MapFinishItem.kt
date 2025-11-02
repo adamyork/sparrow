@@ -4,6 +4,7 @@ import com.github.adamyork.sparrow.game.data.Cell
 import com.github.adamyork.sparrow.game.data.FrameMetadata
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.awt.image.BufferedImage
 
 class MapFinishItem : MapItem {
 
@@ -19,14 +20,16 @@ class MapFinishItem : MapItem {
         x: Int,
         y: Int,
         type: MapItemType,
-        state: MapItemState
+        state: MapItemState,
+        bufferedImage: BufferedImage
     ) : super(
         width,
         height,
         x,
         y,
         type,
-        state
+        state,
+        bufferedImage
     )
 
     constructor(
@@ -36,7 +39,8 @@ class MapFinishItem : MapItem {
         y: Int,
         type: MapItemType,
         state: MapItemState,
-        frameMetadata: FrameMetadata
+        bufferedImage: BufferedImage,
+        frameMetadata: FrameMetadata,
     ) : super(
         width,
         height,
@@ -44,6 +48,7 @@ class MapFinishItem : MapItem {
         y,
         type,
         state,
+        bufferedImage,
         frameMetadata
     )
 
@@ -74,5 +79,30 @@ class MapFinishItem : MapItem {
         deactivatingFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
     }
 
+    override fun from(state: MapItemState, frameMetadata: FrameMetadata): MapFinishItem {
+        return MapFinishItem(
+            this.width,
+            this.height,
+            this.x,
+            this.y,
+            this.type,
+            state,
+            this.bufferedImage,
+            frameMetadata
+        )
+    }
+
+    override fun from(x: Int, y: Int, state: MapItemState, frameMetadata: FrameMetadata): MapFinishItem {
+        return MapFinishItem(
+            this.width,
+            this.height,
+            x,
+            y,
+            this.type,
+            state,
+            this.bufferedImage,
+            frameMetadata
+        )
+    }
 
 }

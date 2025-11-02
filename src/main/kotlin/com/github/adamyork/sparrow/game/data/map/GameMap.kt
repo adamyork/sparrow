@@ -57,7 +57,8 @@ data class GameMap(
                         assetService.getItemPosition(i).x,
                         assetService.getItemPosition(i).y,
                         MapItemType.FINISH,
-                        MapItemState.INACTIVE
+                        MapItemState.INACTIVE,
+                        finishItemAsset.bufferedImage
                     )
                 )
             } else {
@@ -68,7 +69,8 @@ data class GameMap(
                         assetService.getItemPosition(i).x,
                         assetService.getItemPosition(i).y,
                         MapItemType.COLLECTABLE,
-                        MapItemState.ACTIVE
+                        MapItemState.ACTIVE,
+                        greenieItemAsset.bufferedImage
                     )
                 )
             }
@@ -86,7 +88,8 @@ data class GameMap(
                         assetService.getEnemyPosition(i).x,
                         assetService.getEnemyPosition(i).y,
                         MapEnemyType.VACUUM,
-                        MapItemState.ACTIVE
+                        MapItemState.ACTIVE,
+                        vacuumEnemyAsset.bufferedImage
                     )
                 )
             } else {
@@ -97,7 +100,8 @@ data class GameMap(
                         assetService.getEnemyPosition(i).x,
                         assetService.getEnemyPosition(i).y,
                         MapEnemyType.BOT,
-                        MapItemState.INACTIVE
+                        MapItemState.INACTIVE,
+                        botEnemyAsset.bufferedImage
                     )
                 )
             }

@@ -4,6 +4,7 @@ import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.data.item.MapItemState
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.awt.image.BufferedImage
 
 open class MapEnemy {
 
@@ -22,13 +23,22 @@ open class MapEnemy {
     var originY: Int
     var type: MapEnemyType
     var state: MapItemState
+    var bufferedImage: BufferedImage
     var animatingFrames: HashMap<Int, FrameMetadata> = HashMap()
     var collisionFrames: HashMap<Int, FrameMetadata> = HashMap()
     var frameMetadata: FrameMetadata
     var enemyPosition: EnemyPosition
     var colliding: Boolean
 
-    constructor(width: Int, height: Int, x: Int, y: Int, type: MapEnemyType, state: MapItemState) {
+    constructor(
+        width: Int,
+        height: Int,
+        x: Int,
+        y: Int,
+        type: MapEnemyType,
+        state: MapItemState,
+        bufferedImage: BufferedImage
+    ) {
         this.width = width
         this.height = height
         this.x = x
@@ -37,6 +47,7 @@ open class MapEnemy {
         this.originY = y
         this.type = type
         this.state = state
+        this.bufferedImage = bufferedImage
         this.enemyPosition = EnemyPosition(this.x, this.y, Direction.LEFT)
         this.colliding = false
         this.frameMetadata = FrameMetadata(1, Cell(1, 1, width, height))
@@ -52,6 +63,7 @@ open class MapEnemy {
         originY: Int,
         type: MapEnemyType,
         state: MapItemState,
+        bufferedImage: BufferedImage,
         frameMetadata: FrameMetadata,
         enemyPosition: EnemyPosition,
         colliding: Boolean
@@ -64,6 +76,7 @@ open class MapEnemy {
         this.originY = originY
         this.type = type
         this.state = state
+        this.bufferedImage = bufferedImage
         this.frameMetadata = frameMetadata
         this.enemyPosition = enemyPosition
         this.colliding = colliding
@@ -137,6 +150,7 @@ open class MapEnemy {
             this.originY,
             this.type,
             this.state,
+            this.bufferedImage,
             frameMetadata,
             this.enemyPosition,
             isColliding
@@ -161,6 +175,7 @@ open class MapEnemy {
             this.originY,
             this.type,
             state,
+            this.bufferedImage,
             frameMetadata,
             nextPosition,
             isColliding

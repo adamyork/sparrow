@@ -4,6 +4,7 @@ import com.github.adamyork.sparrow.game.engine.data.PhysicsXResult
 import com.github.adamyork.sparrow.game.engine.data.PhysicsYResult
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.awt.image.BufferedImage
 
 class Player {
 
@@ -23,6 +24,7 @@ class Player {
 
     var width: Int
     var height: Int
+    var bufferedImage: BufferedImage
     var x: Int
     var y: Int
     var vx: Double
@@ -33,11 +35,12 @@ class Player {
     var frameMetadata: FrameMetadata
     var colliding: Boolean
 
-    constructor(xPos: Int, yPos: Int, width: Int, height: Int) {
+    constructor(xPos: Int, yPos: Int, width: Int, height: Int, bufferedImage: BufferedImage) {
         this.x = xPos
         this.y = yPos
         this.width = width
         this.height = height
+        this.bufferedImage = bufferedImage
         this.vx = 0.0
         this.vy = 0.0
         this.jumping = false
@@ -53,6 +56,7 @@ class Player {
         y: Int,
         width: Int,
         height: Int,
+        bufferedImage: BufferedImage,
         vx: Double,
         vy: Double,
         jumping: Boolean,
@@ -65,6 +69,7 @@ class Player {
         this.y = y
         this.width = width
         this.height = height
+        this.bufferedImage = bufferedImage
         this.vx = vx
         this.vy = vy
         this.jumping = jumping
@@ -159,6 +164,7 @@ class Player {
             physicsYResult.y,
             this.width,
             this.height,
+            this.bufferedImage,
             this.vx,
             physicsYResult.vy,
             physicsYResult.jumping,
@@ -175,6 +181,7 @@ class Player {
             physicsYResult.y,
             this.width,
             this.height,
+            this.bufferedImage,
             physicsXResult.vx,
             physicsYResult.vy,
             physicsYResult.jumping,
@@ -191,6 +198,7 @@ class Player {
             this.y,
             this.width,
             this.height,
+            this.bufferedImage,
             vx,
             this.vy,
             this.jumping,
@@ -207,6 +215,7 @@ class Player {
             player.y,
             player.width,
             player.height,
+            this.bufferedImage,
             player.vx,
             player.vy,
             player.jumping,
@@ -223,6 +232,7 @@ class Player {
             this.y,
             this.width,
             this.height,
+            this.bufferedImage,
             this.vx,
             this.vy,
             this.jumping,

@@ -7,6 +7,7 @@ import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.data.item.MapItemState
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.awt.image.BufferedImage
 
 class MapShooterEnemy : MapEnemy {
 
@@ -16,13 +17,22 @@ class MapShooterEnemy : MapEnemy {
         const val PLAYER_PROXIMITY_THRESHOLD = 200
     }
 
-    constructor(width: Int, height: Int, x: Int, y: Int, type: MapEnemyType, state: MapItemState) : super(
+    constructor(
+        width: Int,
+        height: Int,
+        x: Int,
+        y: Int,
+        type: MapEnemyType,
+        state: MapItemState,
+        bufferedImage: BufferedImage
+    ) : super(
         width,
         height,
         x,
         y,
         type,
-        state
+        state,
+        bufferedImage
     )
 
     constructor(
@@ -34,6 +44,7 @@ class MapShooterEnemy : MapEnemy {
         originY: Int,
         type: MapEnemyType,
         state: MapItemState,
+        bufferedImage: BufferedImage,
         frameMetadata: FrameMetadata,
         enemyPosition: EnemyPosition,
         colliding: Boolean
@@ -46,6 +57,7 @@ class MapShooterEnemy : MapEnemy {
         originY,
         type,
         state,
+        bufferedImage,
         frameMetadata,
         enemyPosition,
         colliding
@@ -93,6 +105,7 @@ class MapShooterEnemy : MapEnemy {
             this.originY,
             this.type,
             this.state,
+            this.bufferedImage,
             frameMetadata,
             this.enemyPosition,
             isColliding
@@ -117,6 +130,7 @@ class MapShooterEnemy : MapEnemy {
             this.originY,
             this.type,
             state,
+            this.bufferedImage,
             frameMetadata,
             nextPosition,
             isColliding

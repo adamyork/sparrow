@@ -31,12 +31,7 @@ interface Engine {
     fun draw(
         map: GameMap,
         viewPort: ViewPort,
-        playerAsset: ImageAsset,
-        player: Player,
-        mapItemAsset: ImageAsset,
-        finishItemAsset: ImageAsset,
-        mapEnemyVacuumAsset: ImageAsset,
-        mapEnemyBotAsset: ImageAsset
+        player: Player
     ): ByteArray
 
 }

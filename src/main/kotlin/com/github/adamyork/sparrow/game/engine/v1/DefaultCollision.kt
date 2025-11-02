@@ -6,8 +6,6 @@ import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.data.enemy.MapEnemyType
-import com.github.adamyork.sparrow.game.data.item.MapFinishItem
-import com.github.adamyork.sparrow.game.data.item.MapItem
 import com.github.adamyork.sparrow.game.data.item.MapItemState
 import com.github.adamyork.sparrow.game.data.item.MapItemType
 import com.github.adamyork.sparrow.game.data.map.GameMap
@@ -78,11 +76,7 @@ class DefaultCollision : Collision {
                     nextFrameMetaData = item.getFirstDeactivatingFrame()
                 }
             }
-            if (item.type == MapItemType.FINISH) {
-                MapFinishItem(item.width, item.height, item.x, item.y, item.type, nextItemState, nextFrameMetaData)
-            } else {
-                MapItem(item.width, item.height, item.x, item.y, item.type, nextItemState, nextFrameMetaData)
-            }
+            item.from(nextItemState, nextFrameMetaData)
         }.toCollection(ArrayList())
         return gameMap.from(gameState, managedMapItems)
     }
