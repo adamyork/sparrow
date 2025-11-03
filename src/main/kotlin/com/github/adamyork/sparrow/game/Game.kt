@@ -98,7 +98,11 @@ class Game {
             scoreService.gameMapItem = gameMap.items
             isInitialized = true
             true
-        }.onErrorReturn(false)
+        }.onErrorResume { throwable ->
+            LOGGER.error("Error initializing game ${throwable.message}")
+            throwable.printStackTrace()//TODO put this in the log
+            Mono.just(false)
+        }
     }
 
     @OptIn(ExperimentalAtomicApi::class)

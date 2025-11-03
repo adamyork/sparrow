@@ -2,6 +2,7 @@ package com.github.adamyork.sparrow.game.engine.v1
 
 import com.github.adamyork.sparrow.common.AudioQueue
 import com.github.adamyork.sparrow.game.data.Direction
+import com.github.adamyork.sparrow.game.data.Drawable
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.data.enemy.MapEnemy
@@ -151,15 +152,13 @@ class DefaultEngine : Engine {
             val itemX = item.x
             val itemY = item.y
             val frameMetadata = item.getNextFrameCell()
-            if (item.type == MapItemType.FINISH) {//TODO Simplify if
-                var nextState = item.state
+            var nextState = item.state
+            if (item.type == MapItemType.FINISH) {
                 if (gameMap.state == GameMapState.COMPLETING && item.state == MapItemState.INACTIVE) {
                     nextState = MapItemState.ACTIVE
                 }
-                item.from(itemX, itemY, nextState, frameMetadata)
-            } else {
-                item.from(itemX, itemY, item.state, frameMetadata)
             }
+            item.from(itemX, itemY, nextState, frameMetadata)
         }.toCollection(ArrayList())
     }
 
@@ -188,8 +187,8 @@ class DefaultEngine : Engine {
 
         drawBackground(map, viewPort, graphics)
         drawStatusText(map, graphics)
-        drawMapItems(map, viewPort, graphics)
-        drawMapEnemies(map, viewPort, graphics)
+        drawMapElements(map.items.toCollection(ArrayList()), viewPort, graphics, false)
+        drawMapElements(map.enemies.toCollection(ArrayList()), viewPort, graphics, true)
         drawParticles(map, viewPort, graphics)
         drawPlayer(player, viewPort, graphics)
 
@@ -228,7 +227,8 @@ class DefaultEngine : Engine {
     }
 
     private fun drawPlayer(player: Player, viewPort: ViewPort, graphics: Graphics) {
-        val playerSubImage = player.bufferedImage.getSubimage(
+        val playerSubImage = getSubImage(
+            player.bufferedImage,
             player.frameMetadata.cell.x,
             player.frameMetadata.cell.y,
             player.width,
@@ -265,41 +265,26 @@ class DefaultEngine : Engine {
         graphics.drawImage(gameStatusTextImage.image, 0, 0, null)
     }
 
-    private fun drawMapItems(
-        map: GameMap,
+    private fun drawMapElements(
+        elements: ArrayList<Drawable>,
         viewPort: ViewPort,
-        graphics: Graphics
+        graphics: Graphics,
+        transformDirection: Boolean
     ) {
-        map.items.forEach { item ->
-            if (item.state != MapItemState.INACTIVE) {
-                val localCord = viewPort.globalToLocal(item.x, item.y)
-                val itemSubImage = item.bufferedImage.getSubimage(
-                    item.frameMetadata.cell.x,
-                    item.frameMetadata.cell.y,
-                    item.width,
-                    item.height
+        elements.forEach { element ->
+            val localCord = viewPort.globalToLocal(element.x, element.y)
+            if (element.state != MapItemState.INACTIVE) {
+                var itemSubImage = element.bufferedImage.getSubimage(
+                    element.frameMetadata.cell.x,
+                    element.frameMetadata.cell.y,
+                    element.width,
+                    element.height
                 )
-                graphics.drawImage(itemSubImage, localCord.first, localCord.second, null)
-            }
-        }
-    }
-
-    private fun drawMapEnemies(
-        map: GameMap,
-        viewPort: ViewPort,
-        graphics: Graphics
-    ) {
-        map.enemies.forEach { enemy ->
-            val localCord = viewPort.globalToLocal(enemy.x, enemy.y)
-            if (enemy.state != MapItemState.INACTIVE) {
-                val itemSubImage = enemy.bufferedImage.getSubimage(
-                    enemy.frameMetadata.cell.x,
-                    enemy.frameMetadata.cell.y,
-                    enemy.width,
-                    enemy.height
-                )
+                if (transformDirection) {
+                    itemSubImage = transformDirection(itemSubImage, element.nestedDirection(), element.width)
+                }
                 graphics.drawImage(
-                    transformDirection(itemSubImage, enemy.enemyPosition.direction, enemy.width),
+                    itemSubImage,
                     localCord.first,
                     localCord.second,
                     null

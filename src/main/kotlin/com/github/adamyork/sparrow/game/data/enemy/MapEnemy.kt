@@ -6,7 +6,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 
-open class MapEnemy {
+open class MapEnemy : Drawable {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(MapEnemy::class.java)
@@ -15,18 +15,11 @@ open class MapEnemy {
         const val MOVEMENT_X_DISTANCE = 10
     }
 
-    var width: Int
-    var height: Int
-    var x: Int
-    var y: Int
     var originX: Int
     var originY: Int
     var type: MapEnemyType
-    var state: MapItemState
-    var bufferedImage: BufferedImage
     var animatingFrames: HashMap<Int, FrameMetadata> = HashMap()
     var collisionFrames: HashMap<Int, FrameMetadata> = HashMap()
-    var frameMetadata: FrameMetadata
     var enemyPosition: EnemyPosition
     var colliding: Boolean
 
@@ -81,6 +74,10 @@ open class MapEnemy {
         this.enemyPosition = enemyPosition
         this.colliding = colliding
         generateAnimationFrameIndex()
+    }
+
+    override fun nestedDirection(): Direction {
+        return this.enemyPosition.direction
     }
 
     fun getNextFrameCell(): FrameMetadata {

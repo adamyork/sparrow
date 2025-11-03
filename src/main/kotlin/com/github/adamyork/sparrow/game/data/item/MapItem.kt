@@ -1,12 +1,14 @@
 package com.github.adamyork.sparrow.game.data.item
 
 import com.github.adamyork.sparrow.game.data.Cell
+import com.github.adamyork.sparrow.game.data.Direction
+import com.github.adamyork.sparrow.game.data.Drawable
 import com.github.adamyork.sparrow.game.data.FrameMetadata
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 
-open class MapItem {
+open class MapItem : Drawable {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(MapItem::class.java)
@@ -14,16 +16,9 @@ open class MapItem {
         const val ANIMATION_ACTIVE_FRAMES = 16
     }
 
-    var width: Int
-    var height: Int
-    var x: Int
-    var y: Int
     var type: MapItemType
-    var state: MapItemState
     var activeFrames: HashMap<Int, FrameMetadata> = HashMap()
     var deactivatingFrames: HashMap<Int, FrameMetadata> = HashMap()
-    var frameMetadata: FrameMetadata
-    var bufferedImage: BufferedImage
 
     constructor(
         width: Int,
@@ -87,6 +82,10 @@ open class MapItem {
             }
         }
         return FrameMetadata(1, Cell(1, 1, width, height))
+    }
+
+    override fun nestedDirection(): Direction {
+        return Direction.LEFT
     }
 
     fun getFirstDeactivatingFrame(): FrameMetadata {
