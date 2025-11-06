@@ -33,6 +33,8 @@ class GameAudio {
                         LOGGER.info("playing player collision audio")
                     } else if (sound == Sounds.ITEM_COLLECT) {
                         LOGGER.info("playing item collect audio")
+                    } else if (sound == Sounds.ENEMY_SHOOT) {
+                        LOGGER.info("playing enemy shoott audio")
                     }
                     val bytes = assetService.getSoundStream(sound)
                     audioQueue.queue.remove()

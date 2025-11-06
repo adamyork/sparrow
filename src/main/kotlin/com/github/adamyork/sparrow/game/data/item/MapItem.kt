@@ -2,13 +2,13 @@ package com.github.adamyork.sparrow.game.data.item
 
 import com.github.adamyork.sparrow.game.data.Cell
 import com.github.adamyork.sparrow.game.data.Direction
-import com.github.adamyork.sparrow.game.data.Drawable
+import com.github.adamyork.sparrow.game.data.GameElement
 import com.github.adamyork.sparrow.game.data.FrameMetadata
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 
-open class MapItem : Drawable {
+open class MapItem : GameElement {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(MapItem::class.java)

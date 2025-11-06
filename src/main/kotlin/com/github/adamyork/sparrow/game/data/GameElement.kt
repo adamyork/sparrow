@@ -3,7 +3,7 @@ package com.github.adamyork.sparrow.game.data
 import com.github.adamyork.sparrow.game.data.item.MapItemState
 import java.awt.image.BufferedImage
 
-abstract class Drawable {
+abstract class GameElement {
 
     var x: Int = 0
     var y: Int = 0

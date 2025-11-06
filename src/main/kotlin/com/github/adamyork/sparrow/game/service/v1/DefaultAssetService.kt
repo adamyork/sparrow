@@ -104,7 +104,8 @@ class DefaultAssetService : AssetService {
         audioPlayerJumpPath: String,
         audioPlayerCollisionPath: String,
         audioItemCollectPath: String,
-        audioBackgroundMusicPath: String
+        audioBackgroundMusicPath: String,
+        audioEnemyShootPath: String
     ) {
         this.wavService = wavService
         this.viewPortWidth = viewPortWidth
@@ -136,10 +137,12 @@ class DefaultAssetService : AssetService {
         val jumpSoundBytes = urlToBytes(this::class.java.classLoader.getResource(audioPlayerJumpPath))
         val itemCollectSoundBytes = urlToBytes(this::class.java.classLoader.getResource(audioItemCollectPath))
         val playerCollisionSoundBytes = urlToBytes(this::class.java.classLoader.getResource(audioPlayerCollisionPath))
+        val enemyShootSoundBytes = urlToBytes(this::class.java.classLoader.getResource(audioEnemyShootPath))
 
         soundBytesMap[Sounds.JUMP] = jumpSoundBytes
         soundBytesMap[Sounds.ITEM_COLLECT] = itemCollectSoundBytes
         soundBytesMap[Sounds.PLAYER_COLLISION] = playerCollisionSoundBytes
+        soundBytesMap[Sounds.ENEMY_SHOOT] = enemyShootSoundBytes
 
         itemUrlMap[0] = this::class.java.classLoader.getResource(mapItemAssetOnePath)
         itemUrlMap[1] = this::class.java.classLoader.getResource(mapItemAssetTwoPath)

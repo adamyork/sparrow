@@ -6,7 +6,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 
-class Player {
+class Player : GameElement {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(Player::class.java)
@@ -22,17 +22,11 @@ class Player {
     var jumpingFrames: HashMap<Int, FrameMetadata> = HashMap()
     var collisionFrames: HashMap<Int, FrameMetadata> = HashMap()
 
-    var width: Int
-    var height: Int
-    var bufferedImage: BufferedImage
-    var x: Int
-    var y: Int
     var vx: Double
     var vy: Double
-    var jumping: Boolean
+    var jumping: Boolean//TODO Make these booleans an array of states
     var moving: Boolean
     var direction: Direction
-    var frameMetadata: FrameMetadata
     var colliding: Boolean
 
     constructor(xPos: Int, yPos: Int, width: Int, height: Int, bufferedImage: BufferedImage) {
@@ -241,5 +235,9 @@ class Player {
             this.frameMetadata,
             colliding
         )
+    }
+
+    override fun nestedDirection(): Direction {
+        return this.direction
     }
 }

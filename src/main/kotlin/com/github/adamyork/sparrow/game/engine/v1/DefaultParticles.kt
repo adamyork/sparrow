@@ -11,6 +11,8 @@ import net.mamoe.yamlkt.Yaml
 import net.mamoe.yamlkt.YamlMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import reactor.util.function.Tuple2
+import reactor.util.function.Tuples
 import java.awt.Color
 import java.io.File
 import kotlin.math.abs
@@ -102,15 +104,17 @@ class DefaultParticles : Particles {
         player: Player,
         enemy: MapEnemy,
         particles: ArrayList<Particle>
-    ): ArrayList<Particle> {
+    ): Tuple2<ArrayList<Particle>, Boolean> {
         val count = particles.filter { it.type == ParticleType.FURBALL }
             .size
         val particles: ArrayList<Particle> = ArrayList()
+        var particleAdded = false
         if (count < MAX_ACTIVE_PROJECTILES) {
             val xDiff = abs(enemy.x - player.x)
             val yDiff = abs(enemy.y - player.y)
             val xIncrement = (xDiff / 10).coerceAtLeast(1)
             val yIncrement = (yDiff / 10).coerceAtLeast(1)
+            particleAdded = true
             particles.add(
                 Particle(
                     count + 1,
@@ -130,7 +134,7 @@ class DefaultParticles : Particles {
                 )
             )
         }
-        return particles
+        return Tuples.of(particles, particleAdded)
     }
 
     private fun parseParticleColorMap(file: File): HashMap<ParticleType, Color> {

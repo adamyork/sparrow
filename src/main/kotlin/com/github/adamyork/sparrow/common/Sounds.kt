@@ -4,5 +4,6 @@ enum class Sounds {
 
     JUMP,
     ITEM_COLLECT,
-    PLAYER_COLLISION
+    PLAYER_COLLISION,
+    ENEMY_SHOOT
 }

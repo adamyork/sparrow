@@ -2,7 +2,7 @@ package com.github.adamyork.sparrow.game.engine.v1
 
 import com.github.adamyork.sparrow.common.AudioQueue
 import com.github.adamyork.sparrow.game.data.Direction
-import com.github.adamyork.sparrow.game.data.Drawable
+import com.github.adamyork.sparrow.game.data.GameElement
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.data.enemy.MapEnemy
@@ -266,7 +266,7 @@ class DefaultEngine : Engine {
     }
 
     private fun drawMapElements(
-        elements: ArrayList<Drawable>,
+        elements: ArrayList<GameElement>,
         viewPort: ViewPort,
         graphics: Graphics,
         transformDirection: Boolean

@@ -111,11 +111,14 @@ class DefaultCollision : Collision {
                             enemy.y.toDouble()
                         )
                             .toInt()
-                    if (dist <= 200) {
-                        LOGGER.info("enemy shoots")
-                        val managedProjectileParticles =
+                    if (dist <= 500) {//TODO this threshold shoule be somewhere else
+                        val managedProjectileParticlesResult =
                             particles.createProjectileParticle(player, enemy, gameMap.particles)
-                        managedMapParticles.addAll(managedProjectileParticles)
+                        if (managedProjectileParticlesResult.t2) {
+                            LOGGER.info("enemy shoots")
+                            audioQueue.queue.add(Sounds.ENEMY_SHOOT)
+                        }
+                        managedMapParticles.addAll(managedProjectileParticlesResult.t1)
                     }
                 }
                 val frameMetadata = enemy.getNextFrameCell()

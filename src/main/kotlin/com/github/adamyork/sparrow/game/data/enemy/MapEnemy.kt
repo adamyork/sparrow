@@ -6,7 +6,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 
-open class MapEnemy : Drawable {
+open class MapEnemy : GameElement {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(MapEnemy::class.java)

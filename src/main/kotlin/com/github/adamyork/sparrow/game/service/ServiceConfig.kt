@@ -44,6 +44,7 @@ class ServiceConfig {
         @Value("\${audio.player.collision}") audioPlayerCollisionPath: String,
         @Value("\${audio.item.collect}") audioItemCollectPath: String,
         @Value("\${audio.background}") audioBackgroundMusicPath: String,
+        @Value("\${audio.enemy.shoot}") audioEnemyShootPath: String,
     ): AssetService {
         return DefaultAssetService(
             wavService,
@@ -71,7 +72,8 @@ class ServiceConfig {
             audioPlayerJumpPath,
             audioPlayerCollisionPath,
             audioItemCollectPath,
-            audioBackgroundMusicPath
+            audioBackgroundMusicPath,
+            audioEnemyShootPath
         )
     }
 

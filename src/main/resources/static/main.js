@@ -33,7 +33,7 @@ startButton.addEventListener("click", () => {
             let ctx = canvas.getContext("2d");
             document.game.imageLoader.src = URL.createObjectURL(blob);
             document.game.imageLoader.onload = function () {
-                console.log("one game tick" + (Date.now() - document.game.sendTime));
+                //console.log("one game tick" + (Date.now() - document.game.sendTime));
                 document.game.loadedTime = Date.now();
                 URL.revokeObjectURL(document.game.imageLoader.src);
                 ctx.clearRect(0, 0, canvas.width, canvas.height);

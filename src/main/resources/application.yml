@@ -93,3 +93,5 @@ audio:
   item:
     collect: "game/item-collect.wav"
   background: "game/level-1-music.wav"
+  enemy:
+    shoot: "game/shoot.wav"
