@@ -68,8 +68,8 @@ class DefaultEngine : Engine {
 
     override fun managePlayer(player: Player, collisionBoundaries: CollisionBoundaries): Player {
         val physicsAppliedPlayer = physics.applyPlayerPhysics(player, collisionBoundaries, collision)
-        val nextFrameMetadata = player.getNextFrameCell()
-        return player.from(physicsAppliedPlayer, nextFrameMetadata)
+        val nextFrameMetadata = physicsAppliedPlayer.getNextFrameCell()
+        return physicsAppliedPlayer.from(physicsAppliedPlayer, nextFrameMetadata)
     }
 
     override fun manageViewport(player: Player, viewPort: ViewPort): ViewPort {
@@ -170,7 +170,7 @@ class DefaultEngine : Engine {
                 val itemX = nextPosition.x
                 val itemY = nextPosition.y
                 val frameMetadata = enemy.getNextFrameCell()
-                enemy.from(itemX, itemY, nextState, frameMetadata, nextPosition, false)
+                enemy.from(itemX, itemY, nextState, frameMetadata, nextPosition, enemy.colliding, enemy.interacting)
             } else {
                 enemy
             }

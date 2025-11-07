@@ -136,15 +136,15 @@ class DefaultPhysics : Physics {
             if (playerDirection == Direction.LEFT) {
                 targetX -= (playerVx * deltaTime).roundToInt()
                 if (targetX <= collisionBoundaries.left) {
-                    LOGGER.info("targetX $targetX less or equal to the left boundary ${collisionBoundaries.left}")
-                    LOGGER.info("(left) playerVx $playerVx and $deltaTime")
+                    //LOGGER.info("targetX $targetX less or equal to the left boundary ${collisionBoundaries.left}")
+                    //LOGGER.info("(left) playerVx $playerVx and $deltaTime")
                     targetX = collisionBoundaries.left + 1
                 }
             } else {
                 targetX += (playerVx * deltaTime).roundToInt()
                 if (targetX >= collisionBoundaries.right) {
-                    LOGGER.info("targetX $targetX greater or equal to the right boundary ${collisionBoundaries.right}")
-                    LOGGER.info("(right) playerVx $playerVx and $deltaTime")
+                    //LOGGER.info("targetX $targetX greater or equal to the right boundary ${collisionBoundaries.right}")
+                    //LOGGER.info("(right) playerVx $playerVx and $deltaTime")
                     targetX = (collisionBoundaries.right - 1).coerceAtLeast(0)
                 }
             }

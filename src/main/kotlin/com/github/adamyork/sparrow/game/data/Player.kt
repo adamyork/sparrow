@@ -87,32 +87,30 @@ class Player : GameElement {
     fun getNextFrameCell(): FrameMetadata {
         if (colliding) {
             if (frameMetadata.frame == ANIMATION_COLLISION_FRAMES) {
-                return collisionFrames.get(1) ?: FrameMetadata(1, Cell(1, 1, width, height))
+                this.colliding = false
+                return movingFrames[1] ?: throw RuntimeException("missing animation frame")
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                return collisionFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, width, height))
+                return collisionFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
             }
         }
         if (jumping) {
-            LOGGER.info("here")
             if (frameMetadata.frame == ANIMATION_JUMPING_FRAMES) {
-                LOGGER.info("here1")
-                return jumpingFrames.get(1) ?: FrameMetadata(1, Cell(1, 1, width, height))
+                return jumpingFrames[1] ?: throw RuntimeException("missing animation frame")
             } else {
-                LOGGER.info("here2")
                 val nextFrame = frameMetadata.frame + 1
-                return jumpingFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, width, height))
+                return jumpingFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
             }
         }
         if (moving) {
             if (frameMetadata.frame == ANIMATION_MOVING_FRAMES) {
-                return movingFrames.get(1) ?: FrameMetadata(1, Cell(1, 1, width, height))
+                return movingFrames[1] ?: throw RuntimeException("missing animation frame")
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                return movingFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, width, height))
+                return movingFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
             }
         }
-        return FrameMetadata(1, Cell(1, 1, width, height))
+        return movingFrames[1] ?: throw RuntimeException("missing animation frame")
     }
 
     private fun generateAnimationFrameIndex() {

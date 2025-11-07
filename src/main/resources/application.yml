@@ -26,19 +26,15 @@ map:
       two:
         path: "game/finish-item.png"
     position:
+      # noinspection SpringBootApplicationYaml
       0:
-        # noinspection SpringBootApplicationYaml
         x: 0
-        # noinspection SpringBootApplicationYaml
         y: 450
-        # noinspection SpringBootApplicationYaml
         type: "collectable"
+      # noinspection SpringBootApplicationYaml
       1:
-        # noinspection SpringBootApplicationYaml
         x: 797
-        # noinspection SpringBootApplicationYaml
         y: 450
-        # noinspection SpringBootApplicationYaml
         type: "finish"
   enemy:
     asset:
@@ -51,29 +47,27 @@ map:
         height: 64
         path: "game/deebot-full.png"
     position:
+      # noinspection SpringBootApplicationYaml
       0:
-        # noinspection SpringBootApplicationYaml
-        x: 1024
-        # noinspection SpringBootApplicationYaml
+        x: 700
         y: 450
-        # noinspection SpringBootApplicationYaml
         type: "vacuum"
+      # noinspection SpringBootApplicationYaml
       1:
-        # noinspection SpringBootApplicationYaml
-        x: 800
-        # noinspection SpringBootApplicationYaml
+        x: 1600
         y: 683
-        # noinspection SpringBootApplicationYaml
         type: "deebot"
 particle:
   player:
     movement:
+      # noinspection SpringBootApplicationYaml
       color:
         r: 230
         g: 234
         b: 218
         a: 255
     collision:
+      # noinspection SpringBootApplicationYaml
       color:
         r: 255
         g: 255
@@ -81,6 +75,7 @@ particle:
         a: 255
   enemy:
     projectile:
+      # noinspection SpringBootApplicationYaml
       color:
         r: 0
         g: 0

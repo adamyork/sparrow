@@ -20,8 +20,10 @@ open class MapEnemy : GameElement {
     var type: MapEnemyType
     var animatingFrames: HashMap<Int, FrameMetadata> = HashMap()
     var collisionFrames: HashMap<Int, FrameMetadata> = HashMap()
+    var interactingFrames: HashMap<Int, FrameMetadata> = HashMap()
     var enemyPosition: EnemyPosition
     var colliding: Boolean
+    var interacting: Boolean
 
     constructor(
         width: Int,
@@ -43,6 +45,7 @@ open class MapEnemy : GameElement {
         this.bufferedImage = bufferedImage
         this.enemyPosition = EnemyPosition(this.x, this.y, Direction.LEFT)
         this.colliding = false
+        this.interacting = false
         this.frameMetadata = FrameMetadata(1, Cell(1, 1, width, height))
         generateAnimationFrameIndex()
     }
@@ -59,7 +62,8 @@ open class MapEnemy : GameElement {
         bufferedImage: BufferedImage,
         frameMetadata: FrameMetadata,
         enemyPosition: EnemyPosition,
-        colliding: Boolean
+        colliding: Boolean,
+        interacting: Boolean
     ) {
         this.width = width
         this.height = height
@@ -73,6 +77,7 @@ open class MapEnemy : GameElement {
         this.frameMetadata = frameMetadata
         this.enemyPosition = enemyPosition
         this.colliding = colliding
+        this.interacting = interacting
         generateAnimationFrameIndex()
     }
 
@@ -80,16 +85,17 @@ open class MapEnemy : GameElement {
         return this.enemyPosition.direction
     }
 
-    fun getNextFrameCell(): FrameMetadata {
+    open fun getNextFrameCell(): FrameMetadata {
         if (colliding) {
             if (frameMetadata.frame == ANIMATION_COLLISION_FRAMES) {
-                return collisionFrames[1] ?: FrameMetadata(1, Cell(1, 1, width, height))
+                this.colliding = false
+                return animatingFrames[1] ?: throw RuntimeException("missing animation frame")
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                return collisionFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, width, height))
+                return collisionFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
             }
         }
-        return FrameMetadata(1, Cell(1, 1, width, height))
+        return animatingFrames[1] ?: throw RuntimeException("missing animation frame")
     }
 
     open fun getNextPosition(player: Player, viewPort: ViewPort): EnemyPosition {
@@ -121,7 +127,7 @@ open class MapEnemy : GameElement {
     }
 
     @Suppress("DuplicatedCode")
-    private fun generateAnimationFrameIndex() {
+    protected open fun generateAnimationFrameIndex() {
         animatingFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
 
         collisionFrames[1] = FrameMetadata(1, Cell(1, 2, width, height))
@@ -136,7 +142,8 @@ open class MapEnemy : GameElement {
 
     open fun from(
         frameMetadata: FrameMetadata,
-        isColliding: Boolean
+        isColliding: Boolean,
+        isInteracting: Boolean
     ): MapEnemy {
         return MapEnemy(
             this.width,
@@ -150,7 +157,8 @@ open class MapEnemy : GameElement {
             this.bufferedImage,
             frameMetadata,
             this.enemyPosition,
-            isColliding
+            isColliding,
+            isInteracting
         )
     }
 
@@ -161,7 +169,8 @@ open class MapEnemy : GameElement {
         state: MapItemState,
         frameMetadata: FrameMetadata,
         nextPosition: EnemyPosition,
-        isColliding: Boolean
+        isColliding: Boolean,
+        isInteracting: Boolean
     ): MapEnemy {
         return MapEnemy(
             this.width,
@@ -175,7 +184,8 @@ open class MapEnemy : GameElement {
             this.bufferedImage,
             frameMetadata,
             nextPosition,
-            isColliding
+            isColliding,
+            isInteracting
         )
     }
 }

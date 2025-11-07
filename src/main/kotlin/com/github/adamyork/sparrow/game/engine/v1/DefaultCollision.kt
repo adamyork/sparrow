@@ -92,6 +92,7 @@ class DefaultCollision : Collision {
         var playerIsColliding = false
         val managedMapEnemies = gameMap.enemies.map { enemy ->
             var isColliding = false
+            var isInteracting = false
             if (enemy.state != MapItemState.INACTIVE) {
                 val enemyRect = Rectangle(enemy.x, enemy.y, enemy.width, enemy.height)
                 val playerRect = Rectangle(player.x, player.y, player.width, player.height)
@@ -111,26 +112,36 @@ class DefaultCollision : Collision {
                             enemy.y.toDouble()
                         )
                             .toInt()
-                    if (dist <= 500) {//TODO this threshold shoule be somewhere else
+                    if (dist <= 500) {//TODO this threshold should be somewhere else
                         val managedProjectileParticlesResult =
                             particles.createProjectileParticle(player, enemy, gameMap.particles)
-                        if (managedProjectileParticlesResult.t2) {
+                        if (managedProjectileParticlesResult.second) {
                             LOGGER.info("enemy shoots")
+                            isInteracting = true
                             audioQueue.queue.add(Sounds.ENEMY_SHOOT)
                         }
-                        managedMapParticles.addAll(managedProjectileParticlesResult.t1)
+                        managedMapParticles.addAll(managedProjectileParticlesResult.first)
                     }
                 }
                 val frameMetadata = enemy.getNextFrameCell()
-                enemy.from(frameMetadata, isColliding)
+                if (isColliding) {
+                    enemy.from(frameMetadata, true, enemy.interacting)
+                } else if (isInteracting) {
+                    enemy.from(frameMetadata, enemy.colliding, true)
+                } else {
+                    enemy
+                }
             } else {
                 enemy
             }
         }.toCollection(ArrayList())
         val nextPlayer: Player = if (playerIsColliding) {
+            LOGGER.info("player is colliding apply physics")
             physics.applyPlayerCollisionPhysics(player, viewPort)
         } else {
-            player.from(false)
+            //LOGGER.info("player is not colliding setting collision to false")
+            //player.from(false)
+            player
         }
         return Pair(
             nextPlayer,
@@ -169,7 +180,7 @@ class DefaultCollision : Collision {
         val nextPlayer: Player = if (playerIsColliding) {
             physics.applyPlayerCollisionPhysics(player, viewPort)
         } else {
-            player.from(false)
+            player
         }
         return Pair(
             nextPlayer,

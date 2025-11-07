@@ -3,7 +3,6 @@ package com.github.adamyork.sparrow.game.engine
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.enemy.MapEnemy
 import com.github.adamyork.sparrow.game.engine.data.Particle
-import reactor.util.function.Tuple2
 
 interface Particles {
 
@@ -15,6 +14,6 @@ interface Particles {
         player: Player,
         enemy: MapEnemy,
         particles: ArrayList<Particle>
-    ): Tuple2<ArrayList<Particle>, Boolean>//TODO Make a wrapper
+    ): Pair<ArrayList<Particle>, Boolean>
 
 }

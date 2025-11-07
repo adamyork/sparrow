@@ -18,6 +18,8 @@
     <logger name="com.github.adamyork.sparrow.game.engine.v1.DefaultPhysics" level="INFO"/>
     <logger name="com.github.adamyork.sparrow.game.engine.v1.DefaultCollision" level="INFO"/>
     <logger name="com.github.adamyork.sparrow.game.engine.v1.DefaultParticles" level="INFO"/>
+    <logger name="com.github.adamyork.sparrow.game.data.Player" level="INFO"/>
+    <logger name="com.github.adamyork.sparrow.game.data.enemy.MapShooterEnemy" level="INFO"/>
 
     <root level="info">
         <appender-ref ref="STDOUT"/>
