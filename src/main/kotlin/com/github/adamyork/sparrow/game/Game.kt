@@ -100,7 +100,7 @@ class Game {
             true
         }.onErrorResume { throwable ->
             LOGGER.error("Error initializing game ${throwable.message}")
-            throwable.printStackTrace()//TODO put this in the log
+            LOGGER.error(throwable.stackTraceToString())
             Mono.just(false)
         }
     }

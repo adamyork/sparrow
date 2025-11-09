@@ -16,7 +16,8 @@ data class Particle(
     val xJitter: Int,
     val yJitter: Int,
     val radius: Int,
-    val color: Color
+    val color: Color,
+    val shape: ParticleShape
 ) {
 
     fun from(nextX: Int, nextY: Int, nextFrame: Int): Particle {
@@ -34,7 +35,8 @@ data class Particle(
             this.xJitter,
             this.yJitter,
             this.radius,
-            this.color
+            this.color,
+            this.shape
         )
     }
 
@@ -53,7 +55,8 @@ data class Particle(
             this.xJitter,
             this.yJitter,
             nextRadius,
-            this.color
+            this.color,
+            this.shape
         )
     }
 
@@ -72,7 +75,8 @@ data class Particle(
             this.xJitter,
             this.yJitter,
             nextRadius,
-            this.color
+            this.color,
+            this.shape
         )
     }
 
@@ -91,7 +95,8 @@ data class Particle(
             this.xJitter,
             this.yJitter,
             this.radius,
-            this.color
+            this.color,
+            this.shape
         )
     }
 

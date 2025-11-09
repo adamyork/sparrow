@@ -6,6 +6,7 @@ import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.data.enemy.MapEnemyType
+import com.github.adamyork.sparrow.game.data.enemy.MapShooterEnemy
 import com.github.adamyork.sparrow.game.data.item.MapItemState
 import com.github.adamyork.sparrow.game.data.item.MapItemType
 import com.github.adamyork.sparrow.game.data.map.GameMap
@@ -112,7 +113,7 @@ class DefaultCollision : Collision {
                             enemy.y.toDouble()
                         )
                             .toInt()
-                    if (dist <= 500) {//TODO this threshold should be somewhere else
+                    if (dist <= MapShooterEnemy.PLAYER_PROXIMITY_THRESHOLD) {
                         val managedProjectileParticlesResult =
                             particles.createProjectileParticle(player, enemy, gameMap.particles)
                         if (managedProjectileParticlesResult.second) {
@@ -139,8 +140,6 @@ class DefaultCollision : Collision {
             LOGGER.info("player is colliding apply physics")
             physics.applyPlayerCollisionPhysics(player, viewPort)
         } else {
-            //LOGGER.info("player is not colliding setting collision to false")
-            //player.from(false)
             player
         }
         return Pair(

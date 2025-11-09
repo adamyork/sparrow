@@ -16,6 +16,7 @@ import com.github.adamyork.sparrow.game.engine.Engine
 import com.github.adamyork.sparrow.game.engine.Particles
 import com.github.adamyork.sparrow.game.engine.Physics
 import com.github.adamyork.sparrow.game.engine.data.CollisionBoundaries
+import com.github.adamyork.sparrow.game.engine.data.ParticleShape
 import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.game.service.ScoreService
 import com.github.adamyork.sparrow.game.service.data.ImageAsset
@@ -249,12 +250,21 @@ class DefaultEngine : Engine {
         map.particles.forEach { particle ->
             val localCord = viewPort.globalToLocal(particle.x, particle.y)
             particleGraphics.color = particle.color
-            particleGraphics.fillRect(
-                localCord.first,
-                localCord.second,
-                particle.width,
-                particle.height
-            )//TODO make shape variable
+            if (particle.shape == ParticleShape.CIRCLE) {
+                particleGraphics.fillOval(
+                    localCord.first,
+                    localCord.second,
+                    particle.width,
+                    particle.height
+                )
+            } else {
+                particleGraphics.fillRect(
+                    localCord.first,
+                    localCord.second,
+                    particle.width,
+                    particle.height
+                )
+            }
         }
         graphics.drawImage(particleImage, 0, 0, null)
         particleImage.graphics.dispose()

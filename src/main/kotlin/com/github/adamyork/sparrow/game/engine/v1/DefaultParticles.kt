@@ -5,6 +5,7 @@ import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.enemy.MapEnemy
 import com.github.adamyork.sparrow.game.engine.Particles
 import com.github.adamyork.sparrow.game.engine.data.Particle
+import com.github.adamyork.sparrow.game.engine.data.ParticleShape
 import com.github.adamyork.sparrow.game.engine.data.ParticleType
 import com.github.adamyork.sparrow.game.service.AssetService
 import net.mamoe.yamlkt.Yaml
@@ -59,7 +60,8 @@ class DefaultParticles : Particles {
                 Random.nextInt(50),
                 Random.nextInt(50),
                 1,
-                colorMap[ParticleType.COLLISION] ?: Color.WHITE
+                colorMap[ParticleType.COLLISION] ?: Color.WHITE,
+                ParticleShape.RECT
             )
         }.toCollection(ArrayList())
     }
@@ -93,7 +95,8 @@ class DefaultParticles : Particles {
                 0,
                 0,
                 0,
-                adjustedAlphaColor
+                adjustedAlphaColor,
+                ParticleShape.CIRCLE
             )
         }.toCollection(ArrayList())
     }
@@ -128,7 +131,8 @@ class DefaultParticles : Particles {
                     xIncrement,
                     yIncrement,
                     1,
-                    colorMap[ParticleType.FURBALL] ?: Color.WHITE
+                    colorMap[ParticleType.FURBALL] ?: Color.WHITE,
+                    ParticleShape.CIRCLE
                 )
             )
         }

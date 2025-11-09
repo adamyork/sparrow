@@ -49,12 +49,12 @@ map:
     position:
       # noinspection SpringBootApplicationYaml
       0:
-        x: 700
+        x: 1600
         y: 450
         type: "vacuum"
       # noinspection SpringBootApplicationYaml
       1:
-        x: 1600
+        x: 700
         y: 683
         type: "deebot"
 particle:
