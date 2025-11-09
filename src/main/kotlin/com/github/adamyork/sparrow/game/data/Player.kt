@@ -1,5 +1,7 @@
 package com.github.adamyork.sparrow.game.data
 
+import com.github.adamyork.sparrow.game.data.player.PlayerCollisionState
+import com.github.adamyork.sparrow.game.data.player.PlayerMovingState
 import com.github.adamyork.sparrow.game.engine.data.PhysicsXResult
 import com.github.adamyork.sparrow.game.engine.data.PhysicsYResult
 import org.slf4j.Logger
@@ -25,9 +27,9 @@ class Player : GameElement {
     var vx: Double
     var vy: Double
     var jumping: Boolean//TODO Make these booleans an array of states
-    var moving: Boolean
+    var moving: PlayerMovingState
     var direction: Direction
-    var colliding: Boolean
+    var colliding: PlayerCollisionState
 
     constructor(xPos: Int, yPos: Int, width: Int, height: Int, bufferedImage: BufferedImage) {
         this.x = xPos
@@ -38,10 +40,10 @@ class Player : GameElement {
         this.vx = 0.0
         this.vy = 0.0
         this.jumping = false
-        this.moving = false
+        this.moving = PlayerMovingState.STATIONARY
         this.direction = Direction.RIGHT
         this.frameMetadata = FrameMetadata(1, Cell(1, 1, width, height))
-        this.colliding = false
+        this.colliding = PlayerCollisionState.FREE
         generateAnimationFrameIndex()
     }
 
@@ -54,10 +56,10 @@ class Player : GameElement {
         vx: Double,
         vy: Double,
         jumping: Boolean,
-        moving: Boolean,
+        moving: PlayerMovingState,
         direction: Direction,
         frame: FrameMetadata,
-        colliding: Boolean,
+        colliding: PlayerCollisionState,
     ) {
         this.x = x
         this.y = y
@@ -74,7 +76,7 @@ class Player : GameElement {
         generateAnimationFrameIndex()
     }
 
-    fun setPlayerState(moving: Boolean, jumping: Boolean, direction: Direction) {
+    fun setPlayerState(moving: PlayerMovingState, jumping: Boolean, direction: Direction) {
         this.moving = moving
         this.jumping = jumping
         if (this.direction != direction) {
@@ -85,9 +87,9 @@ class Player : GameElement {
     }
 
     fun getNextFrameCell(): FrameMetadata {
-        if (colliding) {
+        if (colliding == PlayerCollisionState.COLLIDING) {
             if (frameMetadata.frame == ANIMATION_COLLISION_FRAMES) {
-                this.colliding = false
+                this.colliding = PlayerCollisionState.FREE
                 return movingFrames[1] ?: throw RuntimeException("missing animation frame")
             } else {
                 val nextFrame = frameMetadata.frame + 1
@@ -102,7 +104,7 @@ class Player : GameElement {
                 return jumpingFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
             }
         }
-        if (moving) {
+        if (moving == PlayerMovingState.MOVING) {
             if (frameMetadata.frame == ANIMATION_MOVING_FRAMES) {
                 return movingFrames[1] ?: throw RuntimeException("missing animation frame")
             } else {
@@ -144,10 +146,10 @@ class Player : GameElement {
         this.vx = 0.0
         this.vy = 0.0
         this.jumping = false
-        this.moving = false
+        this.moving = PlayerMovingState.STATIONARY
         this.direction = Direction.RIGHT
         this.frameMetadata = FrameMetadata(1, Cell(1, 1, width, height))
-        this.colliding = false
+        this.colliding = PlayerCollisionState.FREE
     }
 
     fun from(physicsYResult: PhysicsYResult): Player {
@@ -184,7 +186,7 @@ class Player : GameElement {
         )
     }
 
-    fun from(x: Int, vx: Double, isColliding: Boolean): Player {
+    fun from(x: Int, vx: Double, colliding: PlayerCollisionState): Player {
         return Player(
             x,
             this.y,
@@ -197,7 +199,7 @@ class Player : GameElement {
             this.moving,
             this.direction,
             this.frameMetadata,
-            isColliding,
+            colliding,
         )
     }
 
@@ -218,7 +220,7 @@ class Player : GameElement {
         )
     }
 
-    fun from(colliding: Boolean): Player {
+    fun from(colliding: PlayerCollisionState): Player {
         return Player(
             this.x,
             this.y,

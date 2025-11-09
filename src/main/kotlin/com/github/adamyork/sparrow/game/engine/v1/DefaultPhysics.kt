@@ -5,6 +5,8 @@ import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.Player.Companion.JUMP_DISTANCE
 import com.github.adamyork.sparrow.game.data.ViewPort
+import com.github.adamyork.sparrow.game.data.player.PlayerCollisionState
+import com.github.adamyork.sparrow.game.data.player.PlayerMovingState
 import com.github.adamyork.sparrow.game.engine.Collision
 import com.github.adamyork.sparrow.game.engine.Physics
 import com.github.adamyork.sparrow.game.engine.data.*
@@ -74,12 +76,12 @@ class DefaultPhysics : Physics {
                 nextX = 0
             }
         }
-        return player.from(nextX, 0.0, isColliding = true)
+        return player.from(nextX, 0.0, PlayerCollisionState.COLLIDING)
     }
 
-    private fun getXVelocity(playerVx: Double, playerMoving: Boolean): Double {
+    private fun getXVelocity(playerVx: Double, playerMoving: PlayerMovingState): Double {
         var nextVx: Double = playerVx
-        if (playerMoving) {
+        if (playerMoving == PlayerMovingState.MOVING) {
             if (nextVx == 0.0) {
                 nextVx = X_MOVEMENT_DISTANCE
             }
@@ -126,13 +128,13 @@ class DefaultPhysics : Physics {
     private fun movePlayerX(
         playerX: Int,
         playerVx: Double,
-        playerMoving: Boolean,
+        playerMoving: PlayerMovingState,
         playerDirection: Direction,
         collisionBoundaries: CollisionBoundaries
     ): PhysicsXResult {
         var targetX = playerX
         val deltaTime = gameStatusProvider.getDeltaTime()
-        if (playerMoving || playerVx != 0.0) {
+        if (playerMoving == PlayerMovingState.MOVING || playerVx != 0.0) {
             if (playerDirection == Direction.LEFT) {
                 targetX -= (playerVx * deltaTime).roundToInt()
                 if (targetX <= collisionBoundaries.left) {

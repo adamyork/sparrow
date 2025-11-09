@@ -7,6 +7,7 @@ import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.data.map.GameMap
+import com.github.adamyork.sparrow.game.data.player.PlayerMovingState
 import com.github.adamyork.sparrow.game.engine.Engine
 import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.game.service.ScoreService
@@ -146,13 +147,13 @@ class Game {
     private fun startInput(controlAction: ControlAction) {
         when (controlAction) {
             ControlAction.LEFT -> player.setPlayerState(
-                true,
+                PlayerMovingState.MOVING,
                 jumping = player.jumping,
                 direction = Direction.LEFT
             )
 
             ControlAction.RIGHT -> player.setPlayerState(
-                true,
+                PlayerMovingState.MOVING,
                 jumping = player.jumping,
                 direction = Direction.RIGHT
             )
@@ -180,7 +181,7 @@ class Game {
         if (controlAction == ControlAction.RIGHT) {
             if (player.direction == Direction.RIGHT) {
                 player.setPlayerState(
-                    false,
+                    PlayerMovingState.STATIONARY,
                     jumping = player.jumping,
                     direction = Direction.RIGHT
                 )
@@ -188,7 +189,7 @@ class Game {
         } else if (controlAction == ControlAction.LEFT) {
             if (player.direction == Direction.LEFT) {
                 player.setPlayerState(
-                    false,
+                    PlayerMovingState.STATIONARY,
                     jumping = player.jumping,
                     direction = Direction.LEFT
                 )
