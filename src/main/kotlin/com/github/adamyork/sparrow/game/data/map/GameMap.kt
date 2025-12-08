@@ -1,13 +1,11 @@
 package com.github.adamyork.sparrow.game.data.map
 
 import com.github.adamyork.sparrow.game.data.ViewPort
-import com.github.adamyork.sparrow.game.data.enemy.MapEnemy
+import com.github.adamyork.sparrow.game.data.enemy.GameEnemy
+import com.github.adamyork.sparrow.game.data.enemy.MapBlockerEnemy
 import com.github.adamyork.sparrow.game.data.enemy.MapEnemyType
 import com.github.adamyork.sparrow.game.data.enemy.MapShooterEnemy
-import com.github.adamyork.sparrow.game.data.item.MapFinishItem
-import com.github.adamyork.sparrow.game.data.item.MapItem
-import com.github.adamyork.sparrow.game.data.item.MapItemState
-import com.github.adamyork.sparrow.game.data.item.MapItemType
+import com.github.adamyork.sparrow.game.data.item.*
 import com.github.adamyork.sparrow.game.engine.data.Particle
 import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.game.service.data.ImageAsset
@@ -20,8 +18,8 @@ data class GameMap(
     val collisionAsset: ImageAsset,
     val width: Int,
     val height: Int,
-    var items: ArrayList<MapItem>,
-    var enemies: ArrayList<MapEnemy>,
+    var items: ArrayList<GameItem>,
+    var enemies: ArrayList<GameEnemy>,
     var particles: ArrayList<Particle>
 ) {
 
@@ -63,7 +61,7 @@ data class GameMap(
                 )
             } else {
                 items.add(
-                    MapItem(
+                    MapCollectibleItem(
                         greenieItemAsset.width,
                         greenieItemAsset.height,
                         assetService.getItemPosition(i).x,
@@ -82,7 +80,7 @@ data class GameMap(
             val itemType = MapEnemyType.from(assetService.getEnemyPosition(i).type)
             if (itemType == MapEnemyType.VACUUM) {
                 enemies.add(
-                    MapEnemy(
+                    MapBlockerEnemy(
                         vacuumEnemyAsset.width,
                         vacuumEnemyAsset.height,
                         assetService.getEnemyPosition(i).x,
@@ -123,7 +121,7 @@ data class GameMap(
         generateMapEnemies(vacuumEnemyAsset, botEnemyAsset, assetService)
     }
 
-    fun from(managedMapEnemies: ArrayList<MapEnemy>, managedMapParticles: ArrayList<Particle>): GameMap {
+    fun from(managedMapEnemies: ArrayList<GameEnemy>, managedMapParticles: ArrayList<Particle>): GameMap {
         return GameMap(
             this.state,
             this.farGroundAsset,
@@ -138,7 +136,7 @@ data class GameMap(
         )
     }
 
-    fun from(gameMapState: GameMapState, managedMapItems: ArrayList<MapItem>): GameMap {
+    fun from(gameMapState: GameMapState, managedMapItems: ArrayList<GameItem>): GameMap {
         return GameMap(
             gameMapState,
             this.farGroundAsset,
@@ -155,8 +153,8 @@ data class GameMap(
 
     fun from(
         gameMapState: GameMapState,
-        managedMapItems: ArrayList<MapItem>,
-        managedMapEnemies: ArrayList<MapEnemy>,
+        managedMapItems: ArrayList<GameItem>,
+        managedMapEnemies: ArrayList<GameEnemy>,
         managedMapParticles: ArrayList<Particle>
     ): GameMap {
         return GameMap(

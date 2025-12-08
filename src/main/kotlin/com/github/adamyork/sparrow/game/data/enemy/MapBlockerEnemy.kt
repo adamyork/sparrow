@@ -6,24 +6,32 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 
-open class MapEnemy : GameElement {
+class MapBlockerEnemy : GameElement, GameEnemy {
 
     companion object {
-        val LOGGER: Logger = LoggerFactory.getLogger(MapEnemy::class.java)
+        val LOGGER: Logger = LoggerFactory.getLogger(MapBlockerEnemy::class.java)
         const val ANIMATION_COLLISION_FRAMES = 8
         const val MAX_X_MOVEMENT = 50
         const val MOVEMENT_X_DISTANCE = 10
     }
 
-    var originX: Int
-    var originY: Int
-    var type: MapEnemyType
+    override var width: Int
+    override var height: Int
+    override var x: Int
+    override var y: Int
+    override var type: MapEnemyType
+    override var state: MapItemState
+    override var bufferedImage: BufferedImage
+    override var frameMetadata: FrameMetadata
+    override var originX: Int
+    override var originY: Int
+    override var enemyPosition: EnemyPosition
+    override var colliding: Boolean
+    override var interacting: Boolean
+
     var animatingFrames: HashMap<Int, FrameMetadata> = HashMap()
     var collisionFrames: HashMap<Int, FrameMetadata> = HashMap()
     var interactingFrames: HashMap<Int, FrameMetadata> = HashMap()
-    var enemyPosition: EnemyPosition
-    var colliding: Boolean
-    var interacting: Boolean
 
     constructor(
         width: Int,
@@ -85,7 +93,7 @@ open class MapEnemy : GameElement {
         return this.enemyPosition.direction
     }
 
-    open fun getNextFrameCell(): FrameMetadata {
+    override fun getNextFrameCell(): FrameMetadata {
         if (colliding) {
             if (frameMetadata.frame == ANIMATION_COLLISION_FRAMES) {
                 this.colliding = false
@@ -98,7 +106,7 @@ open class MapEnemy : GameElement {
         return animatingFrames[1] ?: throw RuntimeException("missing animation frame")
     }
 
-    open fun getNextPosition(player: Player, viewPort: ViewPort): EnemyPosition {
+    override fun getNextPosition(player: Player, viewPort: ViewPort): EnemyPosition {
         if (enemyPosition.direction == Direction.LEFT) {
             return if (enemyPosition.x >= originX - MAX_X_MOVEMENT) {
                 EnemyPosition(
@@ -122,12 +130,12 @@ open class MapEnemy : GameElement {
         }
     }
 
-    open fun getNextEnemyState(player: Player): MapItemState {
+    override fun getNextEnemyState(player: Player): MapItemState {
         return this.state
     }
 
     @Suppress("DuplicatedCode")
-    protected open fun generateAnimationFrameIndex() {
+    private fun generateAnimationFrameIndex() {
         animatingFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
 
         collisionFrames[1] = FrameMetadata(1, Cell(1, 2, width, height))
@@ -140,12 +148,12 @@ open class MapEnemy : GameElement {
         collisionFrames[8] = FrameMetadata(8, Cell(1, 1, width, height))
     }
 
-    open fun from(
+    override fun from(
         frameMetadata: FrameMetadata,
         isColliding: Boolean,
         isInteracting: Boolean
-    ): MapEnemy {
-        return MapEnemy(
+    ): MapBlockerEnemy {
+        return MapBlockerEnemy(
             this.width,
             this.height,
             this.x,
@@ -163,7 +171,7 @@ open class MapEnemy : GameElement {
     }
 
 
-    open fun from(
+    override fun from(
         x: Int,
         y: Int,
         state: MapItemState,
@@ -171,8 +179,8 @@ open class MapEnemy : GameElement {
         nextPosition: EnemyPosition,
         isColliding: Boolean,
         isInteracting: Boolean
-    ): MapEnemy {
-        return MapEnemy(
+    ): MapBlockerEnemy {
+        return MapBlockerEnemy(
             this.width,
             this.height,
             x,

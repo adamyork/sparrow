@@ -138,7 +138,8 @@ class Game {
 
     fun reset() {
         LOGGER.info("reset game")
-        player.reset(playerInitialX, playerInitialY)
+        player =
+            Player(playerInitialX, playerInitialY, playerAsset.width, playerAsset.height, playerAsset.bufferedImage)
         gameMap.reset(mapItemGreenieAsset, mapItemFinishAsset, mapEnemyVacuumAsset, mapEnemyBotAsset, assetService)
         viewPort = ViewPort(viewPortInitialX, viewPortInitialY, 0, 0, viewPortWidth, viewPortHeight)
         scoreService.gameMapItem = gameMap.items

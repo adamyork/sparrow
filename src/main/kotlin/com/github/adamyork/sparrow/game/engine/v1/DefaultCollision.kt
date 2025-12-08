@@ -3,6 +3,7 @@ package com.github.adamyork.sparrow.game.engine.v1
 import com.github.adamyork.sparrow.common.AudioQueue
 import com.github.adamyork.sparrow.common.Sounds
 import com.github.adamyork.sparrow.game.data.Direction
+import com.github.adamyork.sparrow.game.data.GameElement
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.data.enemy.MapEnemyType
@@ -124,7 +125,7 @@ class DefaultCollision : Collision {
                         managedMapParticles.addAll(managedProjectileParticlesResult.first)
                     }
                 }
-                val frameMetadata = enemy.getNextFrameCell()
+                val frameMetadata = (enemy as GameElement).getNextFrameCell()
                 if (isColliding) {
                     enemy.from(frameMetadata, true, enemy.interacting)
                 } else if (isInteracting) {

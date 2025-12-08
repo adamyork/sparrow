@@ -2,7 +2,7 @@ package com.github.adamyork.sparrow.game.engine.v1
 
 import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.Player
-import com.github.adamyork.sparrow.game.data.enemy.MapEnemy
+import com.github.adamyork.sparrow.game.data.enemy.GameEnemy
 import com.github.adamyork.sparrow.game.engine.Particles
 import com.github.adamyork.sparrow.game.engine.data.Particle
 import com.github.adamyork.sparrow.game.engine.data.ParticleShape
@@ -103,7 +103,7 @@ class DefaultParticles : Particles {
 
     override fun createProjectileParticle(
         player: Player,
-        enemy: MapEnemy,
+        enemy: GameEnemy,
         particles: ArrayList<Particle>
     ): Pair<ArrayList<Particle>, Boolean> {
         val count = particles.filter { it.type == ParticleType.FURBALL }

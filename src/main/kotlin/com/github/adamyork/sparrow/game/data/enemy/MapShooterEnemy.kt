@@ -1,12 +1,13 @@
 package com.github.adamyork.sparrow.game.data.enemy
 
 import com.github.adamyork.sparrow.game.data.*
+import com.github.adamyork.sparrow.game.data.enemy.MapBlockerEnemy.Companion.ANIMATION_COLLISION_FRAMES
 import com.github.adamyork.sparrow.game.data.item.MapItemState
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 
-class MapShooterEnemy : MapEnemy {
+class MapShooterEnemy : GameElement, GameEnemy {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(MapShooterEnemy::class.java)
@@ -14,6 +15,25 @@ class MapShooterEnemy : MapEnemy {
         const val PLAYER_PROXIMITY_THRESHOLD = 200
         const val ANIMATION_INTERACTING_FRAMES = 8
     }
+
+    override var width: Int
+    override var height: Int
+    override var x: Int
+    override var y: Int
+    override var type: MapEnemyType
+    override var state: MapItemState
+    override var bufferedImage: BufferedImage
+    override var frameMetadata: FrameMetadata
+    override var originX: Int
+    override var originY: Int
+    override var enemyPosition: EnemyPosition
+    override var colliding: Boolean
+    override var interacting: Boolean
+
+    var animatingFrames: HashMap<Int, FrameMetadata> = HashMap()
+    var collisionFrames: HashMap<Int, FrameMetadata> = HashMap()
+    var interactingFrames: HashMap<Int, FrameMetadata> = HashMap()
+
 
     constructor(
         width: Int,
@@ -23,15 +43,22 @@ class MapShooterEnemy : MapEnemy {
         type: MapEnemyType,
         state: MapItemState,
         bufferedImage: BufferedImage
-    ) : super(
-        width,
-        height,
-        x,
-        y,
-        type,
-        state,
-        bufferedImage
-    )
+    ) {
+        this.width = width
+        this.height = height
+        this.x = x
+        this.y = y
+        this.originX = x
+        this.originY = y
+        this.type = type
+        this.state = state
+        this.bufferedImage = bufferedImage
+        this.frameMetadata = FrameMetadata(1, Cell(1, 1, width, height))
+        this.enemyPosition = EnemyPosition(this.x, this.y, Direction.LEFT)
+        this.colliding = false
+        this.interacting = false
+        generateAnimationFrameIndex()
+    }
 
     constructor(
         width: Int,
@@ -47,21 +74,22 @@ class MapShooterEnemy : MapEnemy {
         enemyPosition: EnemyPosition,
         colliding: Boolean,
         interacting: Boolean
-    ) : super(
-        width,
-        height,
-        x,
-        y,
-        originX,
-        originY,
-        type,
-        state,
-        bufferedImage,
-        frameMetadata,
-        enemyPosition,
-        colliding,
-        interacting
-    )
+    ) {
+        this.width = width
+        this.height = height
+        this.x = x
+        this.y = y
+        this.originX = originX
+        this.originY = originY
+        this.type = type
+        this.state = state
+        this.bufferedImage = bufferedImage
+        this.frameMetadata = frameMetadata
+        this.enemyPosition = enemyPosition
+        this.colliding = colliding
+        this.interacting = interacting
+        generateAnimationFrameIndex()
+    }
 
     override fun getNextEnemyState(player: Player): MapItemState {
         return if (player.x >= this.originX - PLAYER_PROXIMITY_THRESHOLD) {
@@ -72,7 +100,7 @@ class MapShooterEnemy : MapEnemy {
     }
 
     @Suppress("DuplicatedCode")
-    override fun generateAnimationFrameIndex() {
+    private fun generateAnimationFrameIndex() {
         animatingFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
 
         interactingFrames[1] = FrameMetadata(1, Cell(1, 2, width, height))
@@ -104,7 +132,20 @@ class MapShooterEnemy : MapEnemy {
                 return interactingFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
             }
         }
-        return super.getNextFrameCell()
+        if (colliding) {
+            if (frameMetadata.frame == ANIMATION_COLLISION_FRAMES) {
+                this.colliding = false
+                return animatingFrames[1] ?: throw RuntimeException("missing animation frame")
+            } else {
+                val nextFrame = frameMetadata.frame + 1
+                return collisionFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
+            }
+        }
+        return animatingFrames[1] ?: throw RuntimeException("missing animation frame")
+    }
+
+    override fun nestedDirection(): Direction {
+        return this.enemyPosition.direction
     }
 
     override fun getNextPosition(player: Player, viewPort: ViewPort): EnemyPosition {
@@ -132,7 +173,7 @@ class MapShooterEnemy : MapEnemy {
         frameMetadata: FrameMetadata,
         isColliding: Boolean,
         isInteracting: Boolean
-    ): MapEnemy {
+    ): GameEnemy {
         return MapShooterEnemy(
             this.width,
             this.height,
@@ -151,7 +192,7 @@ class MapShooterEnemy : MapEnemy {
     }
 
 
-    override fun from(
+   override fun from(
         x: Int,
         y: Int,
         state: MapItemState,
@@ -159,7 +200,7 @@ class MapShooterEnemy : MapEnemy {
         nextPosition: EnemyPosition,
         isColliding: Boolean,
         isInteracting: Boolean
-    ): MapEnemy {
+    ): GameEnemy {
         return MapShooterEnemy(
             this.width,
             this.height,

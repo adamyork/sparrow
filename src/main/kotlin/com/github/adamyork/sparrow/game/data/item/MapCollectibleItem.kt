@@ -2,21 +2,29 @@ package com.github.adamyork.sparrow.game.data.item
 
 import com.github.adamyork.sparrow.game.data.Cell
 import com.github.adamyork.sparrow.game.data.Direction
-import com.github.adamyork.sparrow.game.data.GameElement
 import com.github.adamyork.sparrow.game.data.FrameMetadata
+import com.github.adamyork.sparrow.game.data.GameElement
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 
-open class MapItem : GameElement {
+class MapCollectibleItem : GameElement, GameItem {
 
     companion object {
-        val LOGGER: Logger = LoggerFactory.getLogger(MapItem::class.java)
+        val LOGGER: Logger = LoggerFactory.getLogger(MapCollectibleItem::class.java)
         const val ANIMATION_DEACTIVATING_FRAMES = 4
         const val ANIMATION_ACTIVE_FRAMES = 16
     }
 
-    var type: MapItemType
+    override var width: Int
+    override var height: Int
+    override var x: Int
+    override var y: Int
+    override var type: MapItemType
+    override var state: MapItemState
+    override var bufferedImage: BufferedImage
+    override var frameMetadata: FrameMetadata
+
     var activeFrames: HashMap<Int, FrameMetadata> = HashMap()
     var deactivatingFrames: HashMap<Int, FrameMetadata> = HashMap()
 
@@ -61,7 +69,7 @@ open class MapItem : GameElement {
         generateAnimationFrameIndex()
     }
 
-    open fun getNextFrameCell(): FrameMetadata {
+    override fun getNextFrameCell(): FrameMetadata {
         if (state == MapItemState.DEACTIVATING) {
             if (frameMetadata.frame == ANIMATION_DEACTIVATING_FRAMES) {
                 LOGGER.info("deactivating complete 0")
@@ -88,12 +96,12 @@ open class MapItem : GameElement {
         return Direction.LEFT
     }
 
-    fun getFirstDeactivatingFrame(): FrameMetadata {
+    override fun getFirstDeactivatingFrame(): FrameMetadata {
         return deactivatingFrames[1] ?: FrameMetadata(1, Cell(1, 1, width, height))
     }
 
     @Suppress("DuplicatedCode")
-    protected open fun generateAnimationFrameIndex() {
+    private fun generateAnimationFrameIndex() {
         activeFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
         activeFrames[2] = FrameMetadata(2, Cell(1, 1, width, height))
         activeFrames[3] = FrameMetadata(3, Cell(1, 1, width, height))
@@ -117,8 +125,8 @@ open class MapItem : GameElement {
         deactivatingFrames[4] = FrameMetadata(4, Cell(1, 8, width, height))
     }
 
-    open fun from(state: MapItemState, frameMetadata: FrameMetadata): MapItem {
-        return MapItem(
+    override fun from(state: MapItemState, nextFrameMetaData: FrameMetadata): GameItem {
+        return MapCollectibleItem(
             this.width,
             this.height,
             this.x,
@@ -126,12 +134,12 @@ open class MapItem : GameElement {
             this.type,
             state,
             this.bufferedImage,
-            frameMetadata
+            nextFrameMetaData
         )
     }
 
-    open fun from(x: Int, y: Int, state: MapItemState, frameMetadata: FrameMetadata): MapItem {
-        return MapItem(
+    override fun from(x: Int, y: Int, state: MapItemState, frameMetadata: FrameMetadata): GameItem {
+        return MapCollectibleItem(
             this.width,
             this.height,
             x,

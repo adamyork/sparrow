@@ -1,5 +1,6 @@
 package com.github.adamyork.sparrow.game.data
 
+import com.github.adamyork.sparrow.game.data.item.MapItemState
 import com.github.adamyork.sparrow.game.data.player.PlayerCollisionState
 import com.github.adamyork.sparrow.game.data.player.PlayerMovingState
 import com.github.adamyork.sparrow.game.engine.data.PhysicsXResult
@@ -20,9 +21,13 @@ class Player : GameElement {
         const val ANIMATION_COLLISION_FRAMES = 8
     }
 
-    var movingFrames: HashMap<Int, FrameMetadata> = HashMap()
-    var jumpingFrames: HashMap<Int, FrameMetadata> = HashMap()
-    var collisionFrames: HashMap<Int, FrameMetadata> = HashMap()
+    override val width: Int
+    override val height: Int
+    override val x: Int
+    override val y: Int
+    override val bufferedImage: BufferedImage
+    override val frameMetadata: FrameMetadata
+    override val state: MapItemState
 
     var vx: Double
     var vy: Double
@@ -30,6 +35,12 @@ class Player : GameElement {
     var moving: PlayerMovingState
     var direction: Direction
     var colliding: PlayerCollisionState
+
+
+    var movingFrames: HashMap<Int, FrameMetadata> = HashMap()
+    var jumpingFrames: HashMap<Int, FrameMetadata> = HashMap()
+    var collisionFrames: HashMap<Int, FrameMetadata> = HashMap()
+
 
     constructor(xPos: Int, yPos: Int, width: Int, height: Int, bufferedImage: BufferedImage) {
         this.x = xPos
@@ -44,6 +55,7 @@ class Player : GameElement {
         this.direction = Direction.RIGHT
         this.frameMetadata = FrameMetadata(1, Cell(1, 1, width, height))
         this.colliding = PlayerCollisionState.FREE
+        this.state = MapItemState.ACTIVE
         generateAnimationFrameIndex()
     }
 
@@ -73,6 +85,7 @@ class Player : GameElement {
         this.direction = direction
         this.frameMetadata = frame
         this.colliding = colliding
+        this.state = MapItemState.ACTIVE
         generateAnimationFrameIndex()
     }
 
@@ -86,7 +99,7 @@ class Player : GameElement {
         this.direction = direction
     }
 
-    fun getNextFrameCell(): FrameMetadata {
+    override fun getNextFrameCell(): FrameMetadata {
         if (colliding == PlayerCollisionState.COLLIDING) {
             if (frameMetadata.frame == ANIMATION_COLLISION_FRAMES) {
                 this.colliding = PlayerCollisionState.FREE
@@ -140,17 +153,17 @@ class Player : GameElement {
         collisionFrames[8] = FrameMetadata(8, Cell(1, 3, width, height))
     }
 
-    fun reset(xPos: Int, yPos: Int) {
-        this.x = xPos
-        this.y = yPos
-        this.vx = 0.0
-        this.vy = 0.0
-        this.jumping = false
-        this.moving = PlayerMovingState.STATIONARY
-        this.direction = Direction.RIGHT
-        this.frameMetadata = FrameMetadata(1, Cell(1, 1, width, height))
-        this.colliding = PlayerCollisionState.FREE
-    }
+//    fun reset(xPos: Int, yPos: Int) {
+//        this.x = xPos
+//        this.y = yPos
+//        this.vx = 0.0
+//        this.vy = 0.0
+//        this.jumping = false
+//        this.moving = PlayerMovingState.STATIONARY
+//        this.direction = Direction.RIGHT
+//        this.frameMetadata = FrameMetadata(1, Cell(1, 1, width, height))
+//        this.colliding = PlayerCollisionState.FREE
+//    }
 
     fun from(physicsYResult: PhysicsYResult): Player {
         return Player(

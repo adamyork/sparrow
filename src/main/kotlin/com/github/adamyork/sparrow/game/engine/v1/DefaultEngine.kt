@@ -5,8 +5,8 @@ import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.GameElement
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.ViewPort
-import com.github.adamyork.sparrow.game.data.enemy.MapEnemy
-import com.github.adamyork.sparrow.game.data.item.MapItem
+import com.github.adamyork.sparrow.game.data.enemy.GameEnemy
+import com.github.adamyork.sparrow.game.data.item.GameItem
 import com.github.adamyork.sparrow.game.data.item.MapItemState
 import com.github.adamyork.sparrow.game.data.item.MapItemType
 import com.github.adamyork.sparrow.game.data.map.GameMap
@@ -149,11 +149,11 @@ class DefaultEngine : Engine {
         return Pair(projectTileCollisionResult.first, projectTileCollisionResult.second)
     }
 
-    private fun manageMapItems(gameMap: GameMap): ArrayList<MapItem> {
+    private fun manageMapItems(gameMap: GameMap): ArrayList<GameItem> {
         return gameMap.items.map { item ->
             val itemX = item.x
             val itemY = item.y
-            val frameMetadata = item.getNextFrameCell()
+            val frameMetadata = (item as GameElement).getNextFrameCell()
             var nextState = item.state
             if (item.type == MapItemType.FINISH) {
                 if (gameMap.state == GameMapState.COMPLETING && item.state == MapItemState.INACTIVE) {
@@ -164,14 +164,14 @@ class DefaultEngine : Engine {
         }.toCollection(ArrayList())
     }
 
-    private fun manageMapEnemies(gameMap: GameMap, player: Player, viewPort: ViewPort): ArrayList<MapEnemy> {
+    private fun manageMapEnemies(gameMap: GameMap, player: Player, viewPort: ViewPort): ArrayList<GameEnemy> {
         return gameMap.enemies.map { enemy ->
             val nextState = enemy.getNextEnemyState(player)
             if (nextState != MapItemState.INACTIVE) {
                 val nextPosition = enemy.getNextPosition(player, viewPort)
                 val itemX = nextPosition.x
                 val itemY = nextPosition.y
-                val frameMetadata = enemy.getNextFrameCell()
+                val frameMetadata = (enemy as GameElement).getNextFrameCell()
                 enemy.from(itemX, itemY, nextState, frameMetadata, nextPosition, enemy.colliding, enemy.interacting)
             } else {
                 enemy
@@ -189,8 +189,18 @@ class DefaultEngine : Engine {
 
         drawBackground(map, viewPort, graphics)
         drawStatusText(map, graphics)
-        drawMapElements(map.items.toCollection(ArrayList()), viewPort, graphics, false)
-        drawMapElements(map.enemies.toCollection(ArrayList()), viewPort, graphics, true)
+        drawMapElements(
+            map.items.map { item -> item as GameElement }.toCollection(ArrayList()),
+            viewPort,
+            graphics,
+            false
+        )
+        drawMapElements(
+            map.enemies.map { item -> item as GameElement }.toCollection(ArrayList()),
+            viewPort,
+            graphics,
+            true
+        )
         drawParticles(map, viewPort, graphics)
         drawPlayer(player, viewPort, graphics)
 
