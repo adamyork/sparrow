@@ -6,6 +6,8 @@ import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.GameElement
 import com.github.adamyork.sparrow.game.data.Player
 import com.github.adamyork.sparrow.game.data.ViewPort
+import com.github.adamyork.sparrow.game.data.enemy.GameEnemy
+import com.github.adamyork.sparrow.game.data.enemy.MapBlockerEnemy
 import com.github.adamyork.sparrow.game.data.enemy.MapEnemyType
 import com.github.adamyork.sparrow.game.data.enemy.MapShooterEnemy
 import com.github.adamyork.sparrow.game.data.item.MapItemState
@@ -95,7 +97,7 @@ class DefaultCollision : Collision {
         val managedMapEnemies = gameMap.enemies.map { enemy ->
             var isColliding = false
             var isInteracting = false
-            if (enemy.state != MapItemState.INACTIVE) {
+            if ((enemy as GameElement).state != MapItemState.INACTIVE) {
                 val enemyRect = Rectangle(enemy.x, enemy.y, enemy.width, enemy.height)
                 val playerRect = Rectangle(player.x, player.y, player.width, player.height)
                 if (playerRect.intersects(enemyRect)) {
@@ -127,14 +129,38 @@ class DefaultCollision : Collision {
                 }
                 val frameMetadata = (enemy as GameElement).getNextFrameCell()
                 if (isColliding) {
-                    enemy.from(frameMetadata, true, enemy.interacting)
+                    if (enemy.type == MapEnemyType.BOT) {
+                        (enemy as MapShooterEnemy).copy(
+                            frameMetadata = frameMetadata,
+                            colliding = true,
+                            interacting = enemy.interacting
+                        ) as GameEnemy
+                    } else {
+                        (enemy as MapBlockerEnemy).copy(
+                            frameMetadata = frameMetadata,
+                            colliding = true,
+                            interacting = enemy.interacting
+                        ) as GameEnemy
+                    }
                 } else if (isInteracting) {
-                    enemy.from(frameMetadata, enemy.colliding, true)
+                    if (enemy.type == MapEnemyType.BOT) {
+                        (enemy as MapShooterEnemy).copy(
+                            frameMetadata = frameMetadata,
+                            colliding = enemy.colliding,
+                            interacting = true
+                        ) as GameEnemy
+                    } else {
+                        (enemy as MapBlockerEnemy).copy(
+                            frameMetadata = frameMetadata,
+                            colliding = enemy.colliding,
+                            interacting = true
+                        ) as GameEnemy
+                    }
                 } else {
-                    enemy
+                    enemy as GameEnemy
                 }
             } else {
-                enemy
+                enemy as GameEnemy
             }
         }.toCollection(ArrayList())
         val nextPlayer: Player = if (playerIsColliding) {

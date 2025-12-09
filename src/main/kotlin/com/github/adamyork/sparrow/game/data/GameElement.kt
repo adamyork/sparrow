@@ -5,13 +5,13 @@ import java.awt.image.BufferedImage
 
 interface GameElement {
 
-    val frameMetadata: FrameMetadata
-    val state: MapItemState
-    val height: Int
-    val width: Int
-    val bufferedImage: BufferedImage
     val x: Int
     val y: Int
+    val height: Int
+    val width: Int
+    val state: MapItemState
+    val frameMetadata: FrameMetadata
+    val bufferedImage: BufferedImage
 
     fun getNextFrameCell(): FrameMetadata
 

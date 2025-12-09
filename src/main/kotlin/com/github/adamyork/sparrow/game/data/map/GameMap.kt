@@ -1,10 +1,10 @@
 package com.github.adamyork.sparrow.game.data.map
 
+import com.github.adamyork.sparrow.game.data.Cell
+import com.github.adamyork.sparrow.game.data.Direction
+import com.github.adamyork.sparrow.game.data.FrameMetadata
 import com.github.adamyork.sparrow.game.data.ViewPort
-import com.github.adamyork.sparrow.game.data.enemy.GameEnemy
-import com.github.adamyork.sparrow.game.data.enemy.MapBlockerEnemy
-import com.github.adamyork.sparrow.game.data.enemy.MapEnemyType
-import com.github.adamyork.sparrow.game.data.enemy.MapShooterEnemy
+import com.github.adamyork.sparrow.game.data.enemy.*
 import com.github.adamyork.sparrow.game.data.item.*
 import com.github.adamyork.sparrow.game.engine.data.Particle
 import com.github.adamyork.sparrow.game.service.AssetService
@@ -81,25 +81,37 @@ data class GameMap(
             if (itemType == MapEnemyType.VACUUM) {
                 enemies.add(
                     MapBlockerEnemy(
-                        vacuumEnemyAsset.width,
-                        vacuumEnemyAsset.height,
                         assetService.getEnemyPosition(i).x,
                         assetService.getEnemyPosition(i).y,
-                        MapEnemyType.VACUUM,
+                        vacuumEnemyAsset.width,
+                        vacuumEnemyAsset.height,
                         MapItemState.ACTIVE,
-                        vacuumEnemyAsset.bufferedImage
+                        FrameMetadata(1, Cell(1, 1, width, height)),
+                        vacuumEnemyAsset.bufferedImage,
+                        MapEnemyType.VACUUM,
+                        assetService.getEnemyPosition(i).x,
+                        assetService.getItemPosition(i).y,
+                        EnemyPosition(0, 0, Direction.LEFT),
+                        colliding = false,
+                        interacting = false
                     )
                 )
             } else {
                 enemies.add(
                     MapShooterEnemy(
-                        botEnemyAsset.width,
-                        botEnemyAsset.height,
                         assetService.getEnemyPosition(i).x,
                         assetService.getEnemyPosition(i).y,
-                        MapEnemyType.BOT,
+                        botEnemyAsset.width,
+                        botEnemyAsset.height,
                         MapItemState.INACTIVE,
-                        botEnemyAsset.bufferedImage
+                        FrameMetadata(1, Cell(1, 1, width, height)),
+                        botEnemyAsset.bufferedImage,
+                        MapEnemyType.BOT,
+                        assetService.getEnemyPosition(i).x,
+                        assetService.getItemPosition(i).y,
+                        EnemyPosition(0, 0, Direction.LEFT),
+                        colliding = false,
+                        interacting = false
                     )
                 )
             }
