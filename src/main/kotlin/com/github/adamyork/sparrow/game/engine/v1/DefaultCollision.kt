@@ -2,18 +2,14 @@ package com.github.adamyork.sparrow.game.engine.v1
 
 import com.github.adamyork.sparrow.common.AudioQueue
 import com.github.adamyork.sparrow.common.Sounds
-import com.github.adamyork.sparrow.game.data.Direction
-import com.github.adamyork.sparrow.game.data.GameElement
-import com.github.adamyork.sparrow.game.data.Player
-import com.github.adamyork.sparrow.game.data.ViewPort
-import com.github.adamyork.sparrow.game.data.enemy.GameEnemy
-import com.github.adamyork.sparrow.game.data.enemy.MapBlockerEnemy
-import com.github.adamyork.sparrow.game.data.enemy.MapEnemyType
-import com.github.adamyork.sparrow.game.data.enemy.MapShooterEnemy
-import com.github.adamyork.sparrow.game.data.item.MapItemState
+import com.github.adamyork.sparrow.game.data.*
+import com.github.adamyork.sparrow.game.data.enemy.*
+import com.github.adamyork.sparrow.game.data.item.MapCollectibleItem
+import com.github.adamyork.sparrow.game.data.item.MapFinishItem
 import com.github.adamyork.sparrow.game.data.item.MapItemType
 import com.github.adamyork.sparrow.game.data.map.GameMap
 import com.github.adamyork.sparrow.game.data.map.GameMapState
+import com.github.adamyork.sparrow.game.data.player.Player
 import com.github.adamyork.sparrow.game.engine.Collision
 import com.github.adamyork.sparrow.game.engine.Particles
 import com.github.adamyork.sparrow.game.engine.Physics
@@ -68,21 +64,25 @@ class DefaultCollision : Collision {
             val playerRect = Rectangle(player.x, player.y, player.width, player.height)
             var nextItemState = item.state
             var nextFrameMetaData = item.frameMetadata
-            if (playerRect.intersects(itemRect) && nextItemState == MapItemState.ACTIVE) {
+            if (playerRect.intersects(itemRect) && nextItemState == GameElementState.ACTIVE) {
                 if (item.type == MapItemType.FINISH) {
                     LOGGER.info("finish reached")
                     gameState = GameMapState.COMPLETED
-                    nextItemState = MapItemState.INACTIVE
+                    nextItemState = GameElementState.INACTIVE
                 } else {
                     LOGGER.info("item collision")
-                    nextItemState = MapItemState.DEACTIVATING
+                    nextItemState = GameElementState.DEACTIVATING
                     audioQueue.queue.add(Sounds.ITEM_COLLECT)
                     nextFrameMetaData = item.getFirstDeactivatingFrame()
                 }
             }
-            item.from(nextItemState, nextFrameMetaData)
+            if (item.type == MapItemType.FINISH) {
+                (item as MapFinishItem).copy(state = nextItemState, frameMetadata = nextFrameMetaData)
+            } else {
+                (item as MapCollectibleItem).copy(state = nextItemState, frameMetadata = nextFrameMetaData)
+            }
         }.toCollection(ArrayList())
-        return gameMap.from(gameState, managedMapItems)
+        return gameMap.copy(state = gameState, items = managedMapItems)
     }
 
     override fun checkForEnemyCollisionAndProximity(
@@ -97,7 +97,7 @@ class DefaultCollision : Collision {
         val managedMapEnemies = gameMap.enemies.map { enemy ->
             var isColliding = false
             var isInteracting = false
-            if ((enemy as GameElement).state != MapItemState.INACTIVE) {
+            if ((enemy as GameElement).state != GameElementState.INACTIVE) {
                 val enemyRect = Rectangle(enemy.x, enemy.y, enemy.width, enemy.height)
                 val playerRect = Rectangle(player.x, player.y, player.width, player.height)
                 if (playerRect.intersects(enemyRect)) {
@@ -127,40 +127,42 @@ class DefaultCollision : Collision {
                         managedMapParticles.addAll(managedProjectileParticlesResult.first)
                     }
                 }
-                val frameMetadata = (enemy as GameElement).getNextFrameCell()
+                val frameMetadataWithState = (enemy as GameElement).getNextFrameMetadataWithState()
+                val metadata = frameMetadataWithState.first
+                val metadataState = frameMetadataWithState.second
                 if (isColliding) {
                     if (enemy.type == MapEnemyType.BOT) {
                         (enemy as MapShooterEnemy).copy(
-                            frameMetadata = frameMetadata,
-                            colliding = true,
+                            frameMetadata = metadata,
+                            colliding = metadataState.colliding,
                             interacting = enemy.interacting
                         ) as GameEnemy
                     } else {
                         (enemy as MapBlockerEnemy).copy(
-                            frameMetadata = frameMetadata,
-                            colliding = true,
+                            frameMetadata = metadata,
+                            colliding = GameElementCollisionState.COLLIDING,
                             interacting = enemy.interacting
                         ) as GameEnemy
                     }
                 } else if (isInteracting) {
                     if (enemy.type == MapEnemyType.BOT) {
                         (enemy as MapShooterEnemy).copy(
-                            frameMetadata = frameMetadata,
+                            frameMetadata = metadata,
                             colliding = enemy.colliding,
-                            interacting = true
+                            interacting = GameEnemyInteractionState.INTERACTING
                         ) as GameEnemy
                     } else {
                         (enemy as MapBlockerEnemy).copy(
-                            frameMetadata = frameMetadata,
+                            frameMetadata = metadata,
                             colliding = enemy.colliding,
-                            interacting = true
+                            interacting = GameEnemyInteractionState.INTERACTING
                         ) as GameEnemy
                     }
                 } else {
-                    enemy as GameEnemy
+                    enemy
                 }
             } else {
-                enemy as GameEnemy
+                enemy
             }
         }.toCollection(ArrayList())
         val nextPlayer: Player = if (playerIsColliding) {
@@ -171,7 +173,7 @@ class DefaultCollision : Collision {
         }
         return Pair(
             nextPlayer,
-            gameMap.from(managedMapEnemies, managedMapParticles)
+            gameMap.copy(enemies = managedMapEnemies, particles = managedMapParticles)
         )
     }
 
@@ -194,7 +196,7 @@ class DefaultCollision : Collision {
                     playerIsColliding = true
                     nextFrame = particle.lifetime
                 }
-                particle.from(nextFrame)
+                particle.copy(frame = nextFrame)
             } else {
                 particle
             }
@@ -210,7 +212,7 @@ class DefaultCollision : Collision {
         }
         return Pair(
             nextPlayer,
-            gameMap.from(gameMap.enemies, managedMapParticles)
+            gameMap.copy(enemies = gameMap.enemies, particles = managedMapParticles)
         )
     }
 

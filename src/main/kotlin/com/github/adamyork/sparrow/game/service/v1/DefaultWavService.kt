@@ -36,7 +36,7 @@ class DefaultWavService : WavService {
                     AudioInputStream(bytesIn, audioFormat, (readBuffer.size / audioFormat.getFrameSize()).toLong())
                 val tempFile = File.createTempFile("bg_music_tmp_$chunkIndex", ".wav")
                 AudioSystem.write(chunkAudioInputStream, AudioSystem.getAudioFileFormat(file).type, tempFile)
-                val chunkBytes = AssetService.Companion.getBytes(tempFile)
+                val chunkBytes = AssetService.getBytes(tempFile)
                 output[chunkIndex] = chunkBytes
                 chunkIndex++
             }

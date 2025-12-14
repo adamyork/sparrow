@@ -2,7 +2,7 @@ package com.github.adamyork.sparrow.game.data.enemy
 
 import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.data.enemy.MapBlockerEnemy.Companion.ANIMATION_COLLISION_FRAMES
-import com.github.adamyork.sparrow.game.data.item.MapItemState
+import com.github.adamyork.sparrow.game.data.player.Player
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
@@ -10,18 +10,18 @@ import java.awt.image.BufferedImage
 data class MapShooterEnemy(
     override val x: Int,
     override val y: Int,
-    override val height: Int,
     override val width: Int,
-    override val state: MapItemState,
+    override val height: Int,
+    override val state: GameElementState,
     override val frameMetadata: FrameMetadata,
     override val bufferedImage: BufferedImage,
     override val type: MapEnemyType,
     override val originX: Int,
     override val originY: Int,
     override val enemyPosition: EnemyPosition,
-    override var colliding: Boolean,
-    override var interacting: Boolean
-) : GameElement, GameEnemy {
+    override val colliding: GameElementCollisionState,
+    override val interacting: GameEnemyInteractionState
+) : GameEnemy {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(MapShooterEnemy::class.java)
@@ -38,9 +38,9 @@ data class MapShooterEnemy(
         generateAnimationFrameIndex()
     }
 
-    override fun getNextEnemyState(player: Player): MapItemState {
+    override fun getNextEnemyState(player: Player): GameElementState {
         return if (player.x >= this.originX - PLAYER_PROXIMITY_THRESHOLD) {
-            MapItemState.ACTIVE
+            GameElementState.ACTIVE
         } else {
             this.state
         }
@@ -69,26 +69,30 @@ data class MapShooterEnemy(
         collisionFrames[8] = FrameMetadata(8, Cell(1, 1, width, height))
     }
 
-    override fun getNextFrameCell(): FrameMetadata {
-        if (this.interacting) {
+    override fun getNextFrameMetadataWithState(): Pair<FrameMetadata, FrameMetadataState> {
+        var metadata = animatingFrames[1] ?: throw RuntimeException("missing animation frame")
+        var metadataState = FrameMetadataState(this.colliding, this.interacting, state)
+        if (this.interacting == GameEnemyInteractionState.INTERACTING) {
             if (frameMetadata.frame == ANIMATION_INTERACTING_FRAMES) {
-                this.interacting = false
-                return animatingFrames[1] ?: throw RuntimeException("missing animation frame")
+                metadataState = metadataState.copy(interacting = GameEnemyInteractionState.ISOLATED)
+                return Pair(metadata, metadataState)
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                return interactingFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
+                metadata = interactingFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
+                return Pair(metadata, metadataState)
             }
         }
-        if (colliding) {
+        if (colliding == GameElementCollisionState.COLLIDING) {
             if (frameMetadata.frame == ANIMATION_COLLISION_FRAMES) {
-                this.colliding = false
-                return animatingFrames[1] ?: throw RuntimeException("missing animation frame")
+                metadataState = metadataState.copy(colliding = GameElementCollisionState.FREE)
+                return Pair(metadata, metadataState)
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                return collisionFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
+                metadata = collisionFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
+                return Pair(metadata, metadataState)
             }
         }
-        return animatingFrames[1] ?: throw RuntimeException("missing animation frame")
+        return Pair(metadata, metadataState)
     }
 
     override fun nestedDirection(): Direction {

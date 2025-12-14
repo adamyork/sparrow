@@ -1,7 +1,7 @@
 package com.github.adamyork.sparrow.game.data.enemy
 
 import com.github.adamyork.sparrow.game.data.*
-import com.github.adamyork.sparrow.game.data.item.MapItemState
+import com.github.adamyork.sparrow.game.data.player.Player
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
@@ -9,18 +9,18 @@ import java.awt.image.BufferedImage
 data class MapBlockerEnemy(
     override val x: Int,
     override val y: Int,
-    override val height: Int,
     override val width: Int,
-    override val state: MapItemState,
+    override val height: Int,
+    override val state: GameElementState,
     override val frameMetadata: FrameMetadata,
     override val bufferedImage: BufferedImage,
     override val type: MapEnemyType,
     override val originX: Int,
     override val originY: Int,
     override val enemyPosition: EnemyPosition,
-    override var colliding: Boolean,
-    override var interacting: Boolean
-) : GameElement, GameEnemy {
+    override val colliding: GameElementCollisionState,
+    override val interacting: GameEnemyInteractionState
+) : GameEnemy {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(MapBlockerEnemy::class.java)
@@ -40,17 +40,21 @@ data class MapBlockerEnemy(
         return this.enemyPosition.direction
     }
 
-    override fun getNextFrameCell(): FrameMetadata {
-        if (colliding) {
+    override fun getNextFrameMetadataWithState(): Pair<FrameMetadata, FrameMetadataState> {
+        var metadata = animatingFrames[1] ?: throw RuntimeException("missing animation frame")
+        var metadataState =
+            FrameMetadataState(GameElementCollisionState.FREE, this.interacting, state)
+        if (colliding == GameElementCollisionState.COLLIDING) {
             if (frameMetadata.frame == ANIMATION_COLLISION_FRAMES) {
-                this.colliding = false
-                return animatingFrames[1] ?: throw RuntimeException("missing animation frame")
+                metadataState = metadataState.copy(colliding = GameElementCollisionState.FREE)
+                return Pair(metadata, metadataState)
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                return collisionFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
+                metadata = collisionFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
+                return Pair(metadata, metadataState)
             }
         }
-        return animatingFrames[1] ?: throw RuntimeException("missing animation frame")
+        return Pair(metadata, metadataState)
     }
 
     override fun getNextPosition(player: Player, viewPort: ViewPort): EnemyPosition {
@@ -77,7 +81,7 @@ data class MapBlockerEnemy(
         }
     }
 
-    override fun getNextEnemyState(player: Player): MapItemState {
+    override fun getNextEnemyState(player: Player): GameElementState {
         return this.state
     }
 

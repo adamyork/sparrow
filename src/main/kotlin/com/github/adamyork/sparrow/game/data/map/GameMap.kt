@@ -1,11 +1,11 @@
 package com.github.adamyork.sparrow.game.data.map
 
-import com.github.adamyork.sparrow.game.data.Cell
-import com.github.adamyork.sparrow.game.data.Direction
-import com.github.adamyork.sparrow.game.data.FrameMetadata
-import com.github.adamyork.sparrow.game.data.ViewPort
+import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.data.enemy.*
-import com.github.adamyork.sparrow.game.data.item.*
+import com.github.adamyork.sparrow.game.data.item.GameItem
+import com.github.adamyork.sparrow.game.data.item.MapCollectibleItem
+import com.github.adamyork.sparrow.game.data.item.MapFinishItem
+import com.github.adamyork.sparrow.game.data.item.MapItemType
 import com.github.adamyork.sparrow.game.engine.data.Particle
 import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.game.service.data.ImageAsset
@@ -55,8 +55,9 @@ data class GameMap(
                         assetService.getItemPosition(i).x,
                         assetService.getItemPosition(i).y,
                         MapItemType.FINISH,
-                        MapItemState.INACTIVE,
-                        finishItemAsset.bufferedImage
+                        GameElementState.INACTIVE,
+                        finishItemAsset.bufferedImage,
+                        FrameMetadata(1, Cell(1, 1, width, height))
                     )
                 )
             } else {
@@ -67,8 +68,9 @@ data class GameMap(
                         assetService.getItemPosition(i).x,
                         assetService.getItemPosition(i).y,
                         MapItemType.COLLECTABLE,
-                        MapItemState.ACTIVE,
-                        greenieItemAsset.bufferedImage
+                        GameElementState.ACTIVE,
+                        greenieItemAsset.bufferedImage,
+                        FrameMetadata(1, Cell(1, 1, width, height))
                     )
                 )
             }
@@ -85,15 +87,19 @@ data class GameMap(
                         assetService.getEnemyPosition(i).y,
                         vacuumEnemyAsset.width,
                         vacuumEnemyAsset.height,
-                        MapItemState.ACTIVE,
+                        GameElementState.ACTIVE,
                         FrameMetadata(1, Cell(1, 1, width, height)),
                         vacuumEnemyAsset.bufferedImage,
                         MapEnemyType.VACUUM,
                         assetService.getEnemyPosition(i).x,
                         assetService.getItemPosition(i).y,
-                        EnemyPosition(0, 0, Direction.LEFT),
-                        colliding = false,
-                        interacting = false
+                        EnemyPosition(
+                            assetService.getEnemyPosition(i).x,
+                            assetService.getEnemyPosition(i).y,
+                            Direction.LEFT
+                        ),
+                        GameElementCollisionState.FREE,
+                        GameEnemyInteractionState.ISOLATED
                     )
                 )
             } else {
@@ -103,15 +109,19 @@ data class GameMap(
                         assetService.getEnemyPosition(i).y,
                         botEnemyAsset.width,
                         botEnemyAsset.height,
-                        MapItemState.INACTIVE,
+                        GameElementState.INACTIVE,
                         FrameMetadata(1, Cell(1, 1, width, height)),
                         botEnemyAsset.bufferedImage,
                         MapEnemyType.BOT,
                         assetService.getEnemyPosition(i).x,
                         assetService.getItemPosition(i).y,
-                        EnemyPosition(0, 0, Direction.LEFT),
-                        colliding = false,
-                        interacting = false
+                        EnemyPosition(
+                            assetService.getEnemyPosition(i).x,
+                            assetService.getEnemyPosition(i).y,
+                            Direction.LEFT
+                        ),
+                        GameElementCollisionState.FREE,
+                        GameEnemyInteractionState.ISOLATED
                     )
                 )
             }
@@ -131,56 +141,6 @@ data class GameMap(
         this.particles = ArrayList()
         generateMapItems(greenieItemAsset, finishItemAsset, assetService)
         generateMapEnemies(vacuumEnemyAsset, botEnemyAsset, assetService)
-    }
-
-    fun from(managedMapEnemies: ArrayList<GameEnemy>, managedMapParticles: ArrayList<Particle>): GameMap {
-        return GameMap(
-            this.state,
-            this.farGroundAsset,
-            this.midGroundAsset,
-            this.nearFieldAsset,
-            this.collisionAsset,
-            this.width,
-            this.height,
-            this.items,
-            managedMapEnemies,
-            managedMapParticles
-        )
-    }
-
-    fun from(gameMapState: GameMapState, managedMapItems: ArrayList<GameItem>): GameMap {
-        return GameMap(
-            gameMapState,
-            this.farGroundAsset,
-            this.midGroundAsset,
-            this.nearFieldAsset,
-            this.collisionAsset,
-            this.width,
-            this.height,
-            managedMapItems,
-            this.enemies,
-            this.particles
-        )
-    }
-
-    fun from(
-        gameMapState: GameMapState,
-        managedMapItems: ArrayList<GameItem>,
-        managedMapEnemies: ArrayList<GameEnemy>,
-        managedMapParticles: ArrayList<Particle>
-    ): GameMap {
-        return GameMap(
-            gameMapState,
-            this.farGroundAsset,
-            this.midGroundAsset,
-            this.nearFieldAsset,
-            this.collisionAsset,
-            this.width,
-            this.height,
-            managedMapItems,
-            managedMapEnemies,
-            managedMapParticles
-        )
     }
 
 }
