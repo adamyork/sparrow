@@ -48,7 +48,7 @@ data class Player(
             state
         )
         if (colliding == GameElementCollisionState.COLLIDING) {
-            if (frameMetadata.frame == ANIMATION_COLLISION_FRAMES) {
+            if (frameMetadata.frame >= ANIMATION_COLLISION_FRAMES) {
                 metadataState = metadataState.copy(colliding = GameElementCollisionState.FREE)
                 metadata = movingFrames[1] ?: throw RuntimeException("missing animation frame")
                 return Pair(metadata, metadataState)
@@ -59,8 +59,9 @@ data class Player(
             }
         }
         if (jumping) {
-            if (frameMetadata.frame == ANIMATION_JUMPING_FRAMES) {
+            if (frameMetadata.frame >= ANIMATION_JUMPING_FRAMES) {
                 metadata = jumpingFrames[1] ?: throw RuntimeException("missing animation frame")
+                LOGGER.info("here 2")
                 return Pair(metadata, metadataState)
             } else {
                 val nextFrame = frameMetadata.frame + 1
@@ -69,7 +70,7 @@ data class Player(
             }
         }
         if (moving == PlayerMovingState.MOVING) {
-            if (frameMetadata.frame == ANIMATION_MOVING_FRAMES) {
+            if (frameMetadata.frame >= ANIMATION_MOVING_FRAMES) {
                 metadata = movingFrames[1] ?: throw RuntimeException("missing animation frame")
                 return Pair(metadata, metadataState)
             } else {

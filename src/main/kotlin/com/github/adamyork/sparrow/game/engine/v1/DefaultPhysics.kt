@@ -2,16 +2,17 @@ package com.github.adamyork.sparrow.game.engine.v1
 
 import com.github.adamyork.sparrow.common.GameStatusProvider
 import com.github.adamyork.sparrow.game.data.Direction
+import com.github.adamyork.sparrow.game.data.GameElementCollisionState
 import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.data.player.Player
 import com.github.adamyork.sparrow.game.data.player.Player.Companion.JUMP_DISTANCE
-import com.github.adamyork.sparrow.game.data.GameElementCollisionState
 import com.github.adamyork.sparrow.game.data.player.PlayerMovingState
 import com.github.adamyork.sparrow.game.engine.Collision
 import com.github.adamyork.sparrow.game.engine.Physics
 import com.github.adamyork.sparrow.game.engine.data.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.awt.Rectangle
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -70,7 +71,12 @@ class DefaultPhysics : Physics {
         )
     }
 
-    override fun applyPlayerCollisionPhysics(player: Player, viewPort: ViewPort): Player {
+    override fun applyPlayerCollisionPhysics(
+        player: Player,
+        rect: Rectangle?,
+        viewPort: ViewPort,
+    ): Player {
+        val collisionRect = rect ?: Rectangle(0, 0, 0, 0)
         var nextX = player.x
         if (player.direction == Direction.LEFT) {
             nextX += player.width
@@ -81,6 +87,15 @@ class DefaultPhysics : Physics {
             nextX -= player.width
             if (nextX < 0) {
                 nextX = 0
+            }
+        }
+        val playerRect = Rectangle(nextX, player.y, player.width, player.height)
+        if (playerRect.intersects(collisionRect)) {
+            LOGGER.info("adjusted player for collision but still colliding !")
+            if (player.direction == Direction.LEFT) {
+                nextX -= collisionRect.width
+            } else {
+                nextX += collisionRect.width
             }
         }
         return player.copy(x = nextX, vx = 0.0, colliding = GameElementCollisionState.COLLIDING)

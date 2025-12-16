@@ -94,6 +94,7 @@ class DefaultCollision : Collision {
     ): Pair<Player, GameMap> {
         var managedMapParticles = gameMap.particles
         var playerIsColliding = false
+        var targetRect: Rectangle? = null
         val managedMapEnemies = gameMap.enemies.map { enemy ->
             var isColliding = false
             var isInteracting = false
@@ -102,6 +103,7 @@ class DefaultCollision : Collision {
                 val playerRect = Rectangle(player.x, player.y, player.width, player.height)
                 if (playerRect.intersects(enemyRect)) {
                     LOGGER.info("enemy collision !")
+                    targetRect = enemyRect
                     audioQueue.queue.add(Sounds.PLAYER_COLLISION)
                     managedMapParticles = particles.createCollisionParticles(enemy.x, enemy.y)
                     isColliding = true
@@ -167,7 +169,7 @@ class DefaultCollision : Collision {
         }.toCollection(ArrayList())
         val nextPlayer: Player = if (playerIsColliding) {
             LOGGER.info("player is colliding apply physics")
-            physics.applyPlayerCollisionPhysics(player, viewPort)
+            physics.applyPlayerCollisionPhysics(player, targetRect, viewPort)
         } else {
             player
         }
@@ -185,6 +187,7 @@ class DefaultCollision : Collision {
         particles: Particles
     ): Pair<Player, GameMap> {
         var playerIsColliding = false
+        var targetRect: Rectangle? = null
         val managedMapParticles = gameMap.particles.map { particle ->
             if (particle.type == ParticleType.FURBALL) {
                 val particleRect = Rectangle(particle.x, particle.y, particle.width, particle.height)
@@ -192,6 +195,7 @@ class DefaultCollision : Collision {
                 var nextFrame = particle.frame
                 if (playerRect.intersects(particleRect)) {
                     LOGGER.info("particle collision !")
+                    targetRect = particleRect
                     audioQueue.queue.add(Sounds.PLAYER_COLLISION)
                     playerIsColliding = true
                     nextFrame = particle.lifetime
@@ -206,7 +210,7 @@ class DefaultCollision : Collision {
             managedMapParticles.addAll(collisionParticles)
         }
         val nextPlayer: Player = if (playerIsColliding) {
-            physics.applyPlayerCollisionPhysics(player, viewPort)
+            physics.applyPlayerCollisionPhysics(player, targetRect, viewPort)//TODO this should be abstract
         } else {
             player
         }
