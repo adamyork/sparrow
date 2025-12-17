@@ -41,23 +41,10 @@ data class MapBlockerEnemy(
     }
 
     override fun getNextFrameMetadataWithState(): Pair<FrameMetadata, FrameMetadataState> {
-        var metadata = animatingFrames[1] ?: throw RuntimeException("missing animation frame")
-        var metadataState =
-            FrameMetadataState(GameElementCollisionState.FREE, this.interacting, state)
-        if (colliding == GameElementCollisionState.COLLIDING) {
-            if (frameMetadata.frame == ANIMATION_COLLISION_FRAMES) {
-                metadataState = metadataState.copy(colliding = GameElementCollisionState.FREE)
-                return Pair(metadata, metadataState)
-            } else {
-                val nextFrame = frameMetadata.frame + 1
-                metadata = collisionFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
-                return Pair(metadata, metadataState)
-            }
-        }
-        return Pair(metadata, metadataState)
+        return this.getNextCollisionMetadataWithState(animatingFrames, collisionFrames)
     }
 
-    override fun getNextPosition(player: Player, viewPort: ViewPort): EnemyPosition {
+    override fun getNextPosition(viewPort: ViewPort): EnemyPosition {
         if (enemyPosition.direction == Direction.LEFT) {
             return if (enemyPosition.x >= originX - MAX_X_MOVEMENT) {
                 EnemyPosition(

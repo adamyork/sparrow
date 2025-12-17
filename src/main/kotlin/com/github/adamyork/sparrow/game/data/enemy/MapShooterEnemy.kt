@@ -1,7 +1,6 @@
 package com.github.adamyork.sparrow.game.data.enemy
 
 import com.github.adamyork.sparrow.game.data.*
-import com.github.adamyork.sparrow.game.data.enemy.MapBlockerEnemy.Companion.ANIMATION_COLLISION_FRAMES
 import com.github.adamyork.sparrow.game.data.player.Player
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -82,24 +81,14 @@ data class MapShooterEnemy(
                 return Pair(metadata, metadataState)
             }
         }
-        if (colliding == GameElementCollisionState.COLLIDING) {
-            if (frameMetadata.frame == ANIMATION_COLLISION_FRAMES) {
-                metadataState = metadataState.copy(colliding = GameElementCollisionState.FREE)
-                return Pair(metadata, metadataState)
-            } else {
-                val nextFrame = frameMetadata.frame + 1
-                metadata = collisionFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
-                return Pair(metadata, metadataState)
-            }
-        }
-        return Pair(metadata, metadataState)
+        return this.getNextCollisionMetadataWithState(animatingFrames, collisionFrames)
     }
 
     override fun nestedDirection(): Direction {
         return this.enemyPosition.direction
     }
 
-    override fun getNextPosition(player: Player, viewPort: ViewPort): EnemyPosition {
+    override fun getNextPosition(viewPort: ViewPort): EnemyPosition {
 //        return if (this.x >= 0) {
 //            EnemyPosition(
 //                enemyPosition.x - MOVEMENT_X_DISTANCE,

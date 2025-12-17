@@ -53,16 +53,7 @@ data class MapFinishItem(
                 return Pair(metadata, metadataState)
             }
         }
-        if (state == GameElementState.ACTIVE) {
-            if (frameMetadata.frame == ANIMATION_ACTIVE_FRAMES) {
-                return Pair(metadata, metadataState)
-            } else {
-                val nextFrame = frameMetadata.frame + 1
-                metadata = activeFrames[nextFrame] ?: FrameMetadata(1, Cell(1, 1, width, height))
-                return Pair(metadata, metadataState)
-            }
-        }
-        return Pair(metadata, metadataState)
+        return getNextActiveMetadataWithState(activeFrames)
     }
 
     override fun nestedDirection(): Direction {

@@ -28,10 +28,14 @@ import com.github.adamyork.sparrow.game.service.ScoreService
 import com.github.adamyork.sparrow.game.service.data.ImageAsset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.awt.AlphaComposite
 import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.RenderingHints
 import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
 import java.awt.image.BufferedImage
+import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
 
@@ -189,7 +193,7 @@ class DefaultEngine : Engine {
         return gameMap.enemies.map { enemy ->
             val nextState = enemy.getNextEnemyState(player)
             if (nextState != GameElementState.INACTIVE) {
-                val nextPosition = enemy.getNextPosition(player, viewPort)
+                val nextPosition = enemy.getNextPosition(viewPort)
                 val itemX = nextPosition.x
                 val itemY = nextPosition.y
                 val frameMetadataWithState = (enemy as GameElement).getNextFrameMetadataWithState()
@@ -228,7 +232,20 @@ class DefaultEngine : Engine {
         player: Player
     ): ByteArray {
         val compositeImage = BufferedImage(viewPort.width, viewPort.height, BufferedImage.TYPE_BYTE_INDEXED)
-        val graphics = compositeImage.graphics
+        val graphics: Graphics2D = compositeImage.graphics as Graphics2D
+        graphics.composite = AlphaComposite.SrcOver
+        graphics.setRenderingHint(
+            RenderingHints.KEY_ALPHA_INTERPOLATION,
+            RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED
+        )
+        graphics.setRenderingHint(
+            RenderingHints.KEY_RENDERING,
+            RenderingHints.VALUE_RENDER_SPEED
+        )
+        graphics.setRenderingHint(
+            RenderingHints.KEY_INTERPOLATION,
+            RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR
+        )
 
         drawBackground(map, viewPort, graphics)
         drawStatusText(map, graphics)
@@ -248,11 +265,13 @@ class DefaultEngine : Engine {
         drawPlayer(player, viewPort, graphics)
 
         val backgroundBuffer = ByteArrayOutputStream()
+        val bufferedOutputStream = BufferedOutputStream(backgroundBuffer)
         ImageIO.setUseCache(false)
-        ImageIO.write(compositeImage, "bmp", backgroundBuffer)
+        ImageIO.write(compositeImage, "bmp", bufferedOutputStream)
         compositeImage.graphics.dispose()
         val gameBytes = backgroundBuffer.toByteArray()
         backgroundBuffer.reset()
+        bufferedOutputStream.close()
         return gameBytes
     }
 
