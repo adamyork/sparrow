@@ -2,16 +2,17 @@ package com.github.adamyork.sparrow.game.engine.v1
 
 import com.github.adamyork.sparrow.common.GameStatusProvider
 import com.github.adamyork.sparrow.game.data.Direction
-import com.github.adamyork.sparrow.game.data.Player
-import com.github.adamyork.sparrow.game.data.Player.Companion.JUMP_DISTANCE
+import com.github.adamyork.sparrow.game.data.GameElementCollisionState
 import com.github.adamyork.sparrow.game.data.ViewPort
-import com.github.adamyork.sparrow.game.data.player.PlayerCollisionState
+import com.github.adamyork.sparrow.game.data.player.Player
+import com.github.adamyork.sparrow.game.data.player.Player.Companion.JUMP_DISTANCE
 import com.github.adamyork.sparrow.game.data.player.PlayerMovingState
 import com.github.adamyork.sparrow.game.engine.Collision
 import com.github.adamyork.sparrow.game.engine.Physics
 import com.github.adamyork.sparrow.game.engine.data.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.awt.Rectangle
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -49,7 +50,7 @@ class DefaultPhysics : Physics {
         )
         var adjustedCollisionBoundaries = collisionBoundaries
         if (player.y != yResult.y) {
-            val nextPlayer = player.from(yResult)
+            val nextPlayer = player.copy(y = yResult.y, vy = yResult.vy, jumping = yResult.jumping)
             adjustedCollisionBoundaries =
                 collision.recomputeXBoundaries(nextPlayer, collisionBoundaries)
         }
@@ -60,10 +61,22 @@ class DefaultPhysics : Physics {
             player.direction,
             adjustedCollisionBoundaries
         )
-        return player.from(xResult, yResult)
+        return player.copy(
+            x = xResult.x,
+            vx = xResult.vx,
+            moving = xResult.moving,
+            y = yResult.y,
+            vy = yResult.vy,
+            jumping = yResult.jumping
+        )
     }
 
-    override fun applyPlayerCollisionPhysics(player: Player, viewPort: ViewPort): Player {
+    override fun applyPlayerCollisionPhysics(
+        player: Player,
+        rect: Rectangle?,
+        viewPort: ViewPort,
+    ): Player {
+        val collisionRect = rect ?: Rectangle(0, 0, 0, 0)
         var nextX = player.x
         if (player.direction == Direction.LEFT) {
             nextX += player.width
@@ -76,7 +89,16 @@ class DefaultPhysics : Physics {
                 nextX = 0
             }
         }
-        return player.from(nextX, 0.0, PlayerCollisionState.COLLIDING)
+        val playerRect = Rectangle(nextX, player.y, player.width, player.height)
+        if (playerRect.intersects(collisionRect)) {
+            LOGGER.info("adjusted player for collision but still colliding !")
+            if (player.direction == Direction.LEFT) {
+                nextX -= collisionRect.width
+            } else {
+                nextX += collisionRect.width
+            }
+        }
+        return player.copy(x = nextX, vx = 0.0, colliding = GameElementCollisionState.COLLIDING)
     }
 
     private fun getXVelocity(playerVx: Double, playerMoving: PlayerMovingState): Double {
@@ -217,7 +239,12 @@ class DefaultPhysics : Physics {
                             position = Pair(particle.x.toFloat(), particle.y.toFloat() + GRAVITY.toFloat())
                         }
                     }
-                    particle.from(position, nextFrame, nextRadius)
+                    particle.copy(
+                        x = position.first.toInt() + particle.xJitter,
+                        y = position.second.toInt() + particle.yJitter,
+                        frame = nextFrame,
+                        radius = nextRadius
+                    )
                 } else {
                     particle
                 }
@@ -233,7 +260,7 @@ class DefaultPhysics : Physics {
                     val nextWidth = (particle.width + 1).coerceAtMost(40)
                     val nextHeight = (particle.height + 1).coerceAtMost(40)
                     val nextRadius = (particle.radius - 15).coerceAtLeast(0)
-                    particle.from(nextWidth, nextHeight, nextFrame, nextRadius)
+                    particle.copy(width = nextWidth, height = nextHeight, frame = nextFrame, radius = nextRadius)
                 } else {
                     particle
                 }
@@ -260,7 +287,7 @@ class DefaultPhysics : Physics {
                     } else {
                         particle.y + particle.yJitter
                     }
-                    particle.from(nextX, nextY, nextFrame)
+                    particle.copy(x = nextX, y = nextY, frame = nextFrame)
                 } else {
                     particle
                 }

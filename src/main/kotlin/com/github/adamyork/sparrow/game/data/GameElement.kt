@@ -1,17 +1,19 @@
 package com.github.adamyork.sparrow.game.data
 
-import com.github.adamyork.sparrow.game.data.item.MapItemState
 import java.awt.image.BufferedImage
 
-abstract class GameElement {
+interface GameElement {
 
-    var x: Int = 0
-    var y: Int = 0
-    var width: Int = 0
-    var height: Int = 0
-    var state: MapItemState = MapItemState.INACTIVE
-    var frameMetadata: FrameMetadata = FrameMetadata(0, Cell(0, 0, 0, 0))
-    var bufferedImage: BufferedImage = BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB)
+    val x: Int
+    val y: Int
+    val height: Int
+    val width: Int
+    val state: GameElementState
+    val frameMetadata: FrameMetadata
+    val bufferedImage: BufferedImage
 
-    abstract fun nestedDirection(): Direction
+    fun getNextFrameMetadataWithState(): Pair<FrameMetadata, FrameMetadataState>
+
+    fun nestedDirection(): Direction
+
 }

@@ -3,10 +3,9 @@ package com.github.adamyork.sparrow.game
 import com.github.adamyork.sparrow.common.ControlAction
 import com.github.adamyork.sparrow.common.ControlType
 import com.github.adamyork.sparrow.common.GameStatusProvider
-import com.github.adamyork.sparrow.game.data.Direction
-import com.github.adamyork.sparrow.game.data.Player
-import com.github.adamyork.sparrow.game.data.ViewPort
+import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.data.map.GameMap
+import com.github.adamyork.sparrow.game.data.player.Player
 import com.github.adamyork.sparrow.game.data.player.PlayerMovingState
 import com.github.adamyork.sparrow.game.engine.Engine
 import com.github.adamyork.sparrow.game.service.AssetService
@@ -89,8 +88,21 @@ class Game {
             mapItemFinishAsset = objects.t4
             mapEnemyVacuumAsset = objects.t5
             mapEnemyBotAsset = objects.t6
-            player =
-                Player(playerInitialX, playerInitialY, playerAsset.width, playerAsset.height, playerAsset.bufferedImage)
+            player = Player(
+                playerInitialX,
+                playerInitialY,
+                playerAsset.width,
+                playerAsset.height,
+                GameElementState.ACTIVE,
+                FrameMetadata(1, Cell(1, 1, playerAsset.width, playerAsset.height)),
+                playerAsset.bufferedImage,
+                0.0,
+                0.0,
+                false,
+                PlayerMovingState.STATIONARY,
+                Direction.RIGHT,
+                GameElementCollisionState.FREE
+            )
             gameMap.generateMapItems(mapItemGreenieAsset, mapItemFinishAsset, assetService)
             LOGGER.info("map items generated")
             gameMap.generateMapEnemies(mapEnemyVacuumAsset, mapEnemyBotAsset, assetService)
@@ -112,12 +124,11 @@ class Game {
             .collectList()
             .map(Function { _ ->
                 if (gameStatusProvider.running.load()) {
-                    val collisionBoundaries = engine.getCollisionBoundaries(player, gameMap.collisionAsset)
+                    val collisionBoundaries = engine.getCollisionBoundaries(player)
                     player = engine.managePlayer(player, collisionBoundaries)
                     viewPort = engine.manageViewport(player, viewPort)
                     gameMap = engine.manageMap(player, gameMap, viewPort)
-                    val nextPlayerAndMap =
-                        engine.manageEnemyAndItemCollision(player, gameMap, viewPort, gameMap.collisionAsset)
+                    val nextPlayerAndMap = engine.manageEnemyAndItemCollision(player, gameMap, viewPort)
                     player = nextPlayerAndMap.first
                     gameMap = nextPlayerAndMap.second
                     scoreService.gameMapItem = gameMap.items
@@ -138,7 +149,21 @@ class Game {
 
     fun reset() {
         LOGGER.info("reset game")
-        player.reset(playerInitialX, playerInitialY)
+        player = Player(
+            playerInitialX,
+            playerInitialY,
+            playerAsset.width,
+            playerAsset.height,
+            GameElementState.ACTIVE,
+            FrameMetadata(1, Cell(1, 1, playerAsset.width, playerAsset.height)),
+            playerAsset.bufferedImage,
+            0.0,
+            0.0,
+            false,
+            PlayerMovingState.STATIONARY,
+            Direction.RIGHT,
+            GameElementCollisionState.FREE
+        )
         gameMap.reset(mapItemGreenieAsset, mapItemFinishAsset, mapEnemyVacuumAsset, mapEnemyBotAsset, assetService)
         viewPort = ViewPort(viewPortInitialX, viewPortInitialY, 0, 0, viewPortWidth, viewPortHeight)
         scoreService.gameMapItem = gameMap.items
@@ -146,29 +171,45 @@ class Game {
 
     private fun startInput(controlAction: ControlAction) {
         when (controlAction) {
-            ControlAction.LEFT -> player.setPlayerState(
-                PlayerMovingState.MOVING,
-                jumping = player.jumping,
-                direction = Direction.LEFT
-            )
+            ControlAction.LEFT -> {
+                val nextVx = adjustXVelocity(controlAction)
+                player = player.copy(moving = PlayerMovingState.MOVING, direction = Direction.LEFT, vx = nextVx)
+            }
 
-            ControlAction.RIGHT -> player.setPlayerState(
-                PlayerMovingState.MOVING,
-                jumping = player.jumping,
-                direction = Direction.RIGHT
-            )
+            ControlAction.RIGHT -> {
+                val nextVx = adjustXVelocity(controlAction)
+                player = player.copy(moving = PlayerMovingState.MOVING, direction = Direction.RIGHT, vx = nextVx)
+            }
 
             ControlAction.JUMP -> {
                 if (!player.jumping) {
                     LOGGER.info("starting player jump")
-                    player.setPlayerState(
-                        player.moving,
-                        jumping = true,
-                        direction = player.direction,
-                    )
+                    player = player.copy(jumping = true)
                 }
             }
         }
+    }
+
+    private fun adjustXVelocity(controlAction: ControlAction): Double {
+        if (controlAction == ControlAction.LEFT) {
+            if (player.direction == Direction.RIGHT) {
+                LOGGER.info(getDirectionChangedLogMessage())
+                return 0.0
+            } else {
+                return player.vx
+            }
+        } else {
+            if (player.direction == Direction.LEFT) {
+                LOGGER.info(getDirectionChangedLogMessage())
+                return 0.0
+            } else {
+                return player.vx
+            }
+        }
+    }
+
+    private fun getDirectionChangedLogMessage(): String {
+        return "direction changed player vx was: ${player.vx} and is now 0"
     }
 
     private fun stopInput(controlAction: ControlAction) {
@@ -180,26 +221,12 @@ class Game {
         }
         if (controlAction == ControlAction.RIGHT) {
             if (player.direction == Direction.RIGHT) {
-                player.setPlayerState(
-                    PlayerMovingState.STATIONARY,
-                    jumping = player.jumping,
-                    direction = Direction.RIGHT
-                )
+                player = player.copy(moving = PlayerMovingState.STATIONARY, direction = Direction.RIGHT)
             }
         } else if (controlAction == ControlAction.LEFT) {
             if (player.direction == Direction.LEFT) {
-                player.setPlayerState(
-                    PlayerMovingState.STATIONARY,
-                    jumping = player.jumping,
-                    direction = Direction.LEFT
-                )
+                player = player.copy(moving = PlayerMovingState.STATIONARY, direction = Direction.LEFT)
             }
-        } else {
-            player.setPlayerState(
-                player.moving,
-                jumping = player.jumping,
-                direction = player.direction
-            )
         }
     }
 

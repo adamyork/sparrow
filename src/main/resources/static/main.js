@@ -19,7 +19,8 @@ startButton.addEventListener("click", () => {
         fpsContainer.innerHTML = (document.game.drawCyclesCompleted / 5) + "";
         document.game.drawCyclesCompleted = 0;
     }
-    const updateFpsTimer = setInterval(document.game.updateFps, 5000);
+
+    setInterval(document.game.updateFps, 5000);
 
     document.game.socket = new WebSocket("ws://localhost:8080/game");
     document.game.socket.addEventListener("open", () => {

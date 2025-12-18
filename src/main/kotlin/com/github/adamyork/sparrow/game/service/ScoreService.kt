@@ -1,10 +1,10 @@
 package com.github.adamyork.sparrow.game.service
 
-import com.github.adamyork.sparrow.game.data.item.MapItem
+import com.github.adamyork.sparrow.game.data.item.GameItem
 
 interface ScoreService {
 
-    var gameMapItem: ArrayList<MapItem>
+    var gameMapItem: ArrayList<GameItem>
 
     fun getTotal(): Int
 

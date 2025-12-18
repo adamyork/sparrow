@@ -1,8 +1,9 @@
 package com.github.adamyork.sparrow.game.engine.v1
 
 import com.github.adamyork.sparrow.game.data.Direction
-import com.github.adamyork.sparrow.game.data.Player
-import com.github.adamyork.sparrow.game.data.enemy.MapEnemy
+import com.github.adamyork.sparrow.game.data.GameElement
+import com.github.adamyork.sparrow.game.data.enemy.GameEnemy
+import com.github.adamyork.sparrow.game.data.player.Player
 import com.github.adamyork.sparrow.game.engine.Particles
 import com.github.adamyork.sparrow.game.engine.data.Particle
 import com.github.adamyork.sparrow.game.engine.data.ParticleShape
@@ -14,6 +15,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.Color
 import java.io.File
+import java.util.*
 import kotlin.math.abs
 import kotlin.random.Random
 
@@ -26,7 +28,7 @@ class DefaultParticles : Particles {
     }
 
     val dustParticleOffsets: HashMap<Int, Pair<Int, Int>> = HashMap()
-    val colorMap: HashMap<ParticleType, Color>
+    val colorMap: EnumMap<ParticleType, Color>
 
     constructor(assetService: AssetService) {
         colorMap = parseParticleColorMap(assetService.applicationYamlFile)
@@ -103,7 +105,7 @@ class DefaultParticles : Particles {
 
     override fun createProjectileParticle(
         player: Player,
-        enemy: MapEnemy,
+        enemy: GameEnemy,
         particles: ArrayList<Particle>
     ): Pair<ArrayList<Particle>, Boolean> {
         val count = particles.filter { it.type == ParticleType.FURBALL }
@@ -111,7 +113,7 @@ class DefaultParticles : Particles {
         val particles: ArrayList<Particle> = ArrayList()
         var particleAdded = false
         if (count < MAX_ACTIVE_PROJECTILES) {
-            val xDiff = abs(enemy.x - player.x)
+            val xDiff = abs((enemy as GameElement).x - player.x)
             val yDiff = abs(enemy.y - player.y)
             val xIncrement = (xDiff / 10).coerceAtLeast(1)
             val yIncrement = (yDiff / 10).coerceAtLeast(1)
@@ -139,8 +141,8 @@ class DefaultParticles : Particles {
         return Pair(particles, particleAdded)
     }
 
-    private fun parseParticleColorMap(file: File): HashMap<ParticleType, Color> {
-        val colorMap: HashMap<ParticleType, Color> = HashMap()
+    private fun parseParticleColorMap(file: File): EnumMap<ParticleType, Color> {
+        val colorMap: EnumMap<ParticleType, Color> = EnumMap(ParticleType::class.java)
         val yamlDefault = Yaml.Default
         val properties = yamlDefault.decodeFromString(YamlMap.serializer(), file.readText())
         val map = properties["particle"] as YamlMap

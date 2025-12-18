@@ -1,12 +1,10 @@
 package com.github.adamyork.sparrow.game.data.map
 
-import com.github.adamyork.sparrow.game.data.ViewPort
-import com.github.adamyork.sparrow.game.data.enemy.MapEnemy
-import com.github.adamyork.sparrow.game.data.enemy.MapEnemyType
-import com.github.adamyork.sparrow.game.data.enemy.MapShooterEnemy
+import com.github.adamyork.sparrow.game.data.*
+import com.github.adamyork.sparrow.game.data.enemy.*
+import com.github.adamyork.sparrow.game.data.item.GameItem
+import com.github.adamyork.sparrow.game.data.item.MapCollectibleItem
 import com.github.adamyork.sparrow.game.data.item.MapFinishItem
-import com.github.adamyork.sparrow.game.data.item.MapItem
-import com.github.adamyork.sparrow.game.data.item.MapItemState
 import com.github.adamyork.sparrow.game.data.item.MapItemType
 import com.github.adamyork.sparrow.game.engine.data.Particle
 import com.github.adamyork.sparrow.game.service.AssetService
@@ -20,8 +18,8 @@ data class GameMap(
     val collisionAsset: ImageAsset,
     val width: Int,
     val height: Int,
-    var items: ArrayList<MapItem>,
-    var enemies: ArrayList<MapEnemy>,
+    var items: ArrayList<GameItem>,
+    var enemies: ArrayList<GameEnemy>,
     var particles: ArrayList<Particle>
 ) {
 
@@ -57,20 +55,22 @@ data class GameMap(
                         assetService.getItemPosition(i).x,
                         assetService.getItemPosition(i).y,
                         MapItemType.FINISH,
-                        MapItemState.INACTIVE,
-                        finishItemAsset.bufferedImage
+                        GameElementState.INACTIVE,
+                        finishItemAsset.bufferedImage,
+                        FrameMetadata(1, Cell(1, 1, width, height))
                     )
                 )
             } else {
                 items.add(
-                    MapItem(
+                    MapCollectibleItem(
                         greenieItemAsset.width,
                         greenieItemAsset.height,
                         assetService.getItemPosition(i).x,
                         assetService.getItemPosition(i).y,
                         MapItemType.COLLECTABLE,
-                        MapItemState.ACTIVE,
-                        greenieItemAsset.bufferedImage
+                        GameElementState.ACTIVE,
+                        greenieItemAsset.bufferedImage,
+                        FrameMetadata(1, Cell(1, 1, width, height))
                     )
                 )
             }
@@ -82,26 +82,46 @@ data class GameMap(
             val itemType = MapEnemyType.from(assetService.getEnemyPosition(i).type)
             if (itemType == MapEnemyType.VACUUM) {
                 enemies.add(
-                    MapEnemy(
-                        vacuumEnemyAsset.width,
-                        vacuumEnemyAsset.height,
+                    MapBlockerEnemy(
                         assetService.getEnemyPosition(i).x,
                         assetService.getEnemyPosition(i).y,
+                        vacuumEnemyAsset.width,
+                        vacuumEnemyAsset.height,
+                        GameElementState.ACTIVE,
+                        FrameMetadata(1, Cell(1, 1, width, height)),
+                        vacuumEnemyAsset.bufferedImage,
                         MapEnemyType.VACUUM,
-                        MapItemState.ACTIVE,
-                        vacuumEnemyAsset.bufferedImage
+                        assetService.getEnemyPosition(i).x,
+                        assetService.getItemPosition(i).y,
+                        EnemyPosition(
+                            assetService.getEnemyPosition(i).x,
+                            assetService.getEnemyPosition(i).y,
+                            Direction.LEFT
+                        ),
+                        GameElementCollisionState.FREE,
+                        GameEnemyInteractionState.ISOLATED
                     )
                 )
             } else {
                 enemies.add(
                     MapShooterEnemy(
-                        botEnemyAsset.width,
-                        botEnemyAsset.height,
                         assetService.getEnemyPosition(i).x,
                         assetService.getEnemyPosition(i).y,
+                        botEnemyAsset.width,
+                        botEnemyAsset.height,
+                        GameElementState.INACTIVE,
+                        FrameMetadata(1, Cell(1, 1, width, height)),
+                        botEnemyAsset.bufferedImage,
                         MapEnemyType.BOT,
-                        MapItemState.INACTIVE,
-                        botEnemyAsset.bufferedImage
+                        assetService.getEnemyPosition(i).x,
+                        assetService.getItemPosition(i).y,
+                        EnemyPosition(
+                            assetService.getEnemyPosition(i).x,
+                            assetService.getEnemyPosition(i).y,
+                            Direction.LEFT
+                        ),
+                        GameElementCollisionState.FREE,
+                        GameEnemyInteractionState.ISOLATED
                     )
                 )
             }
@@ -121,56 +141,6 @@ data class GameMap(
         this.particles = ArrayList()
         generateMapItems(greenieItemAsset, finishItemAsset, assetService)
         generateMapEnemies(vacuumEnemyAsset, botEnemyAsset, assetService)
-    }
-
-    fun from(managedMapEnemies: ArrayList<MapEnemy>, managedMapParticles: ArrayList<Particle>): GameMap {
-        return GameMap(
-            this.state,
-            this.farGroundAsset,
-            this.midGroundAsset,
-            this.nearFieldAsset,
-            this.collisionAsset,
-            this.width,
-            this.height,
-            this.items,
-            managedMapEnemies,
-            managedMapParticles
-        )
-    }
-
-    fun from(gameMapState: GameMapState, managedMapItems: ArrayList<MapItem>): GameMap {
-        return GameMap(
-            gameMapState,
-            this.farGroundAsset,
-            this.midGroundAsset,
-            this.nearFieldAsset,
-            this.collisionAsset,
-            this.width,
-            this.height,
-            managedMapItems,
-            this.enemies,
-            this.particles
-        )
-    }
-
-    fun from(
-        gameMapState: GameMapState,
-        managedMapItems: ArrayList<MapItem>,
-        managedMapEnemies: ArrayList<MapEnemy>,
-        managedMapParticles: ArrayList<Particle>
-    ): GameMap {
-        return GameMap(
-            gameMapState,
-            this.farGroundAsset,
-            this.midGroundAsset,
-            this.nearFieldAsset,
-            this.collisionAsset,
-            this.width,
-            this.height,
-            managedMapItems,
-            managedMapEnemies,
-            managedMapParticles
-        )
     }
 
 }

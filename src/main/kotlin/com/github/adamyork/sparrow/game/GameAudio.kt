@@ -29,12 +29,20 @@ class GameAudio {
             .map(Function { _ ->
                 if (audioQueue.queue.isNotEmpty()) {
                     val sound = audioQueue.queue.element()
-                    if (sound == Sounds.PLAYER_COLLISION) {
-                        LOGGER.info("playing player collision audio")
-                    } else if (sound == Sounds.ITEM_COLLECT) {
-                        LOGGER.info("playing item collect audio")
-                    } else if (sound == Sounds.ENEMY_SHOOT) {
-                        LOGGER.info("playing enemy shoott audio")
+                    when (sound) {
+                        Sounds.PLAYER_COLLISION -> {
+                            LOGGER.info("playing player collision audio")
+                        }
+
+                        Sounds.ITEM_COLLECT -> {
+                            LOGGER.info("playing item collect audio")
+                        }
+
+                        Sounds.ENEMY_SHOOT -> {
+                            LOGGER.info("playing enemy shoot audio")
+                        }
+
+                        else -> {}
                     }
                     val bytes = assetService.getSoundStream(sound)
                     audioQueue.queue.remove()

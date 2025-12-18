@@ -16,7 +16,7 @@ class ScoreHandler {
         val LOGGER: Logger = LoggerFactory.getLogger(ScoreHandler::class.java)
     }
 
-    final val scoreService: ScoreService
+    val scoreService: ScoreService
 
     constructor(scoreService: ScoreService) {
         this.scoreService = scoreService

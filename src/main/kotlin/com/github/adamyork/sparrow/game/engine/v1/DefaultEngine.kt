@@ -3,14 +3,19 @@ package com.github.adamyork.sparrow.game.engine.v1
 import com.github.adamyork.sparrow.common.AudioQueue
 import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.GameElement
-import com.github.adamyork.sparrow.game.data.Player
+import com.github.adamyork.sparrow.game.data.GameElementState
 import com.github.adamyork.sparrow.game.data.ViewPort
-import com.github.adamyork.sparrow.game.data.enemy.MapEnemy
-import com.github.adamyork.sparrow.game.data.item.MapItem
-import com.github.adamyork.sparrow.game.data.item.MapItemState
+import com.github.adamyork.sparrow.game.data.enemy.GameEnemy
+import com.github.adamyork.sparrow.game.data.enemy.MapBlockerEnemy
+import com.github.adamyork.sparrow.game.data.enemy.MapEnemyType
+import com.github.adamyork.sparrow.game.data.enemy.MapShooterEnemy
+import com.github.adamyork.sparrow.game.data.item.GameItem
+import com.github.adamyork.sparrow.game.data.item.MapCollectibleItem
+import com.github.adamyork.sparrow.game.data.item.MapFinishItem
 import com.github.adamyork.sparrow.game.data.item.MapItemType
 import com.github.adamyork.sparrow.game.data.map.GameMap
 import com.github.adamyork.sparrow.game.data.map.GameMapState
+import com.github.adamyork.sparrow.game.data.player.Player
 import com.github.adamyork.sparrow.game.data.player.PlayerMovingState
 import com.github.adamyork.sparrow.game.engine.Collision
 import com.github.adamyork.sparrow.game.engine.Engine
@@ -23,10 +28,14 @@ import com.github.adamyork.sparrow.game.service.ScoreService
 import com.github.adamyork.sparrow.game.service.data.ImageAsset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.awt.AlphaComposite
 import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.RenderingHints
 import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
 import java.awt.image.BufferedImage
+import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
 
@@ -64,14 +73,16 @@ class DefaultEngine : Engine {
         this.collision.collisionImage = asset.bufferedImage
     }
 
-    override fun getCollisionBoundaries(player: Player, collisionAsset: ImageAsset): CollisionBoundaries {
+    override fun getCollisionBoundaries(player: Player): CollisionBoundaries {
         return collision.getCollisionBoundaries(player)
     }
 
     override fun managePlayer(player: Player, collisionBoundaries: CollisionBoundaries): Player {
         val physicsAppliedPlayer = physics.applyPlayerPhysics(player, collisionBoundaries, collision)
-        val nextFrameMetadata = physicsAppliedPlayer.getNextFrameCell()
-        return physicsAppliedPlayer.from(physicsAppliedPlayer, nextFrameMetadata)
+        val nextFrameMetadataWithState = physicsAppliedPlayer.getNextFrameMetadataWithState()
+        val metadata = nextFrameMetadataWithState.first
+        val metadataState = nextFrameMetadataWithState.second
+        return physicsAppliedPlayer.copy(frameMetadata = metadata, colliding = metadataState.colliding)
     }
 
     override fun manageViewport(player: Player, viewPort: ViewPort): ViewPort {
@@ -126,14 +137,18 @@ class DefaultEngine : Engine {
             LOGGER.info("all items found map is in completing mode")
             mapState = GameMapState.COMPLETING
         }
-        return gameMap.from(mapState, managedMapItems, managedMapEnemies, managedAllParticles)
+        return gameMap.copy(
+            state = mapState,
+            items = managedMapItems,
+            enemies = managedMapEnemies,
+            particles = managedAllParticles
+        )
     }
 
     override fun manageEnemyAndItemCollision(
         player: Player,
         map: GameMap,
-        viewPort: ViewPort,
-        collisionAsset: ImageAsset
+        viewPort: ViewPort
     ): Pair<Player, GameMap> {
         val nextMap = collision.checkForItemCollision(player, map, audioQueue)
         val enemyCollisionResult =
@@ -149,30 +164,62 @@ class DefaultEngine : Engine {
         return Pair(projectTileCollisionResult.first, projectTileCollisionResult.second)
     }
 
-    private fun manageMapItems(gameMap: GameMap): ArrayList<MapItem> {
+    private fun manageMapItems(gameMap: GameMap): ArrayList<GameItem> {
         return gameMap.items.map { item ->
             val itemX = item.x
             val itemY = item.y
-            val frameMetadata = item.getNextFrameCell()
-            var nextState = item.state
+            val frameMetadataWithState = (item as GameElement).getNextFrameMetadataWithState()
+            val metadata = frameMetadataWithState.first
+            var nextState = frameMetadataWithState.second.state
             if (item.type == MapItemType.FINISH) {
-                if (gameMap.state == GameMapState.COMPLETING && item.state == MapItemState.INACTIVE) {
-                    nextState = MapItemState.ACTIVE
+                if (gameMap.state == GameMapState.COMPLETING && item.state == GameElementState.INACTIVE) {
+                    nextState = GameElementState.ACTIVE
                 }
             }
-            item.from(itemX, itemY, nextState, frameMetadata)
+            if (item.type == MapItemType.FINISH) {
+                (item as MapFinishItem).copy(x = itemX, y = itemY, state = nextState, frameMetadata = metadata)
+            } else {
+                (item as MapCollectibleItem).copy(
+                    x = itemX,
+                    y = itemY,
+                    state = nextState,
+                    frameMetadata = metadata
+                )
+            }
         }.toCollection(ArrayList())
     }
 
-    private fun manageMapEnemies(gameMap: GameMap, player: Player, viewPort: ViewPort): ArrayList<MapEnemy> {
+    private fun manageMapEnemies(gameMap: GameMap, player: Player, viewPort: ViewPort): ArrayList<GameEnemy> {
         return gameMap.enemies.map { enemy ->
             val nextState = enemy.getNextEnemyState(player)
-            if (nextState != MapItemState.INACTIVE) {
-                val nextPosition = enemy.getNextPosition(player, viewPort)
+            if (nextState != GameElementState.INACTIVE) {
+                val nextPosition = enemy.getNextPosition(viewPort)
                 val itemX = nextPosition.x
                 val itemY = nextPosition.y
-                val frameMetadata = enemy.getNextFrameCell()
-                enemy.from(itemX, itemY, nextState, frameMetadata, nextPosition, enemy.colliding, enemy.interacting)
+                val frameMetadataWithState = (enemy as GameElement).getNextFrameMetadataWithState()
+                val metadata = frameMetadataWithState.first
+                val metadataState = frameMetadataWithState.second
+                if (enemy.type == MapEnemyType.BOT) {
+                    (enemy as MapShooterEnemy).copy(
+                        x = itemX,
+                        y = itemY,
+                        state = nextState,
+                        frameMetadata = metadata,
+                        enemyPosition = nextPosition,
+                        colliding = metadataState.colliding,
+                        interacting = metadataState.interacting
+                    )
+                } else {
+                    (enemy as MapBlockerEnemy).copy(
+                        x = itemX,
+                        y = itemY,
+                        state = nextState,
+                        frameMetadata = metadata,
+                        enemyPosition = nextPosition,
+                        colliding = metadataState.colliding,
+                        interacting = metadataState.interacting
+                    )
+                }
             } else {
                 enemy
             }
@@ -185,21 +232,46 @@ class DefaultEngine : Engine {
         player: Player
     ): ByteArray {
         val compositeImage = BufferedImage(viewPort.width, viewPort.height, BufferedImage.TYPE_BYTE_INDEXED)
-        val graphics = compositeImage.graphics
+        val graphics: Graphics2D = compositeImage.graphics as Graphics2D
+        graphics.composite = AlphaComposite.SrcOver
+        graphics.setRenderingHint(
+            RenderingHints.KEY_ALPHA_INTERPOLATION,
+            RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED
+        )
+        graphics.setRenderingHint(
+            RenderingHints.KEY_RENDERING,
+            RenderingHints.VALUE_RENDER_SPEED
+        )
+        graphics.setRenderingHint(
+            RenderingHints.KEY_INTERPOLATION,
+            RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR
+        )
 
         drawBackground(map, viewPort, graphics)
         drawStatusText(map, graphics)
-        drawMapElements(map.items.toCollection(ArrayList()), viewPort, graphics, false)
-        drawMapElements(map.enemies.toCollection(ArrayList()), viewPort, graphics, true)
+        drawMapElements(
+            map.items.map { item -> item as GameElement }.toCollection(ArrayList()),
+            viewPort,
+            graphics,
+            false
+        )
+        drawMapElements(
+            map.enemies.map { item -> item as GameElement }.toCollection(ArrayList()),
+            viewPort,
+            graphics,
+            true
+        )
         drawParticles(map, viewPort, graphics)
         drawPlayer(player, viewPort, graphics)
 
         val backgroundBuffer = ByteArrayOutputStream()
+        val bufferedOutputStream = BufferedOutputStream(backgroundBuffer)
         ImageIO.setUseCache(false)
-        ImageIO.write(compositeImage, "bmp", backgroundBuffer)
+        ImageIO.write(compositeImage, "bmp", bufferedOutputStream)
         compositeImage.graphics.dispose()
         val gameBytes = backgroundBuffer.toByteArray()
         backgroundBuffer.reset()
+        bufferedOutputStream.close()
         return gameBytes
     }
 
@@ -284,7 +356,7 @@ class DefaultEngine : Engine {
     ) {
         elements.forEach { element ->
             val localCord = viewPort.globalToLocal(element.x, element.y)
-            if (element.state != MapItemState.INACTIVE) {
+            if (element.state != GameElementState.INACTIVE) {
                 var itemSubImage = element.bufferedImage.getSubimage(
                     element.frameMetadata.cell.x,
                     element.frameMetadata.cell.y,

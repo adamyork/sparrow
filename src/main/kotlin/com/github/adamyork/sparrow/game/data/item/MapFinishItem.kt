@@ -1,12 +1,21 @@
 package com.github.adamyork.sparrow.game.data.item
 
-import com.github.adamyork.sparrow.game.data.Cell
-import com.github.adamyork.sparrow.game.data.FrameMetadata
+import com.github.adamyork.sparrow.game.data.*
+import com.github.adamyork.sparrow.game.data.enemy.GameEnemyInteractionState
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 
-class MapFinishItem : MapItem {
+data class MapFinishItem(
+    override val width: Int,
+    override val height: Int,
+    override val x: Int,
+    override val y: Int,
+    override val type: MapItemType,
+    override val state: GameElementState,
+    override val bufferedImage: BufferedImage,
+    override val frameMetadata: FrameMetadata
+) : GameItem {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(MapFinishItem::class.java)
@@ -14,95 +23,46 @@ class MapFinishItem : MapItem {
         const val ANIMATION_ACTIVE_FRAMES = 1
     }
 
-    constructor(
-        width: Int,
-        height: Int,
-        x: Int,
-        y: Int,
-        type: MapItemType,
-        state: MapItemState,
-        bufferedImage: BufferedImage
-    ) : super(
-        width,
-        height,
-        x,
-        y,
-        type,
-        state,
-        bufferedImage
-    )
+    var activeFrames: HashMap<Int, FrameMetadata> = HashMap()
+    var deactivatingFrames: HashMap<Int, FrameMetadata> = HashMap()
 
-    constructor(
-        width: Int,
-        height: Int,
-        x: Int,
-        y: Int,
-        type: MapItemType,
-        state: MapItemState,
-        bufferedImage: BufferedImage,
-        frameMetadata: FrameMetadata,
-    ) : super(
-        width,
-        height,
-        x,
-        y,
-        type,
-        state,
-        bufferedImage,
-        frameMetadata
-    )
+    init {
+        generateAnimationFrameIndex()
+    }
 
-    override fun getNextFrameCell(): FrameMetadata {
-        if (state == MapItemState.DEACTIVATING) {
+    override fun getFirstDeactivatingFrame(): FrameMetadata {
+        TODO("Not yet implemented")
+    }
+
+    override fun getNextFrameMetadataWithState(): Pair<FrameMetadata, FrameMetadataState> {
+        var metadata = activeFrames[1] ?: throw RuntimeException("missing animation frame")
+        val metadataState =
+            FrameMetadataState(
+                GameElementCollisionState.FREE,
+                GameEnemyInteractionState.ISOLATED,
+                state
+            )
+        if (state == GameElementState.DEACTIVATING) {
             if (frameMetadata.frame == ANIMATION_DEACTIVATING_FRAMES) {
                 LOGGER.info("deactivating complete 0")
-                return FrameMetadata(1, Cell(1, 1, width, height))
+                return Pair(metadata, metadataState)
             } else {
                 val nextFrame = frameMetadata.frame + 1
                 LOGGER.info("deactivating frame $nextFrame")
-                return deactivatingFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, width, height))
+                metadata = deactivatingFrames[nextFrame] ?: FrameMetadata(1, Cell(1, 1, width, height))
+                return Pair(metadata, metadataState)
             }
         }
-        if (state == MapItemState.ACTIVE) {
-            if (frameMetadata.frame == ANIMATION_ACTIVE_FRAMES) {
-                return FrameMetadata(1, Cell(1, 1, width, height))
-            } else {
-                val nextFrame = frameMetadata.frame + 1
-                return activeFrames.get(nextFrame) ?: FrameMetadata(1, Cell(1, 1, width, height))
-            }
-        }
-        return FrameMetadata(1, Cell(1, 1, width, height))
+        return getNextActiveMetadataWithState(activeFrames)
     }
 
-    override fun generateAnimationFrameIndex() {
+    override fun nestedDirection(): Direction {
+        TODO("Not yet implemented")
+    }
+
+    private fun generateAnimationFrameIndex() {
         activeFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
         deactivatingFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
-    }
-
-    override fun from(state: MapItemState, frameMetadata: FrameMetadata): MapFinishItem {
-        return MapFinishItem(
-            this.width,
-            this.height,
-            this.x,
-            this.y,
-            this.type,
-            state,
-            this.bufferedImage,
-            frameMetadata
-        )
-    }
-
-    override fun from(x: Int, y: Int, state: MapItemState, frameMetadata: FrameMetadata): MapFinishItem {
-        return MapFinishItem(
-            this.width,
-            this.height,
-            x,
-            y,
-            this.type,
-            state,
-            this.bufferedImage,
-            frameMetadata
-        )
     }
 
 }

@@ -8,7 +8,9 @@ import com.github.adamyork.sparrow.game.service.WavService
 import com.github.adamyork.sparrow.game.service.data.ImageAsset
 import com.github.adamyork.sparrow.game.service.data.ItemPositionAndType
 import com.github.adamyork.sparrow.game.service.data.TextAsset
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.reactor.mono
+import kotlinx.coroutines.withContext
 import net.mamoe.yamlkt.Yaml
 import net.mamoe.yamlkt.YamlMap
 import org.slf4j.Logger
@@ -21,6 +23,7 @@ import java.awt.image.BufferedImage
 import java.io.File
 import java.net.URI
 import java.net.URL
+import java.util.*
 import javax.imageio.ImageIO
 
 
@@ -35,7 +38,7 @@ class DefaultAssetService : AssetService {
     val wavService: WavService
 
     //sounds
-    val soundBytesMap: HashMap<Sounds, ByteArray> = HashMap()
+    val soundBytesMap: EnumMap<Sounds, ByteArray> = EnumMap(Sounds::class.java)
     override var backgroundMusicBytesMap: HashMap<Int, ByteArray> = HashMap()
 
     //viewport
@@ -76,7 +79,7 @@ class DefaultAssetService : AssetService {
     val enemyPositions: YamlMap
 
     //text
-    val textAssetMap: HashMap<GameMapState, TextAsset> = HashMap()
+    val textAssetMap: EnumMap<GameMapState, TextAsset> = EnumMap(GameMapState::class.java)
 
     constructor(
         wavService: WavService,
@@ -207,7 +210,9 @@ class DefaultAssetService : AssetService {
     }
 
     override suspend fun loadBufferedImageAsync(file: File): BufferedImage {
-        return ImageIO.read(file)
+        return withContext(Dispatchers.IO) {
+            ImageIO.read(file)
+        }
     }
 
     override fun loadMap(id: Int): Mono<GameMap> {
@@ -372,7 +377,7 @@ class DefaultAssetService : AssetService {
 
     private fun urlToBytes(url: URL?): ByteArray {
         val file = urlToFile(url)
-        return AssetService.Companion.getBytes(file)
+        return AssetService.getBytes(file)
     }
 
 }

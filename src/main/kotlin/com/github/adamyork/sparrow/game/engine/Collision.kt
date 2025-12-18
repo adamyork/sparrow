@@ -1,7 +1,7 @@
 package com.github.adamyork.sparrow.game.engine
 
 import com.github.adamyork.sparrow.common.AudioQueue
-import com.github.adamyork.sparrow.game.data.Player
+import com.github.adamyork.sparrow.game.data.player.Player
 import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.data.map.GameMap
 import com.github.adamyork.sparrow.game.engine.data.CollisionBoundaries
