@@ -91,11 +91,11 @@ class DefaultPhysics : Physics {
         }
         val playerRect = Rectangle(nextX, player.y, player.width, player.height)
         if (playerRect.intersects(collisionRect)) {
-            LOGGER.info("adjusted player for collision but still colliding !")
+            LOGGER.info("adjusted player for collision but still colliding ! ${player.direction}")
             if (player.direction == Direction.LEFT) {
-                nextX -= collisionRect.width
+                nextX -= collisionRect.width * 2
             } else {
-                nextX += collisionRect.width
+                nextX += collisionRect.width * 2
             }
         }
         return player.copy(x = nextX, vx = 0.0, colliding = GameElementCollisionState.COLLIDING)

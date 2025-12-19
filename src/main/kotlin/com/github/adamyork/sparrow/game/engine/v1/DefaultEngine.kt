@@ -1,6 +1,7 @@
 package com.github.adamyork.sparrow.game.engine.v1
 
 import com.github.adamyork.sparrow.common.AudioQueue
+import com.github.adamyork.sparrow.common.GameStatusProvider
 import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.GameElement
 import com.github.adamyork.sparrow.game.data.GameElementState
@@ -36,8 +37,10 @@ import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
 import java.awt.image.BufferedImage
 import java.io.BufferedOutputStream
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 
 class DefaultEngine : Engine {
@@ -52,6 +55,7 @@ class DefaultEngine : Engine {
     val audioQueue: AudioQueue
     val scoreService: ScoreService
     val assetService: AssetService
+    val gameStatusProvider: GameStatusProvider
 
     constructor(
         physics: Physics,
@@ -59,7 +63,8 @@ class DefaultEngine : Engine {
         particles: Particles,
         audioQueue: AudioQueue,
         scoreService: ScoreService,
-        assetService: AssetService
+        assetService: AssetService,
+        gameStatusProvider: GameStatusProvider
     ) {
         this.physics = physics
         this.particles = particles
@@ -67,6 +72,7 @@ class DefaultEngine : Engine {
         this.collision = collision
         this.scoreService = scoreService
         this.assetService = assetService
+        this.gameStatusProvider = gameStatusProvider
     }
 
     override fun setCollisionBufferedImage(asset: ImageAsset) {
@@ -226,6 +232,7 @@ class DefaultEngine : Engine {
         }.toCollection(ArrayList())
     }
 
+    @OptIn(ExperimentalAtomicApi::class)
     override fun draw(
         map: GameMap,
         viewPort: ViewPort,
@@ -247,7 +254,20 @@ class DefaultEngine : Engine {
             RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR
         )
 
-        drawBackground(map, viewPort, graphics)
+        if (gameStatusProvider.lastBackgroundComposite.load().width == 1) {
+            val compositeBackgroundImage = compositeBackground(map, viewPort)
+            gameStatusProvider.lastBackgroundComposite.store(compositeBackgroundImage)
+        }
+
+        if (viewPort.x != viewPort.lastX || viewPort.y != viewPort.lastY) {
+            LOGGER.info("view port has moved need to redraw background")
+            val compositeBackgroundImage = compositeBackground(map, viewPort)
+            gameStatusProvider.lastBackgroundComposite.store(compositeBackgroundImage)
+            graphics.drawImage(compositeBackgroundImage, 0, 0, null)
+        } else {
+            graphics.drawImage(gameStatusProvider.lastBackgroundComposite.load(), 0, 0, null)
+        }
+
         drawStatusText(map, graphics)
         drawMapElements(
             map.items.map { item -> item as GameElement }.toCollection(ArrayList()),
@@ -264,18 +284,11 @@ class DefaultEngine : Engine {
         drawParticles(map, viewPort, graphics)
         drawPlayer(player, viewPort, graphics)
 
-        val backgroundBuffer = ByteArrayOutputStream()
-        val bufferedOutputStream = BufferedOutputStream(backgroundBuffer)
-        ImageIO.setUseCache(false)
-        ImageIO.write(compositeImage, "bmp", bufferedOutputStream)
-        compositeImage.graphics.dispose()
-        val gameBytes = backgroundBuffer.toByteArray()
-        backgroundBuffer.reset()
-        bufferedOutputStream.close()
-        return gameBytes
+        return createByteArrayFromCompositeImage(compositeImage)
     }
 
-    private fun drawBackground(map: GameMap, viewPort: ViewPort, graphics: Graphics) {
+    private fun compositeBackground(map: GameMap, viewPort: ViewPort): BufferedImage {
+        val bgCompositeImage = BufferedImage(viewPort.width, viewPort.height, BufferedImage.TYPE_BYTE_INDEXED)
         val farGroundSubImage = getSubImage(
             map.farGroundAsset.bufferedImage,
             map.getFarGroundX(viewPort),
@@ -294,10 +307,25 @@ class DefaultEngine : Engine {
             getSubImage(map.nearFieldAsset.bufferedImage, viewPort.x, viewPort.y, viewPort.width, viewPort.height)
         val collisionSubImage =
             getSubImage(map.collisionAsset.bufferedImage, viewPort.x, viewPort.y, viewPort.width, viewPort.height)
-        graphics.drawImage(farGroundSubImage, 0, 0, null)
-        graphics.drawImage(midGroundSubImage, 0, 0, null)
-        graphics.drawImage(nearFieldSubImage, 0, 0, null)
-        graphics.drawImage(collisionSubImage, 0, 0, null)
+        bgCompositeImage.graphics.drawImage(farGroundSubImage, 0, 0, null)
+        bgCompositeImage.graphics.drawImage(midGroundSubImage, 0, 0, null)
+        bgCompositeImage.graphics.drawImage(nearFieldSubImage, 0, 0, null)
+        bgCompositeImage.graphics.drawImage(collisionSubImage, 0, 0, null)
+        val bytes = createByteArrayFromCompositeImage(bgCompositeImage)
+        val bais = ByteArrayInputStream(bytes)
+        return ImageIO.read(bais)
+    }
+
+    private fun createByteArrayFromCompositeImage(compositeImage: BufferedImage): ByteArray {
+        val backgroundBuffer = ByteArrayOutputStream()
+        val bufferedOutputStream = BufferedOutputStream(backgroundBuffer)
+        ImageIO.setUseCache(false)
+        ImageIO.write(compositeImage, "bmp", bufferedOutputStream)
+        compositeImage.graphics.dispose()
+        val bytes = backgroundBuffer.toByteArray()
+        backgroundBuffer.reset()
+        bufferedOutputStream.close()
+        return bytes
     }
 
     private fun drawPlayer(player: Player, viewPort: ViewPort, graphics: Graphics) {

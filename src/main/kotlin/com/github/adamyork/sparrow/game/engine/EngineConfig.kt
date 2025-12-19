@@ -30,9 +30,10 @@ class EngineConfig {
         particles: Particles,
         audioQueue: AudioQueue,
         scoreService: ScoreService,
-        assetService: AssetService
+        assetService: AssetService,
+        gameStatusProvider: GameStatusProvider
     ): Engine {
-        return DefaultEngine(physics, collision, particles, audioQueue, scoreService, assetService)
+        return DefaultEngine(physics, collision, particles, audioQueue, scoreService, assetService, gameStatusProvider)
     }
 
 }
