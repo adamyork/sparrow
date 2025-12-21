@@ -24,9 +24,6 @@ data class Player(
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(Player::class.java)
-        const val MAX_X_VELOCITY: Double = 16.0
-        const val MAX_Y_VELOCITY: Double = 32.0
-        const val JUMP_DISTANCE: Int = 256
         const val ANIMATION_MOVING_FRAMES = 4
         const val ANIMATION_JUMPING_FRAMES = 8
         const val ANIMATION_COLLISION_FRAMES = 8

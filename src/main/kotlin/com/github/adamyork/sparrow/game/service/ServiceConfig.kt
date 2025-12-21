@@ -1,6 +1,7 @@
 package com.github.adamyork.sparrow.game.service
 
 import com.github.adamyork.sparrow.game.service.v1.DefaultAssetService
+import com.github.adamyork.sparrow.game.service.v1.DefaultPhysicsSettingsService
 import com.github.adamyork.sparrow.game.service.v1.DefaultScoreService
 import com.github.adamyork.sparrow.game.service.v1.DefaultWavService
 import org.springframework.beans.factory.annotation.Value
@@ -15,6 +16,9 @@ class ServiceConfig {
 
     @Bean
     fun scoreService(): ScoreService = DefaultScoreService()
+
+    @Bean
+    fun physicsSettingsService(): PhysicsSettingsService = DefaultPhysicsSettingsService()
 
     @Bean
     fun assetService(

@@ -34,7 +34,7 @@
     background-color: #ffffffa6;
 }
 
-.scoreContainer table caption{
+.scoreContainer table caption {
     background-color: #ffffffa6;
 }
 
@@ -47,8 +47,21 @@ button {
 }
 
 button:disabled,
-button[disabled]{
+button[disabled] {
     border: 1px solid #999999;
     background-color: #cccccc;
     color: #666666;
+}
+
+form {
+    font-size: 10pt
+}
+
+form label {
+    width: 200px
+}
+
+form div label {
+    display: inline-block;
+    vertical-align: super;
 }

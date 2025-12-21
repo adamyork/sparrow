@@ -42,6 +42,61 @@
         <button id="start">Start</button>
         <button id="pause">Pause</button>
     </div>
+    <div class="text-align-center">
+        <form id="physicsForm">
+            <div>
+                <label for="maxXVelocityRange">MAX_X_VELOCITY</label>
+                <input class="slider" id="maxXVelocityRange" max="64.0" min="2.0" step="2.0" type="range" value="16.0">
+                <label id="maxXVelocityRangeValue">Some Value</label>
+            </div>
+            <div>
+                <label for="maxYVelocityRange">MAX_Y_VELOCITY</label>
+                <input class="slider" id="maxYVelocityRange" max="64.0" min="2.0" step="2.0" type="range" value="32.0">
+                <label id="maxYVelocityRangeValue">Some Value</label>
+            </div>
+            <div>
+                <label for="jumpDistanceRange">JUMP_DISTANCE</label>
+                <input class="slider" id="jumpDistanceRange" max="512.0" min="2.0" step="2.0" type="range"
+                       value="256.0">
+                <label id="jumpDistanceRangeValue">Some Value</label>
+            </div>
+            <div>
+                <label for="gravityRange">GRAVITY</label>
+                <input class="slider" id="gravityRange" max="128.0" min="2.0" step="2.0" type="range" value="20.0">
+                <label id="gravityRangeValue">Some Value</label>
+            </div>
+            <div>
+                <label for="frictionRange">FRICTION</label>
+                <input class="slider" id="frictionRange" max="2.0" min="0.0" step="0.1" type="range" value="0.9">
+                <label id="frictionRangeValue">Some Value</label>
+            </div>
+            <div>
+                <label for="yVelocityCoefficientRange">Y_VELOCITY_COEFFICIENT</label>
+                <input class="slider" id="yVelocityCoefficientRange" max="2.0" min="0.1" step="0.1" type="range"
+                       value="0.5">
+                <label id="yVelocityCoefficientRangeValue">Some Value</label>
+            </div>
+            <div>
+                <label for="xMovementDistanceRange">X_MOVEMENT_DISTANCE</label>
+                <input class="slider" id="xMovementDistanceRange" max="64.0" min="1.0" step="1.0" type="range"
+                       value="1.0">
+                <label id="xMovementDistanceRangeValue">Some Value</label>
+            </div>
+            <div>
+                <label for="xAccelerationRateRange">X_ACCELERATION_RATE</label>
+                <input class="slider" id="xAccelerationRateRange" max="16.0" min="0.1" step="0.1" type="range"
+                       value="1.5">
+                <label id="xAccelerationRateRangeValue">Some Value</label>
+            </div>
+            <div>
+                <label for="xDeaccelerationRateRange">X_DEACCELERATION_RATE</label>
+                <input class="slider" id="xDeaccelerationRateRange" max="16.0" min="0.1" step="0.1" type="range"
+                       value="4.0">
+                <label id="xDeaccelerationRateRangeValue">Some Value</label>
+            </div>
+            <button type="submit">Apply</button>
+        </form>
+    </div>
 </div>
 
 

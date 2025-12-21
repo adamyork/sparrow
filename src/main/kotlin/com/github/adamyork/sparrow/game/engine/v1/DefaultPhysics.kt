@@ -5,11 +5,11 @@ import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.GameElementCollisionState
 import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.data.player.Player
-import com.github.adamyork.sparrow.game.data.player.Player.Companion.JUMP_DISTANCE
 import com.github.adamyork.sparrow.game.data.player.PlayerMovingState
 import com.github.adamyork.sparrow.game.engine.Collision
 import com.github.adamyork.sparrow.game.engine.Physics
 import com.github.adamyork.sparrow.game.engine.data.*
+import com.github.adamyork.sparrow.game.service.PhysicsSettingsService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.Rectangle
@@ -21,18 +21,17 @@ class DefaultPhysics : Physics {
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(DefaultPhysics::class.java)
-        const val GRAVITY: Double = 20.0
-        const val FRICTION: Double = 0.9
-        const val Y_VELOCITY_COEFFICIENT: Double = 0.5
-        const val X_MOVEMENT_DISTANCE: Double = 1.0
-        const val X_ACCELERATION_RATE: Double = 1.5
-        const val X_DEACCELERATION_RATE: Double = 4.0
     }
 
     val gameStatusProvider: GameStatusProvider
+    val physicsSettingsService: PhysicsSettingsService
 
-    constructor(gameStatusProvider: GameStatusProvider) {
+    constructor(
+        gameStatusProvider: GameStatusProvider,
+        physicsSettingsService: PhysicsSettingsService
+    ) {
         this.gameStatusProvider = gameStatusProvider
+        this.physicsSettingsService = physicsSettingsService
     }
 
     override fun applyPlayerPhysics(
@@ -105,16 +104,17 @@ class DefaultPhysics : Physics {
         var nextVx: Double = playerVx
         if (playerMoving == PlayerMovingState.MOVING) {
             if (nextVx == 0.0) {
-                nextVx = X_MOVEMENT_DISTANCE
+                nextVx = physicsSettingsService.xMovementDistance
             }
-            nextVx = X_MOVEMENT_DISTANCE * (nextVx * X_ACCELERATION_RATE)
-            nextVx *= FRICTION
-            if (nextVx > Player.MAX_X_VELOCITY) {
-                nextVx = Player.MAX_X_VELOCITY
+            nextVx =
+                physicsSettingsService.xMovementDistance * (nextVx * physicsSettingsService.xAccelerationRate)
+            nextVx *= physicsSettingsService.friction
+            if (nextVx > physicsSettingsService.maxXVelocity) {
+                nextVx = physicsSettingsService.maxXVelocity
             }
         } else {
             if (nextVx > 0.0) {
-                nextVx -= X_DEACCELERATION_RATE
+                nextVx -= physicsSettingsService.xDeaccelerationRate
                 if (nextVx < 0) {
                     nextVx = 0.0
                 }
@@ -134,11 +134,11 @@ class DefaultPhysics : Physics {
         if (playerJumping) {
             if (nextVy == 0.0 && playerIsOnFloor) {
                 LOGGER.info("starting a jump")
-                nextVy += JUMP_DISTANCE / 2
-            } else if (nextVy < Player.MAX_Y_VELOCITY) {
-                nextVy += (Y_VELOCITY_COEFFICIENT * nextVy)
-                if (nextVy > Player.MAX_Y_VELOCITY) {
-                    nextVy = Player.MAX_Y_VELOCITY
+                nextVy += physicsSettingsService.jumpDistance / 2
+            } else if (nextVy < physicsSettingsService.maxYVelocity) {
+                nextVy += (physicsSettingsService.yVelocityCoefficient * nextVy)
+                if (nextVy > physicsSettingsService.maxYVelocity) {
+                    nextVy = physicsSettingsService.maxYVelocity
                 }
             }
         } else {
@@ -182,7 +182,7 @@ class DefaultPhysics : Physics {
         playerJumping: Boolean,
         collisionBoundaries: CollisionBoundaries
     ): PhysicsYResult {
-        var destinationY = playerY + GRAVITY.roundToInt()
+        var destinationY = playerY + physicsSettingsService.gravity.roundToInt()
         var nextPlayerJumping = playerJumping
         var nextPlayerVy = vy
         val playerIsOnFloor = playerY == collisionBoundaries.bottom
@@ -194,7 +194,7 @@ class DefaultPhysics : Physics {
             destinationY -= (vy * deltaTime).roundToInt()
         }
         if (playerJumping) {
-            val jumpBoundary = collisionBoundaries.bottom - JUMP_DISTANCE
+            val jumpBoundary = collisionBoundaries.bottom - physicsSettingsService.jumpDistance
             if (destinationY <= jumpBoundary) {
                 LOGGER.info("jump height reached")
                 nextPlayerJumping = false
@@ -236,7 +236,10 @@ class DefaultPhysics : Physics {
                             )
                     } else {
                         if (particle.frame <= particle.lifetime) {
-                            position = Pair(particle.x.toFloat(), particle.y.toFloat() + GRAVITY.toFloat())
+                            position = Pair(
+                                particle.x.toFloat(),
+                                particle.y.toFloat() + physicsSettingsService.gravity.toFloat()
+                            )
                         }
                     }
                     particle.copy(

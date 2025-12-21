@@ -7,6 +7,7 @@ import com.github.adamyork.sparrow.game.engine.v1.DefaultEngine
 import com.github.adamyork.sparrow.game.engine.v1.DefaultParticles
 import com.github.adamyork.sparrow.game.engine.v1.DefaultPhysics
 import com.github.adamyork.sparrow.game.service.AssetService
+import com.github.adamyork.sparrow.game.service.PhysicsSettingsService
 import com.github.adamyork.sparrow.game.service.ScoreService
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -15,7 +16,10 @@ import org.springframework.context.annotation.Configuration
 class EngineConfig {
 
     @Bean
-    fun physics(gameStatusProvider: GameStatusProvider): Physics = DefaultPhysics(gameStatusProvider)
+    fun physics(
+        gameStatusProvider: GameStatusProvider,
+        physicsSettingsService: PhysicsSettingsService
+    ): Physics = DefaultPhysics(gameStatusProvider, physicsSettingsService)
 
     @Bean
     fun collision(physics: Physics): Collision = DefaultCollision(physics)
