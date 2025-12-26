@@ -1,6 +1,7 @@
 # TODO
+- Lose A Greenie
 - Goal Map Item
-- Enemy Asset
+- Vacuum Asset
 - Enemy Placement
 - Item Placement
 - Code Clean up Todo

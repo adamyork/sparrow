@@ -37,6 +37,7 @@ class SocketConfig {
         @Value("\${viewport.y}") viewPortInitialY: Int,
         @Value("\${viewport.width}") viewPortWidth: Int,
         @Value("\${viewport.height}") viewPortHeight: Int,
+        @Value("\${engine.fps.max}") fpsMax: Int,
     ): HandlerMapping {
         val handlers: MutableMap<String?, WebSocketHandler?> = HashMap()
         val game = Game(
@@ -49,7 +50,8 @@ class SocketConfig {
             viewPortInitialX,
             viewPortInitialY,
             viewPortWidth,
-            viewPortHeight
+            viewPortHeight,
+            fpsMax
         )
         val gameAudio = GameAudio(assetService, audioQueue)
         handlers["/game"] = GameHandler(game, assetService, engine, scoreService, gameStatusProvider)

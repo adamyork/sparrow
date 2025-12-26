@@ -104,6 +104,11 @@ startButton.addEventListener("click", () => {
         document.game.socket.send("START");
     });
     document.game.socket.addEventListener("message", (event) => {
+        if (event.data.size === 0) {
+            document.game.sendTime = Date.now();
+            document.game.socket.send("NEXT");
+            return
+        }
         let blob = new Blob([event.data]);
         let maybeArrayBuffer = blob.arrayBuffer()
         maybeArrayBuffer.then(() => {
@@ -121,7 +126,7 @@ startButton.addEventListener("click", () => {
                 document.game.gameAudioSocket.send("NEXT");
                 document.game.drawCyclesCompleted++;
             };
-        });
+        })
         if (Date.now() - document.game.lastFetchedScore >= 1000) {
             let total = document.getElementById("total");
             let remaining = document.getElementById("remaining");

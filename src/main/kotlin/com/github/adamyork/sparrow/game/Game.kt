@@ -36,6 +36,7 @@ class Game {
     val viewPortInitialY: Int
     val viewPortWidth: Int
     val viewPortHeight: Int
+    val fpsMax: Int
 
 
     lateinit var viewPort: ViewPort
@@ -58,6 +59,7 @@ class Game {
         viewPortInitialY: Int,
         viewPortWidth: Int,
         viewPortHeight: Int,
+        fpsMax: Int,
     ) {
         this.assetService = assetService
         this.engine = engine
@@ -69,6 +71,7 @@ class Game {
         this.viewPortInitialY = viewPortInitialY
         this.viewPortWidth = viewPortWidth
         this.viewPortHeight = viewPortHeight
+        this.fpsMax = fpsMax
     }
 
     fun init(): Mono<Boolean> {
@@ -124,16 +127,24 @@ class Game {
             .collectList()
             .map(Function { _ ->
                 if (gameStatusProvider.running.load()) {
-                    val collisionBoundaries = engine.getCollisionBoundaries(player)
-                    player = engine.managePlayer(player, collisionBoundaries)
-                    viewPort = engine.manageViewport(player, viewPort)
-                    gameMap = engine.manageMap(player, gameMap, viewPort)
-                    val nextPlayerAndMap = engine.manageEnemyAndItemCollision(player, gameMap, viewPort)
-                    player = nextPlayerAndMap.first
-                    gameMap = nextPlayerAndMap.second
-                    scoreService.gameMapItem = gameMap.items
-                    gameStatusProvider.lastPaintTime.store(System.currentTimeMillis().toInt())
-                    engine.draw(gameMap, viewPort, player)
+                    val lastPaintMs = gameStatusProvider.lastPaintTime.load()
+                    val nextPaintTimeMs = System.currentTimeMillis().toInt()
+                    val deltaTime = nextPaintTimeMs - lastPaintMs
+                    val fpsMaxDeltaTimeMs = 1000 / fpsMax
+                    if (deltaTime < fpsMaxDeltaTimeMs) {
+                        ByteArray(0)
+                    } else {
+                        val collisionBoundaries = engine.getCollisionBoundaries(player)
+                        player = engine.managePlayer(player, collisionBoundaries)
+                        viewPort = engine.manageViewport(player, viewPort)
+                        gameMap = engine.manageMap(player, gameMap, viewPort)
+                        val nextPlayerAndMap = engine.manageEnemyAndItemCollision(player, gameMap, viewPort)
+                        player = nextPlayerAndMap.first
+                        gameMap = nextPlayerAndMap.second
+                        scoreService.gameMapItem = gameMap.items
+                        gameStatusProvider.lastPaintTime.store(nextPaintTimeMs)
+                        engine.draw(gameMap, viewPort, player)
+                    }
                 } else {
                     ByteArray(0)
                 }

@@ -2,6 +2,7 @@ package com.github.adamyork.sparrow.common
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.awt.image.BufferedImage
 import kotlin.concurrent.atomics.AtomicBoolean
@@ -18,21 +19,37 @@ class GameStatusProvider {
         val LOGGER: Logger = LoggerFactory.getLogger(GameStatusProvider::class.java)
     }
 
+    final val fpsMax: Int
+    final val fpsMin: Int
+
+    constructor(
+        @Value("\${engine.fps.max}") fpsMax: Int,
+        @Value("\${engine.fps.min}") fpsMin: Int
+    ) {
+        this.fpsMax = fpsMax
+        this.fpsMin = fpsMin
+    }
+
     val running: AtomicBoolean = AtomicBoolean(false)
     val lastPaintTime: AtomicInt = AtomicInt(0)
     val backgroundMusicChunk: AtomicInt = AtomicInt(0)
     val lastBackgroundComposite: AtomicReference<BufferedImage> =
         AtomicReference(BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB))
 
-    fun getDeltaTime(): Int {
-        var deltaTime = (System.currentTimeMillis().toInt() - lastPaintTime.load()) / 60
-        if (deltaTime <= 0) {
-            deltaTime = 1
+    fun getDeltaTime(): Double {
+        val targetDeltaTimeMs = 1000 / fpsMax
+        val deltaTime = System.currentTimeMillis().toInt() - lastPaintTime.load()
+        if (deltaTime > targetDeltaTimeMs) {
+            val deltaTimePercent: Double = (deltaTime - targetDeltaTimeMs).toDouble() / targetDeltaTimeMs.toDouble()
+            val numOfFramesDropped = fpsMax * deltaTimePercent
+            if ((fpsMax - numOfFramesDropped.toInt()) < fpsMin) {
+                //LOGGER.info("FPS drop detected; long deltaTime $deltaTimePercent percent; frames: $numOfFramesDropped")
+                return 1.0 + deltaTimePercent
+            } else {
+                return 1.0
+            }
         }
-        if (deltaTime >= 3) {
-            LOGGER.warn("long deltaTime detected: $deltaTime")
-        }
-        return deltaTime
+        return 1.0
     }
 
 }
