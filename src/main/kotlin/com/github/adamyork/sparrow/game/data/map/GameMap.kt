@@ -57,7 +57,8 @@ data class GameMap(
                         MapItemType.FINISH,
                         GameElementState.INACTIVE,
                         finishItemAsset.bufferedImage,
-                        FrameMetadata(1, Cell(1, 1, width, height))
+                        FrameMetadata(1, Cell(1, 1, width, height)),
+                        i
                     )
                 )
             } else {
@@ -70,7 +71,8 @@ data class GameMap(
                         MapItemType.COLLECTABLE,
                         GameElementState.ACTIVE,
                         greenieItemAsset.bufferedImage,
-                        FrameMetadata(1, Cell(1, 1, width, height))
+                        FrameMetadata(1, Cell(1, 1, width, height)),
+                        i
                     )
                 )
             }

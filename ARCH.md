@@ -1,5 +1,5 @@
 # TODO
-- Lose A Greenie
+- Bitmap Particle
 - Goal Map Item
 - Vacuum Asset
 - Enemy Placement

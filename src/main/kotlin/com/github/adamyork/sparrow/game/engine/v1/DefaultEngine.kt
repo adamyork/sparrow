@@ -2,10 +2,7 @@ package com.github.adamyork.sparrow.game.engine.v1
 
 import com.github.adamyork.sparrow.common.AudioQueue
 import com.github.adamyork.sparrow.common.GameStatusProvider
-import com.github.adamyork.sparrow.game.data.Direction
-import com.github.adamyork.sparrow.game.data.GameElement
-import com.github.adamyork.sparrow.game.data.GameElementState
-import com.github.adamyork.sparrow.game.data.ViewPort
+import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.data.enemy.GameEnemy
 import com.github.adamyork.sparrow.game.data.enemy.MapBlockerEnemy
 import com.github.adamyork.sparrow.game.data.enemy.MapEnemyType
@@ -167,7 +164,12 @@ class DefaultEngine : Engine {
                 audioQueue,
                 particles
             )
-        return Pair(projectTileCollisionResult.first, projectTileCollisionResult.second)
+        var nextGameMap = projectTileCollisionResult.second
+        if (projectTileCollisionResult.first.colliding == GameElementCollisionState.COLLIDING) {
+            val nextItems = returnMapItemAfterCollision(nextGameMap)
+            nextGameMap = nextGameMap.copy(items = nextItems)
+        }
+        return Pair(projectTileCollisionResult.first, nextGameMap)
     }
 
     private fun manageMapItems(gameMap: GameMap): ArrayList<GameItem> {
@@ -193,6 +195,23 @@ class DefaultEngine : Engine {
                 )
             }
         }.toCollection(ArrayList())
+    }
+
+    private fun returnMapItemAfterCollision(gameMap: GameMap): ArrayList<GameItem> {
+        val firstInactive: GameItem? =
+            gameMap.items.firstOrNull { item -> item.type == MapItemType.COLLECTABLE && item.state == GameElementState.INACTIVE }
+        if (firstInactive != null) {
+            val remainingItems: ArrayList<GameItem> =
+                gameMap.items.filter { item -> item.type == MapItemType.COLLECTABLE && item.id != firstInactive.id }
+                    .toCollection(ArrayList())
+            val reactivatedItem = (firstInactive as MapCollectibleItem).copy(
+                state = GameElementState.ACTIVE
+            )
+            remainingItems.add(reactivatedItem)
+            return remainingItems
+        } else {
+            return gameMap.items
+        }
     }
 
     private fun manageMapEnemies(gameMap: GameMap, player: Player, viewPort: ViewPort): ArrayList<GameEnemy> {

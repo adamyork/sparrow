@@ -14,7 +14,8 @@ data class MapCollectibleItem(
     override val type: MapItemType,
     override val state: GameElementState,
     override val bufferedImage: BufferedImage,
-    override val frameMetadata: FrameMetadata
+    override val frameMetadata: FrameMetadata,
+    override val id: Int
 ) : GameItem {
 
     companion object {
@@ -55,7 +56,7 @@ data class MapCollectibleItem(
                 return Pair(metadata, metadataState)
             }
         }
-        return getNextActiveMetadataWithState(activeFrames)
+        return getNextActiveMetadataWithState(activeFrames, ANIMATION_ACTIVE_FRAMES)
     }
 
     override fun nestedDirection(): Direction {
