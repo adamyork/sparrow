@@ -22,7 +22,7 @@ class EngineConfig {
     ): Physics = DefaultPhysics(gameStatusProvider, physicsSettingsService)
 
     @Bean
-    fun collision(physics: Physics): Collision = DefaultCollision(physics)
+    fun collision(physics: Physics, scoreService: ScoreService): Collision = DefaultCollision(physics, scoreService)
 
     @Bean
     fun particles(assetService: AssetService): Particles = DefaultParticles(assetService)

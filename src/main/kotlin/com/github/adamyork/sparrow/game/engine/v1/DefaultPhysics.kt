@@ -13,6 +13,7 @@ import com.github.adamyork.sparrow.game.service.PhysicsSettingsService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.Rectangle
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -274,7 +275,7 @@ class DefaultPhysics : Physics {
     override fun applyProjectileParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle> {
         return mapParticles
             .map { particle ->
-                if (particle.type == ParticleType.FURBALL) {
+                if (particle.type == ParticleType.PROJECTILE) {
                     val nextFrame = particle.frame + 1
                     val nextX: Int = if (particle.originX == particle.x) {
                         particle.x
@@ -291,6 +292,23 @@ class DefaultPhysics : Physics {
                         particle.y + particle.yJitter
                     }
                     particle.copy(x = nextX, y = nextY, frame = nextFrame)
+                } else {
+                    particle
+                }
+            }.filter { particle -> particle.frame <= particle.lifetime }
+            .toCollection(ArrayList())
+    }
+
+    override fun applyMapItemReturnParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle> {
+        return mapParticles
+            .map { particle ->
+                if (particle.type == ParticleType.MAP_ITEM_RETURN) {
+                    val nextFrame = particle.frame + 1
+                    val step = nextFrame.toFloat() / (particle.lifetime - 1)
+                    val angle = PI * (1 + step)
+                    val nextX = particle.originX + cos(angle).toFloat() * 90
+                    val nextY = particle.originY + sin(angle).toFloat() * 90
+                    particle.copy(x = nextX.toInt(), y = nextY.toInt(), frame = nextFrame)
                 } else {
                     particle
                 }

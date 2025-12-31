@@ -108,7 +108,7 @@ class DefaultParticles : Particles {
         enemy: GameEnemy,
         particles: ArrayList<Particle>
     ): Pair<ArrayList<Particle>, Boolean> {
-        val count = particles.filter { it.type == ParticleType.FURBALL }
+        val count = particles.filter { it.type == ParticleType.PROJECTILE }
             .size
         val particles: ArrayList<Particle> = ArrayList()
         var particleAdded = false
@@ -127,18 +127,38 @@ class DefaultParticles : Particles {
                     player.y,
                     24,
                     24,
-                    ParticleType.FURBALL,
+                    ParticleType.PROJECTILE,
                     0,
                     10,
                     xIncrement,
                     yIncrement,
                     1,
-                    colorMap[ParticleType.FURBALL] ?: Color.WHITE,
+                    colorMap[ParticleType.PROJECTILE] ?: Color.WHITE,
                     ParticleShape.CIRCLE
                 )
             )
         }
         return Pair(particles, particleAdded)
+    }
+
+    override fun createMapItemReturnParticle(player: Player): Particle {
+        return Particle(
+            0,
+            player.x,
+            player.y,
+            player.x,
+            player.y,
+            32,
+            32,
+            ParticleType.MAP_ITEM_RETURN,
+            0,
+            16,
+            0,
+            0,
+            1,
+            Color.WHITE,
+            ParticleShape.RECT
+        )
     }
 
     private fun parseParticleColorMap(file: File): EnumMap<ParticleType, Color> {
@@ -174,7 +194,7 @@ class DefaultParticles : Particles {
         )
         colorMap[ParticleType.DUST] = playerMovementParticleColor
         colorMap[ParticleType.COLLISION] = playerCollisionParticleColor
-        colorMap[ParticleType.FURBALL] = enemyProjectileParticleColor
+        colorMap[ParticleType.PROJECTILE] = enemyProjectileParticleColor
         return colorMap
     }
 

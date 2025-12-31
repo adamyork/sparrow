@@ -22,4 +22,6 @@ interface Physics {
 
     fun applyProjectileParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle>
 
+    fun applyMapItemReturnParticlePhysics(mapParticles: ArrayList<Particle>): ArrayList<Particle>
+
 }

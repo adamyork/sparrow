@@ -15,6 +15,7 @@ import com.github.adamyork.sparrow.game.engine.Particles
 import com.github.adamyork.sparrow.game.engine.Physics
 import com.github.adamyork.sparrow.game.engine.data.CollisionBoundaries
 import com.github.adamyork.sparrow.game.engine.data.ParticleType
+import com.github.adamyork.sparrow.game.service.ScoreService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.Rectangle
@@ -29,9 +30,14 @@ class DefaultCollision : Collision {
     }
 
     val physics: Physics
+    val scoreService: ScoreService
 
-    constructor(physics: Physics) {
+    constructor(
+        physics: Physics,
+        scoreService: ScoreService
+    ) {
         this.physics = physics
+        this.scoreService = scoreService
     }
 
     override lateinit var collisionImage: BufferedImage
@@ -105,7 +111,12 @@ class DefaultCollision : Collision {
                     LOGGER.info("enemy collision !")
                     targetRect = enemyRect
                     audioQueue.queue.add(Sounds.PLAYER_COLLISION)
-                    managedMapParticles = particles.createCollisionParticles(enemy.x, enemy.y)
+                    val collisionParticles = particles.createCollisionParticles(enemy.x, enemy.y)
+                    managedMapParticles.addAll(collisionParticles)
+                    if (scoreService.getTotal() != scoreService.getRemaining()) {
+                        val mapItemReturnParticle = particles.createMapItemReturnParticle(player)
+                        managedMapParticles.add(mapItemReturnParticle)
+                    }
                     isColliding = true
                     playerIsColliding = true
                 }
@@ -189,7 +200,7 @@ class DefaultCollision : Collision {
         var playerIsColliding = false
         var targetRect: Rectangle? = null
         val managedMapParticles = gameMap.particles.map { particle ->
-            if (particle.type == ParticleType.FURBALL) {
+            if (particle.type == ParticleType.PROJECTILE) {
                 val particleRect = Rectangle(particle.x, particle.y, particle.width, particle.height)
                 val playerRect = Rectangle(player.x, player.y, player.width, player.height)
                 var nextFrame = particle.frame
@@ -208,6 +219,10 @@ class DefaultCollision : Collision {
         if (playerIsColliding) {
             val collisionParticles = particles.createCollisionParticles(player.x, player.y)
             managedMapParticles.addAll(collisionParticles)
+            if (scoreService.getTotal() != scoreService.getRemaining()) {
+                val mapItemReturnParticle = particles.createMapItemReturnParticle(player)
+                managedMapParticles.add(mapItemReturnParticle)
+            }
         }
         val nextPlayer: Player = if (playerIsColliding) {
             physics.applyPlayerCollisionPhysics(player, targetRect, viewPort)//TODO this should be abstract

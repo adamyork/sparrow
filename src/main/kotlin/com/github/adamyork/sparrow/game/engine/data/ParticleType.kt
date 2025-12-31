@@ -3,5 +3,6 @@ package com.github.adamyork.sparrow.game.engine.data
 enum class ParticleType {
     COLLISION,
     DUST,
-    FURBALL
+    PROJECTILE,
+    MAP_ITEM_RETURN
 }

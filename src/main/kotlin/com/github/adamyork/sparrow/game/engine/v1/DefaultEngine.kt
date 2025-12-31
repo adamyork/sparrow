@@ -21,6 +21,7 @@ import com.github.adamyork.sparrow.game.engine.Particles
 import com.github.adamyork.sparrow.game.engine.Physics
 import com.github.adamyork.sparrow.game.engine.data.CollisionBoundaries
 import com.github.adamyork.sparrow.game.engine.data.ParticleShape
+import com.github.adamyork.sparrow.game.engine.data.ParticleType
 import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.game.service.ScoreService
 import com.github.adamyork.sparrow.game.service.data.ImageAsset
@@ -129,11 +130,12 @@ class DefaultEngine : Engine {
         val managedMapItems = manageMapItems(gameMap)
         val managedMapEnemies = manageMapEnemies(gameMap, player, viewPort)
         val managedCollisionParticles = physics.applyCollisionParticlePhysics(gameMap.particles)
+        val managedMapItemReturnParticles = physics.applyMapItemReturnParticlePhysics(managedCollisionParticles)
         if (player.moving == PlayerMovingState.MOVING && !player.jumping) {
             val nextDustParticles = particles.createDustParticles(player)
-            managedCollisionParticles.addAll(nextDustParticles)
+            managedMapItemReturnParticles.addAll(nextDustParticles)
         }
-        val managedDustParticles = physics.applyDustParticlePhysics(managedCollisionParticles)
+        val managedDustParticles = physics.applyDustParticlePhysics(managedMapItemReturnParticles)
         val managedAllParticles = physics.applyProjectileParticlePhysics(managedDustParticles)
         var mapState = gameMap.state
         if (mapState == GameMapState.COLLECTING && scoreService.allFound()) {
@@ -370,21 +372,41 @@ class DefaultEngine : Engine {
         map.particles.forEach { particle ->
             val localCord = viewPort.globalToLocal(particle.x, particle.y)
             particleGraphics.color = particle.color
-            if (particle.shape == ParticleShape.CIRCLE) {
-                particleGraphics.fillOval(
+            if (particle.type == ParticleType.MAP_ITEM_RETURN) {
+                val mapItemReference = map.items.first { _ -> true }
+                val mapItemReferenceSubImage = getSubImage(
+                    mapItemReference.bufferedImage,
+                    0,
+                    0,
+                    mapItemReference.width,
+                    mapItemReference.height
+                )
+                particleGraphics.drawImage(
+                    mapItemReferenceSubImage,
                     localCord.first,
                     localCord.second,
                     particle.width,
-                    particle.height
+                    particle.height,
+                    null
                 )
             } else {
-                particleGraphics.fillRect(
-                    localCord.first,
-                    localCord.second,
-                    particle.width,
-                    particle.height
-                )
+                if (particle.shape == ParticleShape.CIRCLE) {
+                    particleGraphics.fillOval(
+                        localCord.first,
+                        localCord.second,
+                        particle.width,
+                        particle.height
+                    )
+                } else {
+                    particleGraphics.fillRect(
+                        localCord.first,
+                        localCord.second,
+                        particle.width,
+                        particle.height
+                    )
+                }
             }
+
         }
         graphics.drawImage(particleImage, 0, 0, null)
         particleImage.graphics.dispose()
@@ -404,7 +426,8 @@ class DefaultEngine : Engine {
         elements.forEach { element ->
             val localCord = viewPort.globalToLocal(element.x, element.y)
             if (element.state != GameElementState.INACTIVE) {
-                var itemSubImage = element.bufferedImage.getSubimage(
+                var itemSubImage = getSubImage(
+                    element.bufferedImage,
                     element.frameMetadata.cell.x,
                     element.frameMetadata.cell.y,
                     element.width,
