@@ -120,7 +120,7 @@ class DefaultCollision : Collision {
                     isColliding = true
                     playerIsColliding = true
                 }
-                if (enemy.type == MapEnemyType.BOT) {
+                if (enemy.type == MapEnemyType.SHOOTER) {
                     val dist =
                         Point2D.distance(
                             player.x.toDouble(),
@@ -144,7 +144,7 @@ class DefaultCollision : Collision {
                 val metadata = frameMetadataWithState.first
                 val metadataState = frameMetadataWithState.second
                 if (isColliding) {
-                    if (enemy.type == MapEnemyType.BOT) {
+                    if (enemy.type == MapEnemyType.SHOOTER) {
                         (enemy as MapShooterEnemy).copy(
                             frameMetadata = metadata,
                             colliding = metadataState.colliding,
@@ -158,7 +158,7 @@ class DefaultCollision : Collision {
                         ) as GameEnemy
                     }
                 } else if (isInteracting) {
-                    if (enemy.type == MapEnemyType.BOT) {
+                    if (enemy.type == MapEnemyType.SHOOTER) {
                         (enemy as MapShooterEnemy).copy(
                             frameMetadata = metadata,
                             colliding = enemy.colliding,
@@ -225,7 +225,7 @@ class DefaultCollision : Collision {
             }
         }
         val nextPlayer: Player = if (playerIsColliding) {
-            physics.applyPlayerCollisionPhysics(player, targetRect, viewPort)//TODO this should be abstract
+            physics.applyPlayerCollisionPhysics(player, targetRect, viewPort)
         } else {
             player
         }

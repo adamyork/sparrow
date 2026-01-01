@@ -1,5 +1,4 @@
 # TODO
-- Bitmap Particle
 - Goal Map Item
 - Vacuum Asset
 - Enemy Placement

@@ -166,7 +166,7 @@ class DefaultAssetService : AssetService {
             viewPortHeight,
             Font("Arial", Font.BOLD, 32),
             Color.BLACK,
-            "Collect all the greenies!",
+            "Collect all the greenies!",//TODO externalize this text
             centerX = true,
             centerY = false,
         )
@@ -175,7 +175,7 @@ class DefaultAssetService : AssetService {
             viewPortHeight,
             Font("Arial", Font.BOLD, 32),
             Color.BLACK,
-            "Find the finish flag!",
+            "Find the finish flag!",//TODO externalize this text
             centerX = true,
             centerY = false,
         )
@@ -184,7 +184,7 @@ class DefaultAssetService : AssetService {
             viewPortHeight,
             Font("Arial", Font.BOLD, 32),
             Color.BLACK,
-            "You won!",
+            "You won!",//TODO externalize this text
             centerX = true,
             centerY = false,
         )

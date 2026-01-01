@@ -44,7 +44,7 @@ data class GameMap(
         return x
     }
 
-    fun generateMapItems(greenieItemAsset: ImageAsset, finishItemAsset: ImageAsset, assetService: AssetService) {
+    fun generateMapItems(collectibleItemAsset: ImageAsset, finishItemAsset: ImageAsset, assetService: AssetService) {
         for (i in 0..<assetService.getTotalItems()) {
             val itemType = MapItemType.from(assetService.getItemPosition(i).type)
             if (itemType == MapItemType.FINISH) {
@@ -64,13 +64,13 @@ data class GameMap(
             } else {
                 items.add(
                     MapCollectibleItem(
-                        greenieItemAsset.width,
-                        greenieItemAsset.height,
+                        collectibleItemAsset.width,
+                        collectibleItemAsset.height,
                         assetService.getItemPosition(i).x,
                         assetService.getItemPosition(i).y,
                         MapItemType.COLLECTABLE,
                         GameElementState.ACTIVE,
-                        greenieItemAsset.bufferedImage,
+                        collectibleItemAsset.bufferedImage,
                         FrameMetadata(1, Cell(1, 1, width, height)),
                         i
                     )
@@ -79,20 +79,20 @@ data class GameMap(
         }
     }
 
-    fun generateMapEnemies(vacuumEnemyAsset: ImageAsset, botEnemyAsset: ImageAsset, assetService: AssetService) {
+    fun generateMapEnemies(blockerEnemyAsset: ImageAsset, shooterEnemyAsset: ImageAsset, assetService: AssetService) {
         for (i in 0..<assetService.getTotalEnemies()) {
             val itemType = MapEnemyType.from(assetService.getEnemyPosition(i).type)
-            if (itemType == MapEnemyType.VACUUM) {
+            if (itemType == MapEnemyType.BLOCKER) {
                 enemies.add(
                     MapBlockerEnemy(
                         assetService.getEnemyPosition(i).x,
                         assetService.getEnemyPosition(i).y,
-                        vacuumEnemyAsset.width,
-                        vacuumEnemyAsset.height,
+                        blockerEnemyAsset.width,
+                        blockerEnemyAsset.height,
                         GameElementState.ACTIVE,
                         FrameMetadata(1, Cell(1, 1, width, height)),
-                        vacuumEnemyAsset.bufferedImage,
-                        MapEnemyType.VACUUM,
+                        blockerEnemyAsset.bufferedImage,
+                        MapEnemyType.BLOCKER,
                         assetService.getEnemyPosition(i).x,
                         assetService.getItemPosition(i).y,
                         EnemyPosition(
@@ -109,12 +109,12 @@ data class GameMap(
                     MapShooterEnemy(
                         assetService.getEnemyPosition(i).x,
                         assetService.getEnemyPosition(i).y,
-                        botEnemyAsset.width,
-                        botEnemyAsset.height,
+                        shooterEnemyAsset.width,
+                        shooterEnemyAsset.height,
                         GameElementState.INACTIVE,
                         FrameMetadata(1, Cell(1, 1, width, height)),
-                        botEnemyAsset.bufferedImage,
-                        MapEnemyType.BOT,
+                        shooterEnemyAsset.bufferedImage,
+                        MapEnemyType.SHOOTER,
                         assetService.getEnemyPosition(i).x,
                         assetService.getItemPosition(i).y,
                         EnemyPosition(
@@ -131,18 +131,18 @@ data class GameMap(
     }
 
     fun reset(
-        greenieItemAsset: ImageAsset,
+        collectibleItemAsset: ImageAsset,
         finishItemAsset: ImageAsset,
-        vacuumEnemyAsset: ImageAsset,
-        botEnemyAsset: ImageAsset,
+        blockerEnemyAsset: ImageAsset,
+        shooterEnemyAsset: ImageAsset,
         assetService: AssetService
     ) {
         this.state = GameMapState.COLLECTING
         this.items = ArrayList()
         this.enemies = ArrayList()
         this.particles = ArrayList()
-        generateMapItems(greenieItemAsset, finishItemAsset, assetService)
-        generateMapEnemies(vacuumEnemyAsset, botEnemyAsset, assetService)
+        generateMapItems(collectibleItemAsset, finishItemAsset, assetService)
+        generateMapEnemies(blockerEnemyAsset, shooterEnemyAsset, assetService)
     }
 
 }

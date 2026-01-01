@@ -226,7 +226,7 @@ class DefaultEngine : Engine {
                 val frameMetadataWithState = (enemy as GameElement).getNextFrameMetadataWithState()
                 val metadata = frameMetadataWithState.first
                 val metadataState = frameMetadataWithState.second
-                if (enemy.type == MapEnemyType.BOT) {
+                if (enemy.type == MapEnemyType.SHOOTER) {
                     (enemy as MapShooterEnemy).copy(
                         x = itemX,
                         y = itemY,

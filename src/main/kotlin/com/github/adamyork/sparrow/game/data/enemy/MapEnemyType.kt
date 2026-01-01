@@ -1,18 +1,18 @@
 package com.github.adamyork.sparrow.game.data.enemy
 
 enum class MapEnemyType {
-    VACUUM,
-    BOT;
+    BLOCKER,
+    SHOOTER;
 
     companion object {
         fun from(literalValue: String): MapEnemyType {
             return when (literalValue) {
                 "vacuum" -> {
-                    VACUUM
+                    BLOCKER
                 }
 
                 "deebot" -> {
-                    BOT
+                    SHOOTER
                 }
 
                 else -> {

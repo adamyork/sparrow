@@ -43,10 +43,10 @@ class Game {
     lateinit var player: Player
     lateinit var gameMap: GameMap
     lateinit var playerAsset: ImageAsset
-    lateinit var mapItemGreenieAsset: ImageAsset
+    lateinit var mapItemCollectibleAsset: ImageAsset
     lateinit var mapItemFinishAsset: ImageAsset
-    lateinit var mapEnemyVacuumAsset: ImageAsset
-    lateinit var mapEnemyBotAsset: ImageAsset
+    lateinit var mapEnemyBlockerAsset: ImageAsset
+    lateinit var mapEnemyShooterAsset: ImageAsset
 
     constructor(
         assetService: AssetService,
@@ -87,10 +87,10 @@ class Game {
             viewPort = ViewPort(viewPortInitialX, viewPortInitialY, 0, 0, viewPortWidth, viewPortHeight)
             gameMap = objects.t1
             playerAsset = objects.t2
-            mapItemGreenieAsset = objects.t3
+            mapItemCollectibleAsset = objects.t3
             mapItemFinishAsset = objects.t4
-            mapEnemyVacuumAsset = objects.t5
-            mapEnemyBotAsset = objects.t6
+            mapEnemyBlockerAsset = objects.t5
+            mapEnemyShooterAsset = objects.t6
             player = Player(
                 playerInitialX,
                 playerInitialY,
@@ -106,9 +106,9 @@ class Game {
                 Direction.RIGHT,
                 GameElementCollisionState.FREE
             )
-            gameMap.generateMapItems(mapItemGreenieAsset, mapItemFinishAsset, assetService)
+            gameMap.generateMapItems(mapItemCollectibleAsset, mapItemFinishAsset, assetService)
             LOGGER.info("map items generated")
-            gameMap.generateMapEnemies(mapEnemyVacuumAsset, mapEnemyBotAsset, assetService)
+            gameMap.generateMapEnemies(mapEnemyBlockerAsset, mapEnemyShooterAsset, assetService)
             LOGGER.info("enemy items generated")
             engine.setCollisionBufferedImage(gameMap.collisionAsset)
             scoreService.gameMapItem = gameMap.items
@@ -175,7 +175,13 @@ class Game {
             Direction.RIGHT,
             GameElementCollisionState.FREE
         )
-        gameMap.reset(mapItemGreenieAsset, mapItemFinishAsset, mapEnemyVacuumAsset, mapEnemyBotAsset, assetService)
+        gameMap.reset(
+            mapItemCollectibleAsset,
+            mapItemFinishAsset,
+            mapEnemyBlockerAsset,
+            mapEnemyShooterAsset,
+            assetService
+        )
         viewPort = ViewPort(viewPortInitialX, viewPortInitialY, 0, 0, viewPortWidth, viewPortHeight)
         scoreService.gameMapItem = gameMap.items
     }
