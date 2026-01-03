@@ -5,10 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.awt.image.BufferedImage
-import kotlin.concurrent.atomics.AtomicBoolean
-import kotlin.concurrent.atomics.AtomicInt
-import kotlin.concurrent.atomics.AtomicReference
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.concurrent.atomics.*
 
 
 @OptIn(ExperimentalAtomicApi::class)
@@ -31,7 +28,7 @@ class GameStatusProvider {
     }
 
     val running: AtomicBoolean = AtomicBoolean(false)
-    val lastPaintTime: AtomicInt = AtomicInt(0)
+    val lastPaintTime: AtomicLong = AtomicLong(0L)
     val backgroundMusicChunk: AtomicInt = AtomicInt(0)
     val lastBackgroundComposite: AtomicReference<BufferedImage> =
         AtomicReference(BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB))
@@ -42,14 +39,20 @@ class GameStatusProvider {
         if (deltaTime > targetDeltaTimeMs) {
             val deltaTimePercent: Double = (deltaTime - targetDeltaTimeMs).toDouble() / targetDeltaTimeMs.toDouble()
             val numOfFramesDropped = fpsMax * deltaTimePercent
-            if ((fpsMax - numOfFramesDropped.toInt()) < fpsMin) {
+            return if ((fpsMax - numOfFramesDropped.toInt()) < fpsMin) {
                 //LOGGER.info("FPS drop detected; long deltaTime $deltaTimePercent percent; frames: $numOfFramesDropped")
-                return 1.0 + deltaTimePercent
+                1.0 + deltaTimePercent
             } else {
-                return 1.0
+                1.0
             }
         }
         return 1.0
+    }
+
+    fun reset() {
+        lastPaintTime.store(0L)
+        backgroundMusicChunk.store(0)
+        lastBackgroundComposite.store(BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB))
     }
 
 }

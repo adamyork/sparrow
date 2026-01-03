@@ -55,12 +55,17 @@ map:
       0:
         x: 1600
         y: 450
-        type: "vacuum"
+        type: "blocker"
       # noinspection SpringBootApplicationYaml
       1:
-        x: 700
-        y: 683
-        type: "deebot"
+        x: 1500
+        y: 224
+        type: "shooter"
+      # noinspection SpringBootApplicationYaml
+      2:
+        x: 500
+        y: 672
+        type: "runner"
 particle:
   player:
     movement:

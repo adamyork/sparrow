@@ -53,9 +53,10 @@ class GameHandler : WebSocketHandler {
                     INPUT_START -> {
                         if (game.isInitialized) {
                             game.reset()
-                            gameStatusProvider.lastPaintTime.store(System.currentTimeMillis().toInt())
+                            LOGGER.info("game reset")
+                        } else {
+                            LOGGER.info("game started")
                         }
-                        LOGGER.info("game started")
                     }
 
                     INPUT_PAUSE -> {

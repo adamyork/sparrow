@@ -3,10 +3,7 @@ package com.github.adamyork.sparrow.game.engine.v1
 import com.github.adamyork.sparrow.common.AudioQueue
 import com.github.adamyork.sparrow.common.GameStatusProvider
 import com.github.adamyork.sparrow.game.data.*
-import com.github.adamyork.sparrow.game.data.enemy.GameEnemy
-import com.github.adamyork.sparrow.game.data.enemy.MapBlockerEnemy
-import com.github.adamyork.sparrow.game.data.enemy.MapEnemyType
-import com.github.adamyork.sparrow.game.data.enemy.MapShooterEnemy
+import com.github.adamyork.sparrow.game.data.enemy.*
 import com.github.adamyork.sparrow.game.data.item.GameItem
 import com.github.adamyork.sparrow.game.data.item.MapCollectibleItem
 import com.github.adamyork.sparrow.game.data.item.MapFinishItem
@@ -236,6 +233,16 @@ class DefaultEngine : Engine {
                         colliding = metadataState.colliding,
                         interacting = metadataState.interacting
                     )
+                } else if (enemy.type == MapEnemyType.RUNNER) {
+                    (enemy as MapRunnerEnemy).copy(
+                        x = itemX,
+                        y = itemY,
+                        state = nextState,
+                        frameMetadata = metadata,
+                        enemyPosition = nextPosition,
+                        colliding = metadataState.colliding,
+                        interacting = metadataState.interacting
+                    )
                 } else {
                     (enemy as MapBlockerEnemy).copy(
                         x = itemX,
@@ -247,6 +254,8 @@ class DefaultEngine : Engine {
                         interacting = metadataState.interacting
                     )
                 }
+            } else if (enemy.type == MapEnemyType.RUNNER) {
+                (enemy as MapRunnerEnemy).copy(state = nextState)
             } else {
                 enemy
             }

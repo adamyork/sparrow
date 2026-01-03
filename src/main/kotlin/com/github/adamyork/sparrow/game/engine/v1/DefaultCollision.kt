@@ -98,7 +98,7 @@ class DefaultCollision : Collision {
         audioQueue: AudioQueue,
         particles: Particles
     ): Pair<Player, GameMap> {
-        var managedMapParticles = gameMap.particles
+        val managedMapParticles = gameMap.particles
         var playerIsColliding = false
         var targetRect: Rectangle? = null
         val managedMapEnemies = gameMap.enemies.map { enemy ->
@@ -150,6 +150,12 @@ class DefaultCollision : Collision {
                             colliding = metadataState.colliding,
                             interacting = enemy.interacting
                         ) as GameEnemy
+                    } else if (enemy.type == MapEnemyType.RUNNER) {
+                        (enemy as MapRunnerEnemy).copy(
+                            frameMetadata = metadata,
+                            colliding = GameElementCollisionState.COLLIDING,
+                            interacting = enemy.interacting
+                        ) as GameEnemy
                     } else {
                         (enemy as MapBlockerEnemy).copy(
                             frameMetadata = metadata,
@@ -160,6 +166,12 @@ class DefaultCollision : Collision {
                 } else if (isInteracting) {
                     if (enemy.type == MapEnemyType.SHOOTER) {
                         (enemy as MapShooterEnemy).copy(
+                            frameMetadata = metadata,
+                            colliding = enemy.colliding,
+                            interacting = GameEnemyInteractionState.INTERACTING
+                        ) as GameEnemy
+                    } else if (enemy.type == MapEnemyType.RUNNER) {
+                        (enemy as MapRunnerEnemy).copy(
                             frameMetadata = metadata,
                             colliding = enemy.colliding,
                             interacting = GameEnemyInteractionState.INTERACTING

@@ -6,7 +6,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 
-data class MapShooterEnemy(
+data class MapRunnerEnemy(
     override val x: Int,
     override val y: Int,
     override val width: Int,
@@ -24,6 +24,7 @@ data class MapShooterEnemy(
 
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(MapShooterEnemy::class.java)
+        const val MOVEMENT_X_DISTANCE = 10
         const val PLAYER_PROXIMITY_THRESHOLD = 200
         const val ANIMATION_INTERACTING_FRAMES = 8
     }
@@ -37,7 +38,16 @@ data class MapShooterEnemy(
     }
 
     override fun getNextEnemyState(player: Player): GameElementState {
-        return this.state
+        val withinXRange = player.x >= this.originX - PLAYER_PROXIMITY_THRESHOLD
+        val withinYRange = player.y == this.originY - this.height
+        val notAtEndOfPath = this.x > 0
+        return if (withinXRange && withinYRange && notAtEndOfPath) {
+            GameElementState.ACTIVE
+        } else if (this.x == 0) {
+            GameElementState.INACTIVE
+        } else {
+            this.state
+        }
     }
 
     @Suppress("DuplicatedCode")
@@ -84,10 +94,18 @@ data class MapShooterEnemy(
     }
 
     override fun getNextPosition(viewPort: ViewPort): EnemyPosition {
-        return EnemyPosition(
-            this.x,
-            this.y,
-            this.nestedDirection()
-        )
+        return if (this.x >= 0) {
+            EnemyPosition(
+                enemyPosition.x - MOVEMENT_X_DISTANCE,
+                enemyPosition.y,
+                Direction.LEFT
+            )
+        } else {
+            EnemyPosition(
+                0,
+                enemyPosition.y,
+                Direction.LEFT
+            )
+        }
     }
 }

@@ -94,7 +94,29 @@ data class GameMap(
                         blockerEnemyAsset.bufferedImage,
                         MapEnemyType.BLOCKER,
                         assetService.getEnemyPosition(i).x,
-                        assetService.getItemPosition(i).y,
+                        assetService.getEnemyPosition(i).y,
+                        EnemyPosition(
+                            assetService.getEnemyPosition(i).x,
+                            assetService.getEnemyPosition(i).y,
+                            Direction.LEFT
+                        ),
+                        GameElementCollisionState.FREE,
+                        GameEnemyInteractionState.ISOLATED
+                    )
+                )
+            } else if (itemType == MapEnemyType.SHOOTER) {
+                enemies.add(
+                    MapShooterEnemy(
+                        assetService.getEnemyPosition(i).x,
+                        assetService.getEnemyPosition(i).y,
+                        shooterEnemyAsset.width,
+                        shooterEnemyAsset.height,
+                        GameElementState.ACTIVE,
+                        FrameMetadata(1, Cell(1, 1, width, height)),
+                        shooterEnemyAsset.bufferedImage,
+                        MapEnemyType.SHOOTER,
+                        assetService.getEnemyPosition(i).x,
+                        assetService.getEnemyPosition(i).y,
                         EnemyPosition(
                             assetService.getEnemyPosition(i).x,
                             assetService.getEnemyPosition(i).y,
@@ -106,7 +128,7 @@ data class GameMap(
                 )
             } else {
                 enemies.add(
-                    MapShooterEnemy(
+                    MapRunnerEnemy(
                         assetService.getEnemyPosition(i).x,
                         assetService.getEnemyPosition(i).y,
                         shooterEnemyAsset.width,
@@ -114,9 +136,9 @@ data class GameMap(
                         GameElementState.INACTIVE,
                         FrameMetadata(1, Cell(1, 1, width, height)),
                         shooterEnemyAsset.bufferedImage,
-                        MapEnemyType.SHOOTER,
+                        MapEnemyType.RUNNER,
                         assetService.getEnemyPosition(i).x,
-                        assetService.getItemPosition(i).y,
+                        assetService.getEnemyPosition(i).y,
                         EnemyPosition(
                             assetService.getEnemyPosition(i).x,
                             assetService.getEnemyPosition(i).y,

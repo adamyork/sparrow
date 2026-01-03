@@ -128,7 +128,7 @@ class Game {
             .map(Function { _ ->
                 if (gameStatusProvider.running.load()) {
                     val lastPaintMs = gameStatusProvider.lastPaintTime.load()
-                    val nextPaintTimeMs = System.currentTimeMillis().toInt()
+                    val nextPaintTimeMs = System.currentTimeMillis()
                     val deltaTime = nextPaintTimeMs - lastPaintMs
                     val fpsMaxDeltaTimeMs = 1000 / fpsMax
                     if (deltaTime < fpsMaxDeltaTimeMs) {
@@ -184,6 +184,7 @@ class Game {
         )
         viewPort = ViewPort(viewPortInitialX, viewPortInitialY, 0, 0, viewPortWidth, viewPortHeight)
         scoreService.gameMapItem = gameMap.items
+        gameStatusProvider.reset()
     }
 
     private fun startInput(controlAction: ControlAction) {
