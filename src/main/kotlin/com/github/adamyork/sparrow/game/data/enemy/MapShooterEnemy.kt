@@ -83,7 +83,7 @@ data class MapShooterEnemy(
         return this.enemyPosition.direction
     }
 
-    override fun getNextPosition(viewPort: ViewPort): EnemyPosition {
+    override fun getNextPosition(): EnemyPosition {
         return EnemyPosition(
             this.x,
             this.y,

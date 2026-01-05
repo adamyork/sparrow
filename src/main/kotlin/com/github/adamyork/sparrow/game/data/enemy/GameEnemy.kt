@@ -13,7 +13,7 @@ interface GameEnemy : GameElement {
     val colliding: GameElementCollisionState
     val interacting: GameEnemyInteractionState
 
-    fun getNextPosition(viewPort: ViewPort): EnemyPosition
+    fun getNextPosition(): EnemyPosition
 
     fun getNextEnemyState(player: Player): GameElementState
 

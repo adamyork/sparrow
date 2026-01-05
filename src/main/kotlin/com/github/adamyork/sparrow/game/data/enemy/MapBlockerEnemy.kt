@@ -44,7 +44,7 @@ data class MapBlockerEnemy(
         return this.getNextCollisionMetadataWithState(animatingFrames, collisionFrames)
     }
 
-    override fun getNextPosition(viewPort: ViewPort): EnemyPosition {
+    override fun getNextPosition(): EnemyPosition {
         if (enemyPosition.direction == Direction.LEFT) {
             return if (enemyPosition.x >= originX - MAX_X_MOVEMENT) {
                 EnemyPosition(

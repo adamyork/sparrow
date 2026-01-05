@@ -137,7 +137,7 @@ class Game {
                         val collisionBoundaries = engine.getCollisionBoundaries(player)
                         player = engine.managePlayer(player, collisionBoundaries)
                         viewPort = engine.manageViewport(player, viewPort)
-                        gameMap = engine.manageMap(player, gameMap, viewPort)
+                        gameMap = engine.manageMap(player, gameMap)
                         val nextPlayerAndMap = engine.manageEnemyAndItemCollision(player, gameMap, viewPort)
                         player = nextPlayerAndMap.first
                         gameMap = nextPlayerAndMap.second

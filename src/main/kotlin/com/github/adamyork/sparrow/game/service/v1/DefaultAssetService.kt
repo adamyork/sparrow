@@ -325,6 +325,7 @@ class DefaultAssetService : AssetService {
         return soundBytesMap.getOrElse(sound) { byteArrayOf() }
     }
 
+    @Suppress("SameParameterValue")
     private fun buildTextAsset(
         viewPortWidth: Int,
         viewPortHeight: Int,

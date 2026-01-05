@@ -8,15 +8,15 @@ enum class MapEnemyType {
     companion object {
         fun from(literalValue: String): MapEnemyType {
             return when (literalValue) {
-                "blocker" -> {//TODO generify
+                "blocker" -> {
                     BLOCKER
                 }
 
-                "shooter" -> {//TODO generify
+                "shooter" -> {
                     SHOOTER
                 }
 
-                "runner" -> {//TODO generify
+                "runner" -> {
                     RUNNER
                 }
 

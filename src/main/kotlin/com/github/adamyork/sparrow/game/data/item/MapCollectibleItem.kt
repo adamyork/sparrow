@@ -67,7 +67,7 @@ data class MapCollectibleItem(
         return deactivatingFrames[1] ?: FrameMetadata(1, Cell(1, 1, width, height))
     }
 
-    @Suppress("DuplicatedCode")
+
     private fun generateAnimationFrameIndex() {
         activeFrames[1] = FrameMetadata(1, Cell(1, 1, width, height))
         activeFrames[2] = FrameMetadata(2, Cell(1, 1, width, height))

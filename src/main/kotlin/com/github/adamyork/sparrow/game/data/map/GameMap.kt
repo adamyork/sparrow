@@ -82,72 +82,76 @@ data class GameMap(
     fun generateMapEnemies(blockerEnemyAsset: ImageAsset, shooterEnemyAsset: ImageAsset, assetService: AssetService) {
         for (i in 0..<assetService.getTotalEnemies()) {
             val itemType = MapEnemyType.from(assetService.getEnemyPosition(i).type)
-            if (itemType == MapEnemyType.BLOCKER) {
-                enemies.add(
-                    MapBlockerEnemy(
-                        assetService.getEnemyPosition(i).x,
-                        assetService.getEnemyPosition(i).y,
-                        blockerEnemyAsset.width,
-                        blockerEnemyAsset.height,
-                        GameElementState.ACTIVE,
-                        FrameMetadata(1, Cell(1, 1, width, height)),
-                        blockerEnemyAsset.bufferedImage,
-                        MapEnemyType.BLOCKER,
-                        assetService.getEnemyPosition(i).x,
-                        assetService.getEnemyPosition(i).y,
-                        EnemyPosition(
+            when (itemType) {
+                MapEnemyType.BLOCKER -> {
+                    enemies.add(
+                        MapBlockerEnemy(
                             assetService.getEnemyPosition(i).x,
                             assetService.getEnemyPosition(i).y,
-                            Direction.LEFT
-                        ),
-                        GameElementCollisionState.FREE,
-                        GameEnemyInteractionState.ISOLATED
-                    )
-                )
-            } else if (itemType == MapEnemyType.SHOOTER) {
-                enemies.add(
-                    MapShooterEnemy(
-                        assetService.getEnemyPosition(i).x,
-                        assetService.getEnemyPosition(i).y,
-                        shooterEnemyAsset.width,
-                        shooterEnemyAsset.height,
-                        GameElementState.ACTIVE,
-                        FrameMetadata(1, Cell(1, 1, width, height)),
-                        shooterEnemyAsset.bufferedImage,
-                        MapEnemyType.SHOOTER,
-                        assetService.getEnemyPosition(i).x,
-                        assetService.getEnemyPosition(i).y,
-                        EnemyPosition(
+                            blockerEnemyAsset.width,
+                            blockerEnemyAsset.height,
+                            GameElementState.ACTIVE,
+                            FrameMetadata(1, Cell(1, 1, width, height)),
+                            blockerEnemyAsset.bufferedImage,
+                            MapEnemyType.BLOCKER,
                             assetService.getEnemyPosition(i).x,
                             assetService.getEnemyPosition(i).y,
-                            Direction.LEFT
-                        ),
-                        GameElementCollisionState.FREE,
-                        GameEnemyInteractionState.ISOLATED
+                            EnemyPosition(
+                                assetService.getEnemyPosition(i).x,
+                                assetService.getEnemyPosition(i).y,
+                                Direction.LEFT
+                            ),
+                            GameElementCollisionState.FREE,
+                            GameEnemyInteractionState.ISOLATED
+                        )
                     )
-                )
-            } else {
-                enemies.add(
-                    MapRunnerEnemy(
-                        assetService.getEnemyPosition(i).x,
-                        assetService.getEnemyPosition(i).y,
-                        shooterEnemyAsset.width,
-                        shooterEnemyAsset.height,
-                        GameElementState.INACTIVE,
-                        FrameMetadata(1, Cell(1, 1, width, height)),
-                        shooterEnemyAsset.bufferedImage,
-                        MapEnemyType.RUNNER,
-                        assetService.getEnemyPosition(i).x,
-                        assetService.getEnemyPosition(i).y,
-                        EnemyPosition(
+                }
+                MapEnemyType.SHOOTER -> {
+                    enemies.add(
+                        MapShooterEnemy(
                             assetService.getEnemyPosition(i).x,
                             assetService.getEnemyPosition(i).y,
-                            Direction.LEFT
-                        ),
-                        GameElementCollisionState.FREE,
-                        GameEnemyInteractionState.ISOLATED
+                            shooterEnemyAsset.width,
+                            shooterEnemyAsset.height,
+                            GameElementState.ACTIVE,
+                            FrameMetadata(1, Cell(1, 1, width, height)),
+                            shooterEnemyAsset.bufferedImage,
+                            MapEnemyType.SHOOTER,
+                            assetService.getEnemyPosition(i).x,
+                            assetService.getEnemyPosition(i).y,
+                            EnemyPosition(
+                                assetService.getEnemyPosition(i).x,
+                                assetService.getEnemyPosition(i).y,
+                                Direction.LEFT
+                            ),
+                            GameElementCollisionState.FREE,
+                            GameEnemyInteractionState.ISOLATED
+                        )
                     )
-                )
+                }
+                else -> {
+                    enemies.add(
+                        MapRunnerEnemy(
+                            assetService.getEnemyPosition(i).x,
+                            assetService.getEnemyPosition(i).y,
+                            shooterEnemyAsset.width,
+                            shooterEnemyAsset.height,
+                            GameElementState.INACTIVE,
+                            FrameMetadata(1, Cell(1, 1, width, height)),
+                            shooterEnemyAsset.bufferedImage,
+                            MapEnemyType.RUNNER,
+                            assetService.getEnemyPosition(i).x,
+                            assetService.getEnemyPosition(i).y,
+                            EnemyPosition(
+                                assetService.getEnemyPosition(i).x,
+                                assetService.getEnemyPosition(i).y,
+                                Direction.LEFT
+                            ),
+                            GameElementCollisionState.FREE,
+                            GameEnemyInteractionState.ISOLATED
+                        )
+                    )
+                }
             }
         }
     }

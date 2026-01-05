@@ -144,44 +144,52 @@ class DefaultCollision : Collision {
                 val metadata = frameMetadataWithState.first
                 val metadataState = frameMetadataWithState.second
                 if (isColliding) {
-                    if (enemy.type == MapEnemyType.SHOOTER) {
-                        (enemy as MapShooterEnemy).copy(
-                            frameMetadata = metadata,
-                            colliding = metadataState.colliding,
-                            interacting = enemy.interacting
-                        ) as GameEnemy
-                    } else if (enemy.type == MapEnemyType.RUNNER) {
-                        (enemy as MapRunnerEnemy).copy(
-                            frameMetadata = metadata,
-                            colliding = GameElementCollisionState.COLLIDING,
-                            interacting = enemy.interacting
-                        ) as GameEnemy
-                    } else {
-                        (enemy as MapBlockerEnemy).copy(
-                            frameMetadata = metadata,
-                            colliding = GameElementCollisionState.COLLIDING,
-                            interacting = enemy.interacting
-                        ) as GameEnemy
+                    when (enemy.type) {
+                        MapEnemyType.SHOOTER -> {
+                            (enemy as MapShooterEnemy).copy(
+                                frameMetadata = metadata,
+                                colliding = metadataState.colliding,
+                                interacting = enemy.interacting
+                            ) as GameEnemy
+                        }
+                        MapEnemyType.RUNNER -> {
+                            (enemy as MapRunnerEnemy).copy(
+                                frameMetadata = metadata,
+                                colliding = GameElementCollisionState.COLLIDING,
+                                interacting = enemy.interacting
+                            ) as GameEnemy
+                        }
+                        else -> {
+                            (enemy as MapBlockerEnemy).copy(
+                                frameMetadata = metadata,
+                                colliding = GameElementCollisionState.COLLIDING,
+                                interacting = enemy.interacting
+                            ) as GameEnemy
+                        }
                     }
                 } else if (isInteracting) {
-                    if (enemy.type == MapEnemyType.SHOOTER) {
-                        (enemy as MapShooterEnemy).copy(
-                            frameMetadata = metadata,
-                            colliding = enemy.colliding,
-                            interacting = GameEnemyInteractionState.INTERACTING
-                        ) as GameEnemy
-                    } else if (enemy.type == MapEnemyType.RUNNER) {
-                        (enemy as MapRunnerEnemy).copy(
-                            frameMetadata = metadata,
-                            colliding = enemy.colliding,
-                            interacting = GameEnemyInteractionState.INTERACTING
-                        ) as GameEnemy
-                    } else {
-                        (enemy as MapBlockerEnemy).copy(
-                            frameMetadata = metadata,
-                            colliding = enemy.colliding,
-                            interacting = GameEnemyInteractionState.INTERACTING
-                        ) as GameEnemy
+                    when (enemy.type) {
+                        MapEnemyType.SHOOTER -> {
+                            (enemy as MapShooterEnemy).copy(
+                                frameMetadata = metadata,
+                                colliding = enemy.colliding,
+                                interacting = GameEnemyInteractionState.INTERACTING
+                            ) as GameEnemy
+                        }
+                        MapEnemyType.RUNNER -> {
+                            (enemy as MapRunnerEnemy).copy(
+                                frameMetadata = metadata,
+                                colliding = enemy.colliding,
+                                interacting = GameEnemyInteractionState.INTERACTING
+                            ) as GameEnemy
+                        }
+                        else -> {
+                            (enemy as MapBlockerEnemy).copy(
+                                frameMetadata = metadata,
+                                colliding = enemy.colliding,
+                                interacting = GameEnemyInteractionState.INTERACTING
+                            ) as GameEnemy
+                        }
                     }
                 } else {
                     enemy

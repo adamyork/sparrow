@@ -16,7 +16,7 @@ interface Engine {
 
     fun manageViewport(player: Player, viewPort: ViewPort): ViewPort
 
-    fun manageMap(player: Player, gameMap: GameMap, viewPort: ViewPort): GameMap
+    fun manageMap(player: Player, gameMap: GameMap): GameMap
 
     fun manageEnemyAndItemCollision(
         player: Player,

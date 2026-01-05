@@ -123,9 +123,9 @@ class DefaultEngine : Engine {
         return nextViewPort
     }
 
-    override fun manageMap(player: Player, gameMap: GameMap, viewPort: ViewPort): GameMap {
+    override fun manageMap(player: Player, gameMap: GameMap): GameMap {
         val managedMapItems = manageMapItems(gameMap)
-        val managedMapEnemies = manageMapEnemies(gameMap, player, viewPort)
+        val managedMapEnemies = manageMapEnemies(gameMap, player)
         val managedCollisionParticles = physics.applyCollisionParticlePhysics(gameMap.particles)
         val managedMapItemReturnParticles = physics.applyMapItemReturnParticlePhysics(managedCollisionParticles)
         if (player.moving == PlayerMovingState.MOVING && !player.jumping) {
@@ -213,46 +213,52 @@ class DefaultEngine : Engine {
         }
     }
 
-    private fun manageMapEnemies(gameMap: GameMap, player: Player, viewPort: ViewPort): ArrayList<GameEnemy> {
+    private fun manageMapEnemies(gameMap: GameMap, player: Player): ArrayList<GameEnemy> {
         return gameMap.enemies.map { enemy ->
             val nextState = enemy.getNextEnemyState(player)
             if (nextState != GameElementState.INACTIVE) {
-                val nextPosition = enemy.getNextPosition(viewPort)
+                val nextPosition = enemy.getNextPosition()
                 val itemX = nextPosition.x
                 val itemY = nextPosition.y
                 val frameMetadataWithState = (enemy as GameElement).getNextFrameMetadataWithState()
                 val metadata = frameMetadataWithState.first
                 val metadataState = frameMetadataWithState.second
-                if (enemy.type == MapEnemyType.SHOOTER) {
-                    (enemy as MapShooterEnemy).copy(
-                        x = itemX,
-                        y = itemY,
-                        state = nextState,
-                        frameMetadata = metadata,
-                        enemyPosition = nextPosition,
-                        colliding = metadataState.colliding,
-                        interacting = metadataState.interacting
-                    )
-                } else if (enemy.type == MapEnemyType.RUNNER) {
-                    (enemy as MapRunnerEnemy).copy(
-                        x = itemX,
-                        y = itemY,
-                        state = nextState,
-                        frameMetadata = metadata,
-                        enemyPosition = nextPosition,
-                        colliding = metadataState.colliding,
-                        interacting = metadataState.interacting
-                    )
-                } else {
-                    (enemy as MapBlockerEnemy).copy(
-                        x = itemX,
-                        y = itemY,
-                        state = nextState,
-                        frameMetadata = metadata,
-                        enemyPosition = nextPosition,
-                        colliding = metadataState.colliding,
-                        interacting = metadataState.interacting
-                    )
+                when (enemy.type) {
+                    MapEnemyType.SHOOTER -> {
+                        (enemy as MapShooterEnemy).copy(
+                            x = itemX,
+                            y = itemY,
+                            state = nextState,
+                            frameMetadata = metadata,
+                            enemyPosition = nextPosition,
+                            colliding = metadataState.colliding,
+                            interacting = metadataState.interacting
+                        )
+                    }
+
+                    MapEnemyType.RUNNER -> {
+                        (enemy as MapRunnerEnemy).copy(
+                            x = itemX,
+                            y = itemY,
+                            state = nextState,
+                            frameMetadata = metadata,
+                            enemyPosition = nextPosition,
+                            colliding = metadataState.colliding,
+                            interacting = metadataState.interacting
+                        )
+                    }
+
+                    else -> {
+                        (enemy as MapBlockerEnemy).copy(
+                            x = itemX,
+                            y = itemY,
+                            state = nextState,
+                            frameMetadata = metadata,
+                            enemyPosition = nextPosition,
+                            colliding = metadataState.colliding,
+                            interacting = metadataState.interacting
+                        )
+                    }
                 }
             } else if (enemy.type == MapEnemyType.RUNNER) {
                 (enemy as MapRunnerEnemy).copy(state = nextState)
