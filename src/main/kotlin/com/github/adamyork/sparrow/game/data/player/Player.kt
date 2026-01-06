@@ -16,7 +16,7 @@ data class Player(
     override val bufferedImage: BufferedImage,
     var vx: Double,
     val vy: Double,
-    val jumping: Boolean,
+    val jumping: PlayerJumpingState,
     val moving: PlayerMovingState,
     val direction: Direction,
     val colliding: GameElementCollisionState,
@@ -55,7 +55,7 @@ data class Player(
                 return Pair(metadata, metadataState)
             }
         }
-        if (jumping) {
+        if (jumping == PlayerJumpingState.INITIAL || jumping == PlayerJumpingState.RISING || jumping == PlayerJumpingState.HEIGHT_REACHED) {
             if (frameMetadata.frame >= ANIMATION_JUMPING_FRAMES) {
                 metadata = jumpingFrames[1] ?: throw RuntimeException("missing animation frame")
                 LOGGER.info("here 2")

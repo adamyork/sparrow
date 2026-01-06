@@ -6,6 +6,7 @@ import com.github.adamyork.sparrow.common.GameStatusProvider
 import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.data.map.GameMap
 import com.github.adamyork.sparrow.game.data.player.Player
+import com.github.adamyork.sparrow.game.data.player.PlayerJumpingState
 import com.github.adamyork.sparrow.game.data.player.PlayerMovingState
 import com.github.adamyork.sparrow.game.engine.Engine
 import com.github.adamyork.sparrow.game.service.AssetService
@@ -101,7 +102,7 @@ class Game {
                 playerAsset.bufferedImage,
                 0.0,
                 0.0,
-                false,
+                PlayerJumpingState.GROUNDED,
                 PlayerMovingState.STATIONARY,
                 Direction.RIGHT,
                 GameElementCollisionState.FREE
@@ -170,7 +171,7 @@ class Game {
             playerAsset.bufferedImage,
             0.0,
             0.0,
-            false,
+            PlayerJumpingState.GROUNDED,
             PlayerMovingState.STATIONARY,
             Direction.RIGHT,
             GameElementCollisionState.FREE
@@ -200,9 +201,9 @@ class Game {
             }
 
             ControlAction.JUMP -> {
-                if (!player.jumping) {
+                if (player.jumping == PlayerJumpingState.GROUNDED) {
                     LOGGER.info("starting player jump")
-                    player = player.copy(jumping = true)
+                    player = player.copy(jumping = PlayerJumpingState.INITIAL)
                 }
             }
         }

@@ -5,7 +5,7 @@ import com.github.adamyork.sparrow.game.service.PhysicsSettingsService
 class DefaultPhysicsSettingsService : PhysicsSettingsService {
 
     override var maxXVelocity: Double = 16.0
-    override var maxYVelocity: Double = 32.0
+    override var maxYVelocity: Double = 48.0
     override var jumpDistance: Double = 256.0
     override var gravity: Double = 20.0
     override var friction: Double = 0.9
