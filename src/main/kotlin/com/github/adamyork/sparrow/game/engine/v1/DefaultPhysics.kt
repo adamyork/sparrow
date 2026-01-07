@@ -5,6 +5,7 @@ import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.GameElementCollisionState
 import com.github.adamyork.sparrow.game.data.ViewPort
 import com.github.adamyork.sparrow.game.data.player.Player
+import com.github.adamyork.sparrow.game.data.player.PlayerJumpingState
 import com.github.adamyork.sparrow.game.data.player.PlayerMovingState
 import com.github.adamyork.sparrow.game.engine.Collision
 import com.github.adamyork.sparrow.game.engine.Physics
@@ -41,7 +42,7 @@ class DefaultPhysics : Physics {
         collision: Collision
     ): Player {
         val vx = getXVelocity(player.vx, player.moving)
-        val vy = getYVelocity(player.y, player.vy, player.jumping, collisionBoundaries)
+        val vy = getYVelocity(player.vy, player.jumping)
         val yResult = movePlayerY(
             player.y,
             vy,
@@ -124,26 +125,21 @@ class DefaultPhysics : Physics {
         return nextVx
     }
 
-    private fun getYVelocity(
-        playerY: Int,
-        playerVy: Double,
-        playerJumping: Boolean,
-        collisionBoundaries: CollisionBoundaries
-    ): Double {
-        val playerIsOnFloor = playerY == collisionBoundaries.bottom
+    private fun getYVelocity(playerVy: Double, playerJumping: PlayerJumpingState): Double {
         var nextVy: Double = playerVy
-        if (playerJumping) {
-            if (nextVy == 0.0 && playerIsOnFloor) {
-                LOGGER.info("starting a jump")
+        if (playerJumping == PlayerJumpingState.GROUNDED || playerJumping == PlayerJumpingState.HEIGHT_REACHED || playerJumping == PlayerJumpingState.FALLING) {
+            nextVy = 0.0
+        } else {
+            if (playerJumping == PlayerJumpingState.INITIAL) {
+                LOGGER.info("starting a jump INITIAL")
                 nextVy += physicsSettingsService.jumpDistance / 2
-            } else if (nextVy < physicsSettingsService.maxYVelocity) {
+            } else if (playerJumping == PlayerJumpingState.RISING) {
+                LOGGER.info("in a jump RISING")
                 nextVy += (physicsSettingsService.yVelocityCoefficient * nextVy)
                 if (nextVy > physicsSettingsService.maxYVelocity) {
                     nextVy = physicsSettingsService.maxYVelocity
                 }
             }
-        } else {
-            nextVy = 0.0
         }
         return nextVy
     }
@@ -180,35 +176,40 @@ class DefaultPhysics : Physics {
     private fun movePlayerY(
         playerY: Int,
         vy: Double,
-        playerJumping: Boolean,
+        playerJumping: PlayerJumpingState,
         collisionBoundaries: CollisionBoundaries
     ): PhysicsYResult {
         var destinationY = playerY + physicsSettingsService.gravity.roundToInt()
         var nextPlayerJumping = playerJumping
         var nextPlayerVy = vy
-        val playerIsOnFloor = playerY == collisionBoundaries.bottom
-        if (nextPlayerJumping && !playerIsOnFloor && vy == 0.0) {
-            LOGGER.info("double jump detected")
-            nextPlayerJumping = false
-        } else {
-            val deltaTime = gameStatusProvider.getDeltaTime()
-            destinationY -= (vy * deltaTime).roundToInt()
+        val deltaTime = gameStatusProvider.getDeltaTime()
+        destinationY -= (vy * deltaTime).roundToInt()
+        if (nextPlayerJumping == PlayerJumpingState.HEIGHT_REACHED) {
+            LOGGER.info("player jump is FALLING")
+            nextPlayerJumping = PlayerJumpingState.FALLING
         }
-        if (playerJumping) {
+        if (nextPlayerJumping == PlayerJumpingState.INITIAL || nextPlayerJumping == PlayerJumpingState.RISING) {
+            if (nextPlayerJumping == PlayerJumpingState.INITIAL) {
+                nextPlayerJumping = PlayerJumpingState.RISING
+            }
             val jumpBoundary = collisionBoundaries.bottom - physicsSettingsService.jumpDistance
             if (destinationY <= jumpBoundary) {
-                LOGGER.info("jump height reached")
-                nextPlayerJumping = false
+                LOGGER.info("jump height reached HEIGHT_REACHED")
+                nextPlayerJumping = PlayerJumpingState.HEIGHT_REACHED
                 nextPlayerVy = 0.0
             }
         }
         if (destinationY > collisionBoundaries.bottom) {
             destinationY = collisionBoundaries.bottom
+            if (nextPlayerJumping == PlayerJumpingState.FALLING) {
+                nextPlayerJumping = PlayerJumpingState.GROUNDED
+                LOGGER.info("jump complete GROUNDED")
+            }
         } else if (destinationY < collisionBoundaries.top) {
             destinationY = collisionBoundaries.top + 1
-            if (nextPlayerJumping) {
-                LOGGER.info("jump height reached because of top of viewport")
-                nextPlayerJumping = false
+            if (nextPlayerJumping == PlayerJumpingState.RISING) {
+                LOGGER.info("jump height reached because of top of viewport HEIGHT_REACHED")
+                nextPlayerJumping = PlayerJumpingState.HEIGHT_REACHED
                 nextPlayerVy = 0.0
             }
         }

@@ -11,6 +11,7 @@ import com.github.adamyork.sparrow.game.data.item.MapItemType
 import com.github.adamyork.sparrow.game.data.map.GameMap
 import com.github.adamyork.sparrow.game.data.map.GameMapState
 import com.github.adamyork.sparrow.game.data.player.Player
+import com.github.adamyork.sparrow.game.data.player.PlayerJumpingState
 import com.github.adamyork.sparrow.game.data.player.PlayerMovingState
 import com.github.adamyork.sparrow.game.engine.Collision
 import com.github.adamyork.sparrow.game.engine.Engine
@@ -128,7 +129,7 @@ class DefaultEngine : Engine {
         val managedMapEnemies = manageMapEnemies(gameMap, player)
         val managedCollisionParticles = physics.applyCollisionParticlePhysics(gameMap.particles)
         val managedMapItemReturnParticles = physics.applyMapItemReturnParticlePhysics(managedCollisionParticles)
-        if (player.moving == PlayerMovingState.MOVING && !player.jumping) {
+        if (player.moving == PlayerMovingState.MOVING && player.jumping == PlayerJumpingState.GROUNDED) {
             val nextDustParticles = particles.createDustParticles(player)
             managedMapItemReturnParticles.addAll(nextDustParticles)
         }
