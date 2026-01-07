@@ -49,6 +49,12 @@ class ServiceConfig {
         @Value("\${audio.item.collect}") audioItemCollectPath: String,
         @Value("\${audio.background}") audioBackgroundMusicPath: String,
         @Value("\${audio.enemy.shoot}") audioEnemyShootPath: String,
+        @Value("\${map.directive.initial.text}") mapDirectiveInitialText: String,
+        @Value("\${map.directive.initial.color}") mapDirectiveInitialTextColor: String,
+        @Value("\${map.directive.finish.text}") mapDirectiveFinishText: String,
+        @Value("\${map.directive.finish.color}") mapDirectiveFinishTextColor: String,
+        @Value("\${map.directive.complete.text}") mapDirectiveCompleteText: String,
+        @Value("\${map.directive.complete.color}") mapDirectiveCompleteTextColor: String,
     ): AssetService {
         return DefaultAssetService(
             wavService,
@@ -77,7 +83,13 @@ class ServiceConfig {
             audioPlayerCollisionPath,
             audioItemCollectPath,
             audioBackgroundMusicPath,
-            audioEnemyShootPath
+            audioEnemyShootPath,
+            mapDirectiveInitialText,
+            mapDirectiveInitialTextColor,
+            mapDirectiveFinishText,
+            mapDirectiveFinishTextColor,
+            mapDirectiveCompleteText,
+            mapDirectiveCompleteTextColor
         )
     }
 

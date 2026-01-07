@@ -21,6 +21,7 @@ import java.awt.Font
 import java.awt.FontMetrics
 import java.awt.image.BufferedImage
 import java.io.File
+import java.lang.reflect.Field
 import java.net.URI
 import java.net.URL
 import java.util.*
@@ -108,7 +109,13 @@ class DefaultAssetService : AssetService {
         audioPlayerCollisionPath: String,
         audioItemCollectPath: String,
         audioBackgroundMusicPath: String,
-        audioEnemyShootPath: String
+        audioEnemyShootPath: String,
+        mapDirectiveInitialText: String,
+        mapDirectiveInitialTextColor: String,
+        mapDirectiveFinishText: String,
+        mapDirectiveFinishTextColor: String,
+        mapDirectiveCompleteText: String,
+        mapDirectiveCompleteTextColor: String
     ) {
         this.wavService = wavService
         this.viewPortWidth = viewPortWidth
@@ -165,8 +172,8 @@ class DefaultAssetService : AssetService {
             viewPortWidth,
             viewPortHeight,
             Font("Arial", Font.BOLD, 32),
-            Color.BLACK,
-            "Collect all the greenies!",//TODO externalize this text
+            findColorByName(mapDirectiveInitialTextColor),
+            mapDirectiveInitialText,
             centerX = true,
             centerY = false,
         )
@@ -174,8 +181,8 @@ class DefaultAssetService : AssetService {
             viewPortWidth,
             viewPortHeight,
             Font("Arial", Font.BOLD, 32),
-            Color.BLACK,
-            "Find the finish flag!",//TODO externalize this text
+            findColorByName(mapDirectiveFinishTextColor),
+            mapDirectiveFinishText,
             centerX = true,
             centerY = false,
         )
@@ -183,8 +190,8 @@ class DefaultAssetService : AssetService {
             viewPortWidth,
             viewPortHeight,
             Font("Arial", Font.BOLD, 32),
-            Color.BLACK,
-            "You won!",//TODO externalize this text
+            findColorByName(mapDirectiveCompleteTextColor),
+            mapDirectiveCompleteText,
             centerX = true,
             centerY = false,
         )
@@ -379,6 +386,18 @@ class DefaultAssetService : AssetService {
     private fun urlToBytes(url: URL?): ByteArray {
         val file = urlToFile(url)
         return AssetService.getBytes(file)
+    }
+
+    private fun findColorByName(name: String): Color {
+        var color: Color
+        try {
+            val field: Field = Color::class.java.getField(name)
+            color = field.get(null) as Color
+        } catch (exception: Exception) {
+            LOGGER.info("color not found $exception")
+            color = Color.CYAN
+        }
+        return color
     }
 
 }

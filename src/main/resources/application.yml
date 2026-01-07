@@ -66,6 +66,18 @@ map:
         x: 500
         y: 672
         type: "runner"
+  directive:
+    initial:
+      text: "Collect all the greenies!"
+      color: "green"
+    finish:
+      text: "Find the finish flag!"
+      color: "black"
+    complete:
+      text: "You won!"
+      color: "black"
+
+
 particle:
   player:
     movement:
