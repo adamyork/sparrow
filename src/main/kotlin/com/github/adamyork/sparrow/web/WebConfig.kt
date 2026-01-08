@@ -18,7 +18,8 @@ class WebConfig : WebFluxConfigurer {
     fun scoreHandler(scoreService: ScoreService): ScoreHandler = ScoreHandler(scoreService)
 
     @Bean
-    fun physicsHandler(physicsSettingsService: PhysicsSettingsService): PhysicsSettingsHandler = PhysicsSettingsHandler(physicsSettingsService)
+    fun physicsHandler(physicsSettingsService: PhysicsSettingsService): PhysicsSettingsHandler =
+        PhysicsSettingsHandler(physicsSettingsService)
 
     @Bean
     fun rootRouter() =
@@ -27,7 +28,20 @@ class WebConfig : WebFluxConfigurer {
             val extensions = listOf("js", "css", "wav", "png")
             val spaPredicate = !(path("/score") or
                     path("/physics") or
-                    pathExtension(extensions::contains))
+                    pathExtension(extensions::contains) or
+                    path("/form.html"))
+            resource(spaPredicate, index)
+        }
+
+    @Bean
+    fun formRouter() =
+        router {
+            val index = ClassPathResource("static/form.html")
+            val extensions = listOf("js", "css", "wav", "png")
+            val spaPredicate = !(path("/score") or
+                    path("/physics") or
+                    pathExtension(extensions::contains)) and
+                    path("/form.html")
             resource(spaPredicate, index)
         }
 
@@ -38,7 +52,20 @@ class WebConfig : WebFluxConfigurer {
             val extensions = listOf("css", "wav", "png")
             val spaPredicate = !(path("/score") or
                     path("/physics") or
-                    pathExtension(extensions::contains))
+                    pathExtension(extensions::contains) or
+                    path("/form.js"))
+            resource(spaPredicate, index)
+        }
+
+    @Bean
+    fun formJsRouter() =
+        router {
+            val index = ClassPathResource("static/form.js")
+            val extensions = listOf("css", "wav", "png")
+            val spaPredicate = !(path("/score") or
+                    path("/physics") or
+                    pathExtension(extensions::contains)) and
+                    path("/form.js")
             resource(spaPredicate, index)
         }
 
@@ -49,7 +76,20 @@ class WebConfig : WebFluxConfigurer {
             val extensions = listOf("js", "wav", "png")
             val spaPredicate = !(path("/score") or
                     path("/physics") or
-                    pathExtension(extensions::contains))
+                    pathExtension(extensions::contains) or
+                    path("/form.css"))
+            resource(spaPredicate, index)
+        }
+
+    @Bean
+    fun formCssRouter() =
+        router {
+            val index = ClassPathResource("static/form.css")
+            val extensions = listOf("js", "wav", "png")
+            val spaPredicate = !(path("/score") or
+                    path("/physics") or
+                    pathExtension(extensions::contains)) and
+                    path("/form.css")
             resource(spaPredicate, index)
         }
 

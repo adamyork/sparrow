@@ -53,15 +53,8 @@ button[disabled] {
     color: #666666;
 }
 
-form {
-    font-size: 10pt
-}
-
-form label {
-    width: 200px
-}
-
-form div label {
-    display: inline-block;
-    vertical-align: super;
+#physicFormFrame {
+    border: 0;
+    height: 800px;
+    width: 600px;
 }

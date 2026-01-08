@@ -1,0 +1,12 @@
+form {
+    font-size: 10pt
+}
+
+form label {
+    width: 200px
+}
+
+form div label {
+    display: inline-block;
+    vertical-align: super;
+}
