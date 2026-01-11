@@ -1,8 +1,8 @@
 package com.github.adamyork.sparrow.game
 
-import com.github.adamyork.sparrow.common.ControlAction
-import com.github.adamyork.sparrow.common.ControlType
-import com.github.adamyork.sparrow.common.GameStatusProvider
+import com.github.adamyork.sparrow.common.data.ControlAction
+import com.github.adamyork.sparrow.common.data.ControlType
+import com.github.adamyork.sparrow.common.StatusProvider
 import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.data.map.GameMap
 import com.github.adamyork.sparrow.game.data.player.Player
@@ -29,7 +29,7 @@ class Game {
     val assetService: AssetService
     val engine: Engine
     val scoreService: ScoreService
-    val gameStatusProvider: GameStatusProvider
+    val statusProvider: StatusProvider
     var isInitialized: Boolean = false
     val playerInitialX: Int
     val playerInitialY: Int
@@ -53,7 +53,7 @@ class Game {
         assetService: AssetService,
         engine: Engine,
         scoreService: ScoreService,
-        gameStatusProvider: GameStatusProvider,
+        statusProvider: StatusProvider,
         playerInitialX: Int,
         playerInitialY: Int,
         viewPortInitialX: Int,
@@ -65,7 +65,7 @@ class Game {
         this.assetService = assetService
         this.engine = engine
         this.scoreService = scoreService
-        this.gameStatusProvider = gameStatusProvider
+        this.statusProvider = statusProvider
         this.playerInitialX = playerInitialX
         this.playerInitialY = playerInitialY
         this.viewPortInitialX = viewPortInitialX
@@ -127,8 +127,8 @@ class Game {
         return Flux.fromIterable(listOf(1))
             .collectList()
             .map(Function { _ ->
-                if (gameStatusProvider.running.load()) {
-                    val lastPaintMs = gameStatusProvider.lastPaintTime.load()
+                if (statusProvider.running.load()) {
+                    val lastPaintMs = statusProvider.lastPaintTime.load()
                     val nextPaintTimeMs = System.currentTimeMillis()
                     val deltaTime = nextPaintTimeMs - lastPaintMs
                     val fpsMaxDeltaTimeMs = 1000 / fpsMax
@@ -143,7 +143,7 @@ class Game {
                         player = nextPlayerAndMap.first
                         gameMap = nextPlayerAndMap.second
                         scoreService.gameMapItem = gameMap.items
-                        gameStatusProvider.lastPaintTime.store(nextPaintTimeMs)
+                        statusProvider.lastPaintTime.store(nextPaintTimeMs)
                         engine.draw(gameMap, viewPort, player)
                     }
                 } else {
@@ -185,7 +185,7 @@ class Game {
         )
         viewPort = ViewPort(viewPortInitialX, viewPortInitialY, 0, 0, viewPortWidth, viewPortHeight)
         scoreService.gameMapItem = gameMap.items
-        gameStatusProvider.reset()
+        statusProvider.reset()
     }
 
     private fun startInput(controlAction: ControlAction) {

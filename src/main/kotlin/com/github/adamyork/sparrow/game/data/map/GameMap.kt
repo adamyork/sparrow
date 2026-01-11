@@ -2,10 +2,10 @@ package com.github.adamyork.sparrow.game.data.map
 
 import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.data.enemy.*
-import com.github.adamyork.sparrow.game.data.item.GameItem
-import com.github.adamyork.sparrow.game.data.item.MapCollectibleItem
-import com.github.adamyork.sparrow.game.data.item.MapFinishItem
-import com.github.adamyork.sparrow.game.data.item.MapItemType
+import com.github.adamyork.sparrow.game.data.item.Item
+import com.github.adamyork.sparrow.game.data.item.CollectibleItem
+import com.github.adamyork.sparrow.game.data.item.FinishItem
+import com.github.adamyork.sparrow.game.data.item.ItemType
 import com.github.adamyork.sparrow.game.engine.data.Particle
 import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.game.service.data.ImageAsset
@@ -18,8 +18,8 @@ data class GameMap(
     val collisionAsset: ImageAsset,
     val width: Int,
     val height: Int,
-    var items: ArrayList<GameItem>,
-    var enemies: ArrayList<GameEnemy>,
+    var items: ArrayList<Item>,
+    var enemies: ArrayList<Enemy>,
     var particles: ArrayList<Particle>
 ) {
 
@@ -46,15 +46,15 @@ data class GameMap(
 
     fun generateMapItems(collectibleItemAsset: ImageAsset, finishItemAsset: ImageAsset, assetService: AssetService) {
         for (i in 0..<assetService.getTotalItems()) {
-            val itemType = MapItemType.from(assetService.getItemPosition(i).type)
-            if (itemType == MapItemType.FINISH) {
+            val itemType = ItemType.from(assetService.getItemPosition(i).type)
+            if (itemType == ItemType.FINISH) {
                 items.add(
-                    MapFinishItem(
+                    FinishItem(
                         finishItemAsset.width,
                         finishItemAsset.height,
                         assetService.getItemPosition(i).x,
                         assetService.getItemPosition(i).y,
-                        MapItemType.FINISH,
+                        ItemType.FINISH,
                         GameElementState.INACTIVE,
                         finishItemAsset.bufferedImage,
                         FrameMetadata(1, Cell(1, 1, width, height)),
@@ -63,12 +63,12 @@ data class GameMap(
                 )
             } else {
                 items.add(
-                    MapCollectibleItem(
+                    CollectibleItem(
                         collectibleItemAsset.width,
                         collectibleItemAsset.height,
                         assetService.getItemPosition(i).x,
                         assetService.getItemPosition(i).y,
-                        MapItemType.COLLECTABLE,
+                        ItemType.COLLECTABLE,
                         GameElementState.ACTIVE,
                         collectibleItemAsset.bufferedImage,
                         FrameMetadata(1, Cell(1, 1, width, height)),
@@ -81,11 +81,11 @@ data class GameMap(
 
     fun generateMapEnemies(blockerEnemyAsset: ImageAsset, shooterEnemyAsset: ImageAsset, assetService: AssetService) {
         for (i in 0..<assetService.getTotalEnemies()) {
-            val itemType = MapEnemyType.from(assetService.getEnemyPosition(i).type)
+            val itemType = EnemyType.from(assetService.getEnemyPosition(i).type)
             when (itemType) {
-                MapEnemyType.BLOCKER -> {
+                EnemyType.BLOCKER -> {
                     enemies.add(
-                        MapBlockerEnemy(
+                        BlockerEnemy(
                             assetService.getEnemyPosition(i).x,
                             assetService.getEnemyPosition(i).y,
                             blockerEnemyAsset.width,
@@ -93,7 +93,7 @@ data class GameMap(
                             GameElementState.ACTIVE,
                             FrameMetadata(1, Cell(1, 1, width, height)),
                             blockerEnemyAsset.bufferedImage,
-                            MapEnemyType.BLOCKER,
+                            EnemyType.BLOCKER,
                             assetService.getEnemyPosition(i).x,
                             assetService.getEnemyPosition(i).y,
                             EnemyPosition(
@@ -102,13 +102,13 @@ data class GameMap(
                                 Direction.LEFT
                             ),
                             GameElementCollisionState.FREE,
-                            GameEnemyInteractionState.ISOLATED
+                            EnemyInteractionState.ISOLATED
                         )
                     )
                 }
-                MapEnemyType.SHOOTER -> {
+                EnemyType.SHOOTER -> {
                     enemies.add(
-                        MapShooterEnemy(
+                        ShooterEnemy(
                             assetService.getEnemyPosition(i).x,
                             assetService.getEnemyPosition(i).y,
                             shooterEnemyAsset.width,
@@ -116,7 +116,7 @@ data class GameMap(
                             GameElementState.ACTIVE,
                             FrameMetadata(1, Cell(1, 1, width, height)),
                             shooterEnemyAsset.bufferedImage,
-                            MapEnemyType.SHOOTER,
+                            EnemyType.SHOOTER,
                             assetService.getEnemyPosition(i).x,
                             assetService.getEnemyPosition(i).y,
                             EnemyPosition(
@@ -125,13 +125,13 @@ data class GameMap(
                                 Direction.LEFT
                             ),
                             GameElementCollisionState.FREE,
-                            GameEnemyInteractionState.ISOLATED
+                            EnemyInteractionState.ISOLATED
                         )
                     )
                 }
                 else -> {
                     enemies.add(
-                        MapRunnerEnemy(
+                        RunnerEnemy(
                             assetService.getEnemyPosition(i).x,
                             assetService.getEnemyPosition(i).y,
                             shooterEnemyAsset.width,
@@ -139,7 +139,7 @@ data class GameMap(
                             GameElementState.INACTIVE,
                             FrameMetadata(1, Cell(1, 1, width, height)),
                             shooterEnemyAsset.bufferedImage,
-                            MapEnemyType.RUNNER,
+                            EnemyType.RUNNER,
                             assetService.getEnemyPosition(i).x,
                             assetService.getEnemyPosition(i).y,
                             EnemyPosition(
@@ -148,7 +148,7 @@ data class GameMap(
                                 Direction.LEFT
                             ),
                             GameElementCollisionState.FREE,
-                            GameEnemyInteractionState.ISOLATED
+                            EnemyInteractionState.ISOLATED
                         )
                     )
                 }

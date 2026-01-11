@@ -2,27 +2,21 @@ package com.github.adamyork.sparrow.common
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 import java.awt.image.BufferedImage
 import kotlin.concurrent.atomics.*
 
 
 @OptIn(ExperimentalAtomicApi::class)
-@Component
-class GameStatusProvider {
+class StatusProvider {
 
     companion object {
-        val LOGGER: Logger = LoggerFactory.getLogger(GameStatusProvider::class.java)
+        val LOGGER: Logger = LoggerFactory.getLogger(StatusProvider::class.java)
     }
 
-    final val fpsMax: Int
-    final val fpsMin: Int
+    val fpsMax: Int
+    val fpsMin: Int
 
-    constructor(
-        @Value("\${engine.fps.max}") fpsMax: Int,
-        @Value("\${engine.fps.min}") fpsMin: Int
-    ) {
+    constructor(fpsMax: Int, fpsMin: Int) {
         this.fpsMax = fpsMax
         this.fpsMin = fpsMin
     }

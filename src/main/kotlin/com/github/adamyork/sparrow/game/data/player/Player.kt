@@ -1,7 +1,7 @@
 package com.github.adamyork.sparrow.game.data.player
 
 import com.github.adamyork.sparrow.game.data.*
-import com.github.adamyork.sparrow.game.data.enemy.GameEnemyInteractionState
+import com.github.adamyork.sparrow.game.data.enemy.EnemyInteractionState
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
@@ -41,7 +41,7 @@ data class Player(
         var metadata = movingFrames[1] ?: throw RuntimeException("missing animation frame")
         var metadataState = FrameMetadataState(
             GameElementCollisionState.FREE,
-            GameEnemyInteractionState.ISOLATED,
+            EnemyInteractionState.ISOLATED,
             state
         )
         if (colliding == GameElementCollisionState.COLLIDING) {

@@ -1,9 +1,8 @@
 package com.github.adamyork.sparrow.common
 
-import org.springframework.stereotype.Component
+import com.github.adamyork.sparrow.common.data.Sounds
 import java.util.concurrent.ConcurrentLinkedQueue
 
-@Component
 class AudioQueue {
 
     val queue: ConcurrentLinkedQueue<Sounds> = ConcurrentLinkedQueue()

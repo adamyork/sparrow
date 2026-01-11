@@ -1,12 +1,12 @@
 package com.github.adamyork.sparrow.game.data.enemy
 
-enum class MapEnemyType {
+enum class EnemyType {
     BLOCKER,
     SHOOTER,
     RUNNER;
 
     companion object {
-        fun from(literalValue: String): MapEnemyType {
+        fun from(literalValue: String): EnemyType {
             return when (literalValue) {
                 "blocker" -> {
                     BLOCKER

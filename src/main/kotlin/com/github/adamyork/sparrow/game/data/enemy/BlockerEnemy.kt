@@ -6,7 +6,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 
-data class MapBlockerEnemy(
+data class BlockerEnemy(
     override val x: Int,
     override val y: Int,
     override val width: Int,
@@ -14,16 +14,16 @@ data class MapBlockerEnemy(
     override val state: GameElementState,
     override val frameMetadata: FrameMetadata,
     override val bufferedImage: BufferedImage,
-    override val type: MapEnemyType,
+    override val type: EnemyType,
     override val originX: Int,
     override val originY: Int,
     override val enemyPosition: EnemyPosition,
     override val colliding: GameElementCollisionState,
-    override val interacting: GameEnemyInteractionState
-) : GameEnemy {
+    override val interacting: EnemyInteractionState
+) : Enemy {
 
     companion object {
-        val LOGGER: Logger = LoggerFactory.getLogger(MapBlockerEnemy::class.java)
+        val LOGGER: Logger = LoggerFactory.getLogger(BlockerEnemy::class.java)
         const val ANIMATION_COLLISION_FRAMES = 8
         const val MAX_X_MOVEMENT = 50
         const val MOVEMENT_X_DISTANCE = 10

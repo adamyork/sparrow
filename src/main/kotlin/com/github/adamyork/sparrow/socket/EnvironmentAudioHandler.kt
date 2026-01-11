@@ -10,10 +10,10 @@ import org.springframework.web.reactive.socket.WebSocketSession
 import reactor.core.publisher.Mono
 
 
-class GameAudioHandler : WebSocketHandler {
+class EnvironmentAudioHandler : WebSocketHandler {
 
     companion object {
-        val LOGGER: Logger = LoggerFactory.getLogger(GameAudioHandler::class.java)
+        val LOGGER: Logger = LoggerFactory.getLogger(EnvironmentAudioHandler::class.java)
     }
 
     val assetService: AssetService

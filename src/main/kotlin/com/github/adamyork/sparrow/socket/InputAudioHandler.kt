@@ -1,7 +1,7 @@
 package com.github.adamyork.sparrow.socket
 
-import com.github.adamyork.sparrow.common.GameStatusProvider
-import com.github.adamyork.sparrow.common.Sounds
+import com.github.adamyork.sparrow.common.StatusProvider
+import com.github.adamyork.sparrow.common.data.Sounds
 import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.socket.InputHandler.Companion.INPUT_KEY_JUMP
 import org.slf4j.Logger
@@ -20,11 +20,11 @@ class InputAudioHandler : WebSocketHandler {
     }
 
     val assetService: AssetService
-    val gameStatusProvider: GameStatusProvider
+    val statusProvider: StatusProvider
 
-    constructor(assetService: AssetService, gameStatusProvider: GameStatusProvider) {
+    constructor(assetService: AssetService, statusProvider: StatusProvider) {
         this.assetService = assetService
-        this.gameStatusProvider = gameStatusProvider
+        this.statusProvider = statusProvider
     }
 
     @OptIn(ExperimentalAtomicApi::class)
@@ -32,7 +32,7 @@ class InputAudioHandler : WebSocketHandler {
         val map = session.receive()
             .flatMap { message ->
                 var messageFlux = Flux.fromIterable<WebSocketMessage>(listOf())
-                if (!gameStatusProvider.running.load()) {
+                if (!statusProvider.running.load()) {
                     messageFlux
                 } else {
                     val payloadAsText = message.payloadAsText

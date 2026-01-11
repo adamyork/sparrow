@@ -1,6 +1,6 @@
 package com.github.adamyork.sparrow.game.engine.v1
 
-import com.github.adamyork.sparrow.common.GameStatusProvider
+import com.github.adamyork.sparrow.common.StatusProvider
 import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.GameElementCollisionState
 import com.github.adamyork.sparrow.game.data.ViewPort
@@ -25,14 +25,14 @@ class DefaultPhysics : Physics {
         val LOGGER: Logger = LoggerFactory.getLogger(DefaultPhysics::class.java)
     }
 
-    val gameStatusProvider: GameStatusProvider
+    val statusProvider: StatusProvider
     val physicsSettingsService: PhysicsSettingsService
 
     constructor(
-        gameStatusProvider: GameStatusProvider,
+        statusProvider: StatusProvider,
         physicsSettingsService: PhysicsSettingsService
     ) {
-        this.gameStatusProvider = gameStatusProvider
+        this.statusProvider = statusProvider
         this.physicsSettingsService = physicsSettingsService
     }
 
@@ -152,7 +152,7 @@ class DefaultPhysics : Physics {
         collisionBoundaries: CollisionBoundaries
     ): PhysicsXResult {
         var targetX = playerX
-        val deltaTime = gameStatusProvider.getDeltaTime()
+        val deltaTime = statusProvider.getDeltaTime()
         if (playerMoving == PlayerMovingState.MOVING || playerVx != 0.0) {
             if (playerDirection == Direction.LEFT) {
                 targetX -= (playerVx * deltaTime).roundToInt()
@@ -182,7 +182,7 @@ class DefaultPhysics : Physics {
         var destinationY = playerY + physicsSettingsService.gravity.roundToInt()
         var nextPlayerJumping = playerJumping
         var nextPlayerVy = vy
-        val deltaTime = gameStatusProvider.getDeltaTime()
+        val deltaTime = statusProvider.getDeltaTime()
         destinationY -= (vy * deltaTime).roundToInt()
         if (nextPlayerJumping == PlayerJumpingState.HEIGHT_REACHED) {
             LOGGER.info("player jump is FALLING")

@@ -1,6 +1,6 @@
 package com.github.adamyork.sparrow.game.engine
 
-import com.github.adamyork.sparrow.game.data.enemy.GameEnemy
+import com.github.adamyork.sparrow.game.data.enemy.Enemy
 import com.github.adamyork.sparrow.game.data.player.Player
 import com.github.adamyork.sparrow.game.engine.data.Particle
 
@@ -12,7 +12,7 @@ interface Particles {
 
     fun createProjectileParticle(
         player: Player,
-        enemy: GameEnemy,
+        enemy: Enemy,
         particles: ArrayList<Particle>
     ): Pair<ArrayList<Particle>, Boolean>
 

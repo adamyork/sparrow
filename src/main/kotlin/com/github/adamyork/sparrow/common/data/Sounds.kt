@@ -1,4 +1,4 @@
-package com.github.adamyork.sparrow.common
+package com.github.adamyork.sparrow.common.data
 
 enum class Sounds {
 

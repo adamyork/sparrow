@@ -1,13 +1,13 @@
 package com.github.adamyork.sparrow.game.engine.v1
 
 import com.github.adamyork.sparrow.common.AudioQueue
-import com.github.adamyork.sparrow.common.GameStatusProvider
+import com.github.adamyork.sparrow.common.StatusProvider
 import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.data.enemy.*
-import com.github.adamyork.sparrow.game.data.item.GameItem
-import com.github.adamyork.sparrow.game.data.item.MapCollectibleItem
-import com.github.adamyork.sparrow.game.data.item.MapFinishItem
-import com.github.adamyork.sparrow.game.data.item.MapItemType
+import com.github.adamyork.sparrow.game.data.item.Item
+import com.github.adamyork.sparrow.game.data.item.CollectibleItem
+import com.github.adamyork.sparrow.game.data.item.FinishItem
+import com.github.adamyork.sparrow.game.data.item.ItemType
 import com.github.adamyork.sparrow.game.data.map.GameMap
 import com.github.adamyork.sparrow.game.data.map.GameMapState
 import com.github.adamyork.sparrow.game.data.player.Player
@@ -51,7 +51,7 @@ class DefaultEngine : Engine {
     val audioQueue: AudioQueue
     val scoreService: ScoreService
     val assetService: AssetService
-    val gameStatusProvider: GameStatusProvider
+    val statusProvider: StatusProvider
 
     constructor(
         physics: Physics,
@@ -60,7 +60,7 @@ class DefaultEngine : Engine {
         audioQueue: AudioQueue,
         scoreService: ScoreService,
         assetService: AssetService,
-        gameStatusProvider: GameStatusProvider
+        statusProvider: StatusProvider
     ) {
         this.physics = physics
         this.particles = particles
@@ -68,7 +68,7 @@ class DefaultEngine : Engine {
         this.collision = collision
         this.scoreService = scoreService
         this.assetService = assetService
-        this.gameStatusProvider = gameStatusProvider
+        this.statusProvider = statusProvider
     }
 
     override fun setCollisionBufferedImage(asset: ImageAsset) {
@@ -172,22 +172,22 @@ class DefaultEngine : Engine {
         return Pair(projectTileCollisionResult.first, nextGameMap)
     }
 
-    private fun manageMapItems(gameMap: GameMap): ArrayList<GameItem> {
+    private fun manageMapItems(gameMap: GameMap): ArrayList<Item> {
         return gameMap.items.map { item ->
             val itemX = item.x
             val itemY = item.y
             val frameMetadataWithState = (item as GameElement).getNextFrameMetadataWithState()
             val metadata = frameMetadataWithState.first
             var nextState = frameMetadataWithState.second.state
-            if (item.type == MapItemType.FINISH) {
+            if (item.type == ItemType.FINISH) {
                 if (gameMap.state == GameMapState.COMPLETING && item.state == GameElementState.INACTIVE) {
                     nextState = GameElementState.ACTIVE
                 }
             }
-            if (item.type == MapItemType.FINISH) {
-                (item as MapFinishItem).copy(x = itemX, y = itemY, state = nextState, frameMetadata = metadata)
+            if (item.type == ItemType.FINISH) {
+                (item as FinishItem).copy(x = itemX, y = itemY, state = nextState, frameMetadata = metadata)
             } else {
-                (item as MapCollectibleItem).copy(
+                (item as CollectibleItem).copy(
                     x = itemX,
                     y = itemY,
                     state = nextState,
@@ -197,14 +197,14 @@ class DefaultEngine : Engine {
         }.toCollection(ArrayList())
     }
 
-    private fun returnMapItemAfterCollision(gameMap: GameMap): ArrayList<GameItem> {
-        val firstInactive: GameItem? =
-            gameMap.items.firstOrNull { item -> item.type == MapItemType.COLLECTABLE && item.state == GameElementState.INACTIVE }
+    private fun returnMapItemAfterCollision(gameMap: GameMap): ArrayList<Item> {
+        val firstInactive: Item? =
+            gameMap.items.firstOrNull { item -> item.type == ItemType.COLLECTABLE && item.state == GameElementState.INACTIVE }
         if (firstInactive != null) {
-            val remainingItems: ArrayList<GameItem> =
-                gameMap.items.filter { item -> item.type == MapItemType.COLLECTABLE && item.id != firstInactive.id }
+            val remainingItems: ArrayList<Item> =
+                gameMap.items.filter { item -> item.type == ItemType.COLLECTABLE && item.id != firstInactive.id }
                     .toCollection(ArrayList())
-            val reactivatedItem = (firstInactive as MapCollectibleItem).copy(
+            val reactivatedItem = (firstInactive as CollectibleItem).copy(
                 state = GameElementState.ACTIVE
             )
             remainingItems.add(reactivatedItem)
@@ -214,7 +214,7 @@ class DefaultEngine : Engine {
         }
     }
 
-    private fun manageMapEnemies(gameMap: GameMap, player: Player): ArrayList<GameEnemy> {
+    private fun manageMapEnemies(gameMap: GameMap, player: Player): ArrayList<Enemy> {
         return gameMap.enemies.map { enemy ->
             val nextState = enemy.getNextEnemyState(player)
             if (nextState != GameElementState.INACTIVE) {
@@ -225,8 +225,8 @@ class DefaultEngine : Engine {
                 val metadata = frameMetadataWithState.first
                 val metadataState = frameMetadataWithState.second
                 when (enemy.type) {
-                    MapEnemyType.SHOOTER -> {
-                        (enemy as MapShooterEnemy).copy(
+                    EnemyType.SHOOTER -> {
+                        (enemy as ShooterEnemy).copy(
                             x = itemX,
                             y = itemY,
                             state = nextState,
@@ -237,8 +237,8 @@ class DefaultEngine : Engine {
                         )
                     }
 
-                    MapEnemyType.RUNNER -> {
-                        (enemy as MapRunnerEnemy).copy(
+                    EnemyType.RUNNER -> {
+                        (enemy as RunnerEnemy).copy(
                             x = itemX,
                             y = itemY,
                             state = nextState,
@@ -250,7 +250,7 @@ class DefaultEngine : Engine {
                     }
 
                     else -> {
-                        (enemy as MapBlockerEnemy).copy(
+                        (enemy as BlockerEnemy).copy(
                             x = itemX,
                             y = itemY,
                             state = nextState,
@@ -261,8 +261,8 @@ class DefaultEngine : Engine {
                         )
                     }
                 }
-            } else if (enemy.type == MapEnemyType.RUNNER) {
-                (enemy as MapRunnerEnemy).copy(state = nextState)
+            } else if (enemy.type == EnemyType.RUNNER) {
+                (enemy as RunnerEnemy).copy(state = nextState)
             } else {
                 enemy
             }
@@ -291,18 +291,18 @@ class DefaultEngine : Engine {
             RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR
         )
 
-        if (gameStatusProvider.lastBackgroundComposite.load().width == 1) {
+        if (statusProvider.lastBackgroundComposite.load().width == 1) {
             val compositeBackgroundImage = compositeBackground(map, viewPort)
-            gameStatusProvider.lastBackgroundComposite.store(compositeBackgroundImage)
+            statusProvider.lastBackgroundComposite.store(compositeBackgroundImage)
         }
 
         if (viewPort.x != viewPort.lastX || viewPort.y != viewPort.lastY) {
             LOGGER.info("view port has moved need to redraw background")
             val compositeBackgroundImage = compositeBackground(map, viewPort)
-            gameStatusProvider.lastBackgroundComposite.store(compositeBackgroundImage)
+            statusProvider.lastBackgroundComposite.store(compositeBackgroundImage)
             graphics.drawImage(compositeBackgroundImage, 0, 0, null)
         } else {
-            graphics.drawImage(gameStatusProvider.lastBackgroundComposite.load(), 0, 0, null)
+            graphics.drawImage(statusProvider.lastBackgroundComposite.load(), 0, 0, null)
         }
 
         drawStatusText(map, graphics)

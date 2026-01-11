@@ -1,7 +1,7 @@
 package com.github.adamyork.sparrow.socket
 
-import com.github.adamyork.sparrow.common.ControlAction
-import com.github.adamyork.sparrow.common.ControlType
+import com.github.adamyork.sparrow.common.data.ControlAction
+import com.github.adamyork.sparrow.common.data.ControlType
 import com.github.adamyork.sparrow.game.Game
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

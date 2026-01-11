@@ -2,7 +2,7 @@ package com.github.adamyork.sparrow.game.engine.v1
 
 import com.github.adamyork.sparrow.game.data.Direction
 import com.github.adamyork.sparrow.game.data.GameElement
-import com.github.adamyork.sparrow.game.data.enemy.GameEnemy
+import com.github.adamyork.sparrow.game.data.enemy.Enemy
 import com.github.adamyork.sparrow.game.data.player.Player
 import com.github.adamyork.sparrow.game.engine.Particles
 import com.github.adamyork.sparrow.game.engine.data.Particle
@@ -105,7 +105,7 @@ class DefaultParticles : Particles {
 
     override fun createProjectileParticle(
         player: Player,
-        enemy: GameEnemy,
+        enemy: Enemy,
         particles: ArrayList<Particle>
     ): Pair<ArrayList<Particle>, Boolean> {
         val count = particles.filter { it.type == ParticleType.PROJECTILE }

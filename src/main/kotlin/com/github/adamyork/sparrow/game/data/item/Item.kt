@@ -1,11 +1,11 @@
 package com.github.adamyork.sparrow.game.data.item
 
 import com.github.adamyork.sparrow.game.data.*
-import com.github.adamyork.sparrow.game.data.enemy.GameEnemyInteractionState
+import com.github.adamyork.sparrow.game.data.enemy.EnemyInteractionState
 
-interface GameItem : GameElement {
+interface Item : GameElement {
 
-    val type: MapItemType
+    val type: ItemType
     val id: Int
 
     fun getFirstDeactivatingFrame(): FrameMetadata
@@ -18,7 +18,7 @@ interface GameItem : GameElement {
         val metadataState =
             FrameMetadataState(
                 GameElementCollisionState.FREE,
-                GameEnemyInteractionState.ISOLATED,
+                EnemyInteractionState.ISOLATED,
                 state
             )
         if (state == GameElementState.ACTIVE) {

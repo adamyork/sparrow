@@ -1,6 +1,6 @@
 package com.github.adamyork.sparrow.game.service.v1
 
-import com.github.adamyork.sparrow.common.Sounds
+import com.github.adamyork.sparrow.common.data.Sounds
 import com.github.adamyork.sparrow.game.data.map.GameMap
 import com.github.adamyork.sparrow.game.data.map.GameMapState
 import com.github.adamyork.sparrow.game.service.AssetService

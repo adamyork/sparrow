@@ -1,25 +1,25 @@
 package com.github.adamyork.sparrow.game.data.item
 
 import com.github.adamyork.sparrow.game.data.*
-import com.github.adamyork.sparrow.game.data.enemy.GameEnemyInteractionState
+import com.github.adamyork.sparrow.game.data.enemy.EnemyInteractionState
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 
-data class MapFinishItem(
+data class FinishItem(
     override val width: Int,
     override val height: Int,
     override val x: Int,
     override val y: Int,
-    override val type: MapItemType,
+    override val type: ItemType,
     override val state: GameElementState,
     override val bufferedImage: BufferedImage,
     override val frameMetadata: FrameMetadata,
     override val id: Int
-) : GameItem {
+) : Item {
 
     companion object {
-        val LOGGER: Logger = LoggerFactory.getLogger(MapFinishItem::class.java)
+        val LOGGER: Logger = LoggerFactory.getLogger(FinishItem::class.java)
         const val ANIMATION_DEACTIVATING_FRAMES = 1
         const val ANIMATION_ACTIVE_FRAMES = 1
     }
@@ -40,7 +40,7 @@ data class MapFinishItem(
         val metadataState =
             FrameMetadataState(
                 GameElementCollisionState.FREE,
-                GameEnemyInteractionState.ISOLATED,
+                EnemyInteractionState.ISOLATED,
                 state
             )
         if (state == GameElementState.DEACTIVATING) {

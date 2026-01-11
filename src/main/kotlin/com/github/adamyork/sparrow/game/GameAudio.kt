@@ -1,7 +1,7 @@
 package com.github.adamyork.sparrow.game
 
 import com.github.adamyork.sparrow.common.AudioQueue
-import com.github.adamyork.sparrow.common.Sounds
+import com.github.adamyork.sparrow.common.data.Sounds
 import com.github.adamyork.sparrow.game.service.AssetService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

@@ -1,7 +1,7 @@
 package com.github.adamyork.sparrow.game.engine
 
 import com.github.adamyork.sparrow.common.AudioQueue
-import com.github.adamyork.sparrow.common.GameStatusProvider
+import com.github.adamyork.sparrow.common.StatusProvider
 import com.github.adamyork.sparrow.game.engine.v1.DefaultCollision
 import com.github.adamyork.sparrow.game.engine.v1.DefaultEngine
 import com.github.adamyork.sparrow.game.engine.v1.DefaultParticles
@@ -17,9 +17,9 @@ class EngineConfig {
 
     @Bean
     fun physics(
-        gameStatusProvider: GameStatusProvider,
+        statusProvider: StatusProvider,
         physicsSettingsService: PhysicsSettingsService
-    ): Physics = DefaultPhysics(gameStatusProvider, physicsSettingsService)
+    ): Physics = DefaultPhysics(statusProvider, physicsSettingsService)
 
     @Bean
     fun collision(physics: Physics, scoreService: ScoreService): Collision = DefaultCollision(physics, scoreService)
@@ -35,9 +35,9 @@ class EngineConfig {
         audioQueue: AudioQueue,
         scoreService: ScoreService,
         assetService: AssetService,
-        gameStatusProvider: GameStatusProvider
+        statusProvider: StatusProvider
     ): Engine {
-        return DefaultEngine(physics, collision, particles, audioQueue, scoreService, assetService, gameStatusProvider)
+        return DefaultEngine(physics, collision, particles, audioQueue, scoreService, assetService, statusProvider)
     }
 
 }

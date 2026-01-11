@@ -1,17 +1,17 @@
 package com.github.adamyork.sparrow.game.data.enemy
 
 import com.github.adamyork.sparrow.game.data.*
-import com.github.adamyork.sparrow.game.data.enemy.MapBlockerEnemy.Companion.ANIMATION_COLLISION_FRAMES
+import com.github.adamyork.sparrow.game.data.enemy.BlockerEnemy.Companion.ANIMATION_COLLISION_FRAMES
 import com.github.adamyork.sparrow.game.data.player.Player
 
-interface GameEnemy : GameElement {
+interface Enemy : GameElement {
 
-    val type: MapEnemyType
+    val type: EnemyType
     val originX: Int
     val originY: Int
     val enemyPosition: EnemyPosition
     val colliding: GameElementCollisionState
-    val interacting: GameEnemyInteractionState
+    val interacting: EnemyInteractionState
 
     fun getNextPosition(): EnemyPosition
 

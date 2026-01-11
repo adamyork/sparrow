@@ -1,6 +1,6 @@
 package com.github.adamyork.sparrow.socket
 
-import com.github.adamyork.sparrow.common.GameStatusProvider
+import com.github.adamyork.sparrow.common.StatusProvider
 import com.github.adamyork.sparrow.game.Game
 import com.github.adamyork.sparrow.game.engine.Engine
 import com.github.adamyork.sparrow.game.service.AssetService
@@ -26,7 +26,7 @@ class GameHandler : WebSocketHandler {
     val assetService: AssetService
     val engine: Engine
     val scoreService: ScoreService
-    val gameStatusProvider: GameStatusProvider
+    val statusProvider: StatusProvider
 
     val game: Game
 
@@ -35,13 +35,13 @@ class GameHandler : WebSocketHandler {
         assetService: AssetService,
         engine: Engine,
         scoreService: ScoreService,
-        gameStatusProvider: GameStatusProvider
+        statusProvider: StatusProvider
     ) {
         this.game = game
         this.assetService = assetService
         this.engine = engine
         this.scoreService = scoreService
-        this.gameStatusProvider = gameStatusProvider
+        this.statusProvider = statusProvider
     }
 
     @OptIn(ExperimentalAtomicApi::class)
@@ -61,18 +61,18 @@ class GameHandler : WebSocketHandler {
 
                     INPUT_PAUSE -> {
                         LOGGER.info("game paused")
-                        gameStatusProvider.running.store(false)
+                        statusProvider.running.store(false)
                     }
 
                     INPUT_RESUME -> {
                         LOGGER.info("game resumed")
-                        gameStatusProvider.running.store(true)
+                        statusProvider.running.store(true)
                     }
                 }
                 if (!game.isInitialized) {
                     game.init().flatMap { initialized ->
                         if (initialized) {
-                            gameStatusProvider.running.store(true)
+                            statusProvider.running.store(true)
                             game.next()
                                 .map { bytes ->
                                     session.binaryMessage { session -> session.wrap(bytes) }

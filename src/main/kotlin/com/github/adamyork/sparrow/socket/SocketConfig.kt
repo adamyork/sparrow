@@ -1,7 +1,7 @@
 package com.github.adamyork.sparrow.socket
 
 import com.github.adamyork.sparrow.common.AudioQueue
-import com.github.adamyork.sparrow.common.GameStatusProvider
+import com.github.adamyork.sparrow.common.StatusProvider
 import com.github.adamyork.sparrow.game.Game
 import com.github.adamyork.sparrow.game.GameAudio
 import com.github.adamyork.sparrow.game.engine.Engine
@@ -30,7 +30,7 @@ class SocketConfig {
         engine: Engine,
         scoreService: ScoreService,
         audioQueue: AudioQueue,
-        gameStatusProvider: GameStatusProvider,
+        statusProvider: StatusProvider,
         @Value("\${player.x}") playerInitialX: Int,
         @Value("\${player.y}") playerInitialY: Int,
         @Value("\${viewport.x}") viewPortInitialX: Int,
@@ -44,7 +44,7 @@ class SocketConfig {
             assetService,
             engine,
             scoreService,
-            gameStatusProvider,
+            statusProvider,
             playerInitialX,
             playerInitialY,
             viewPortInitialX,
@@ -54,11 +54,11 @@ class SocketConfig {
             fpsMax
         )
         val gameAudio = GameAudio(assetService, audioQueue)
-        handlers["/game"] = GameHandler(game, assetService, engine, scoreService, gameStatusProvider)
+        handlers["/game"] = GameHandler(game, assetService, engine, scoreService, statusProvider)
         handlers["/input"] = InputHandler(game)
-        handlers["/input-audio"] = InputAudioHandler(assetService, gameStatusProvider)
-        handlers["/game-audio"] = GameAudioHandler(gameAudio, assetService, audioQueue)
-        handlers["/background-audio"] = BackgroundAudioHandler(assetService, gameStatusProvider)
+        handlers["/input-audio"] = InputAudioHandler(assetService, statusProvider)
+        handlers["/game-audio"] = EnvironmentAudioHandler(gameAudio, assetService, audioQueue)
+        handlers["/background-audio"] = BackgroundAudioHandler(assetService, statusProvider)
         val mapping = SimpleUrlHandlerMapping()
         mapping.urlMap = handlers
         mapping.order = Ordered.HIGHEST_PRECEDENCE
