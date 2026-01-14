@@ -1,5 +1,6 @@
 package com.github.adamyork.sparrow.game.data.item
 
+import com.github.adamyork.sparrow.common.AnimationFrameException
 import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.data.enemy.EnemyInteractionState
 import org.slf4j.Logger
@@ -32,7 +33,7 @@ data class CollectibleItem(
     }
 
     override fun getNextFrameMetadataWithState(): Pair<FrameMetadata, FrameMetadataState> {
-        var metadata = activeFrames[1] ?: throw RuntimeException("missing animation frame")
+        var metadata = activeFrames[1] ?: throw AnimationFrameException(activeFrames.toString(), 1)
         var metadataState =
             FrameMetadataState(
                 GameElementCollisionState.FREE,
@@ -52,7 +53,10 @@ data class CollectibleItem(
             } else {
                 val nextFrame = frameMetadata.frame + 1
                 LOGGER.info("deactivating frame $nextFrame")
-                metadata = deactivatingFrames[nextFrame] ?: FrameMetadata(1, Cell(1, 1, width, height))
+                metadata = deactivatingFrames[nextFrame] ?: throw AnimationFrameException(
+                    deactivatingFrames.toString(),
+                    nextFrame
+                )
                 return Pair(metadata, metadataState)
             }
         }
@@ -64,7 +68,7 @@ data class CollectibleItem(
     }
 
     override fun getFirstDeactivatingFrame(): FrameMetadata {
-        return deactivatingFrames[1] ?: FrameMetadata(1, Cell(1, 1, width, height))
+        return deactivatingFrames[1] ?: throw AnimationFrameException(deactivatingFrames.toString(), 1)
     }
 
 

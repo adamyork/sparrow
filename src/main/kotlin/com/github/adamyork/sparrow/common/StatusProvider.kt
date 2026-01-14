@@ -23,7 +23,7 @@ class StatusProvider {
 
     val running: AtomicBoolean = AtomicBoolean(false)
     val lastPaintTime: AtomicLong = AtomicLong(0L)
-    val backgroundMusicChunk: AtomicInt = AtomicInt(0)
+    val backgroundMusicChunkIndex: AtomicInt = AtomicInt(0)
     val lastBackgroundComposite: AtomicReference<BufferedImage> =
         AtomicReference(BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB))
 
@@ -45,7 +45,7 @@ class StatusProvider {
 
     fun reset() {
         lastPaintTime.store(0L)
-        backgroundMusicChunk.store(0)
+        backgroundMusicChunkIndex.store(0)
         lastBackgroundComposite.store(BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB))
     }
 

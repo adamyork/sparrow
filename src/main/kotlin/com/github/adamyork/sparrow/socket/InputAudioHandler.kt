@@ -21,10 +21,16 @@ class InputAudioHandler : WebSocketHandler {
 
     val assetService: AssetService
     val statusProvider: StatusProvider
+    val webSocketMessageBuilder: WebSocketMessageBuilder
 
-    constructor(assetService: AssetService, statusProvider: StatusProvider) {
+    constructor(
+        assetService: AssetService,
+        statusProvider: StatusProvider,
+        webSocketMessageBuilder: WebSocketMessageBuilder
+    ) {
         this.assetService = assetService
         this.statusProvider = statusProvider
+        this.webSocketMessageBuilder = webSocketMessageBuilder
     }
 
     @OptIn(ExperimentalAtomicApi::class)
@@ -37,12 +43,16 @@ class InputAudioHandler : WebSocketHandler {
                 } else {
                     val payloadAsText = message.payloadAsText
                     val controlCodes = payloadAsText.split(":")
-                    val input = controlCodes[1]
-                    if (input == INPUT_KEY_JUMP) {
-                        val bytes = assetService.getSoundStream(Sounds.JUMP)
-                        val binaryMessage = session.binaryMessage { session -> session.wrap(bytes) }
-                        val messages: List<WebSocketMessage> = listOf(binaryMessage)
-                        messageFlux = Flux.fromIterable(messages)
+                    if (controlCodes.size > 1) {
+                        val input = controlCodes[1]
+                        if (input == INPUT_KEY_JUMP) {
+                            val bytes = assetService.getSoundStream(Sounds.JUMP)
+                            val binaryMessage = webSocketMessageBuilder.build(session, bytes)
+                            val messages: List<WebSocketMessage> = listOf(binaryMessage)
+                            messageFlux = Flux.fromIterable(messages)
+                        }
+                    } else {
+                        LOGGER.error("no control codes found")
                     }
                     messageFlux
                 }

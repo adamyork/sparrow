@@ -3,6 +3,7 @@ package com.github.adamyork.sparrow.game.service.v1
 import com.github.adamyork.sparrow.common.data.Sounds
 import com.github.adamyork.sparrow.game.data.map.GameMap
 import com.github.adamyork.sparrow.game.data.map.GameMapState
+import com.github.adamyork.sparrow.game.service.AssetLoadException
 import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.game.service.WavService
 import com.github.adamyork.sparrow.game.service.data.ImageAsset
@@ -60,6 +61,7 @@ class DefaultAssetService : AssetService {
     private val mapMiddleGroundPath: String
     private val mapForGroundPath: String
     private val mapCollisionPath: String
+    private val mapCollisionVisible: Boolean
 
     //items
     val itemUrlMap: HashMap<Int, URL?> = HashMap()
@@ -115,7 +117,8 @@ class DefaultAssetService : AssetService {
         mapDirectiveFinishText: String,
         mapDirectiveFinishTextColor: String,
         mapDirectiveCompleteText: String,
-        mapDirectiveCompleteTextColor: String
+        mapDirectiveCompleteTextColor: String,
+        mapCollisionVisible: Boolean,
     ) {
         this.wavService = wavService
         this.viewPortWidth = viewPortWidth
@@ -139,6 +142,7 @@ class DefaultAssetService : AssetService {
         this.mapEnemyTwoHeight = mapEnemyTwoHeight
         this.mapEnemyAssetOnePath = mapEnemyAssetOnePath
         this.mapEnemyAssetTwoPath = mapEnemyAssetTwoPath
+        this.mapCollisionVisible = mapCollisionVisible
 
         applicationYamlFile = urlToFile(this::class.java.classLoader.getResource("application.yml"))
         enemyPositions = parseEnemyPositions(applicationYamlFile)
@@ -232,25 +236,25 @@ class DefaultAssetService : AssetService {
             loadBufferedImageAsync(farGroundFile)
         }.onErrorMap {
             LOGGER.error("cant load the far ground image")
-            RuntimeException("cant load an image")
+            AssetLoadException(farGroundFile.nameWithoutExtension)
         }
         val midGroundMono = mono {
             loadBufferedImageAsync(midGroundFile)
         }.onErrorMap {
             LOGGER.error("cant load the mid ground image")
-            RuntimeException("cant load an image")
+            AssetLoadException(midGroundFile.nameWithoutExtension)
         }
         val nearFieldMono = mono {
             loadBufferedImageAsync(nearFieldFile)
         }.onErrorMap {
             LOGGER.error("cant load the near field image")
-            RuntimeException("cant load an image")
+            AssetLoadException(nearFieldFile.nameWithoutExtension)
         }
         val collisionMono = mono {
             loadBufferedImageAsync(collisionFile)
         }.onErrorMap {
             LOGGER.error("cant load the collision image")
-            RuntimeException("cant load an image")
+            AssetLoadException(collisionFile.nameWithoutExtension)
         }
 
         return Mono.zip(farGroundMono, midGroundMono, nearFieldMono, collisionMono)
@@ -364,9 +368,9 @@ class DefaultAssetService : AssetService {
         }
         graphics.color = Color.WHITE
         graphics.fillRect(
-            (x - 5).coerceAtLeast(0),
-            (y - textAscent).coerceAtLeast(0),
-            textWidth + 10,
+            (x - 5).coerceAtLeast(0),//TODO magic number
+            (y - textAscent).coerceAtLeast(0),//TODO magic number
+            textWidth + 10,//TODO magic number
             textHeight
         )
         graphics.color = color
@@ -378,8 +382,12 @@ class DefaultAssetService : AssetService {
         return textAssetMap[gameMapState] ?: TextAsset(BufferedImage(0, 0, 0))
     }
 
+    override fun showCollisionMap(): Boolean {
+        return this.mapCollisionVisible
+    }
+
     private fun urlToFile(url: URL?): File {
-        val uri: URI = url?.toURI() ?: URI("")
+        val uri: URI = url?.toURI() ?: throw RuntimeException("url is missing or not supported")
         return File(uri.path)
     }
 

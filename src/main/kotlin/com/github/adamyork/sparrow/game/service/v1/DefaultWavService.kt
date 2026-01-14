@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
-import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioInputStream
 import javax.sound.sampled.AudioSystem
 
@@ -20,7 +19,7 @@ class DefaultWavService : WavService {
     override fun chunk(file: File, chunkMs: Int): HashMap<Int, ByteArray> {
         val output = HashMap<Int, ByteArray>()
         val audioInputStream = AudioSystem.getAudioInputStream(file)
-        val audioFormat = audioInputStream?.format ?: AudioFormat(0F, 0, 0, false, false)
+        val audioFormat = audioInputStream?.format ?: throw RuntimeException("audio format is missing or not supported")
         val sampleBits: Int = audioFormat.getSampleSizeInBits()
         val sampleRate: Float = audioFormat.getSampleRate()
         val bytesPerMilliSecond: Float = ((sampleBits * sampleRate * audioFormat.getChannels()) / 8) / 1000

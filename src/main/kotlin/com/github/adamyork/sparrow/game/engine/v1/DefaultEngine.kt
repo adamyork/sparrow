@@ -4,9 +4,9 @@ import com.github.adamyork.sparrow.common.AudioQueue
 import com.github.adamyork.sparrow.common.StatusProvider
 import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.data.enemy.*
-import com.github.adamyork.sparrow.game.data.item.Item
 import com.github.adamyork.sparrow.game.data.item.CollectibleItem
 import com.github.adamyork.sparrow.game.data.item.FinishItem
+import com.github.adamyork.sparrow.game.data.item.Item
 import com.github.adamyork.sparrow.game.data.item.ItemType
 import com.github.adamyork.sparrow.game.data.map.GameMap
 import com.github.adamyork.sparrow.game.data.map.GameMapState
@@ -347,7 +347,9 @@ class DefaultEngine : Engine {
         bgCompositeImage.graphics.drawImage(farGroundSubImage, 0, 0, null)
         bgCompositeImage.graphics.drawImage(midGroundSubImage, 0, 0, null)
         bgCompositeImage.graphics.drawImage(nearFieldSubImage, 0, 0, null)
-        bgCompositeImage.graphics.drawImage(collisionSubImage, 0, 0, null)
+        if (assetService.showCollisionMap()) {
+            bgCompositeImage.graphics.drawImage(collisionSubImage, 0, 0, null)
+        }
         val bytes = createByteArrayFromCompositeImage(bgCompositeImage)
         val bais = ByteArrayInputStream(bytes)
         return ImageIO.read(bais)

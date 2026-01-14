@@ -23,11 +23,10 @@ class PhysicsSettingsHandler {
         this.physicsSettingsService = physicsSettingsService
     }
 
-    fun setPhysics(request: ServerRequest): Mono<ServerResponse> {
+    fun updatePhysics(request: ServerRequest): Mono<ServerResponse> {
         LOGGER.info("request for ${request.requestPath()} received")
         return request.bodyToMono<PhysicsSettings>()
             .flatMap { settings ->
-                LOGGER.info("settings updated to $settings")
                 physicsSettingsService.maxXVelocity = settings.maxXVelocityRange
                 physicsSettingsService.maxYVelocity = settings.maxYVelocityRange
                 physicsSettingsService.jumpDistance = settings.jumpDistanceRange
@@ -37,6 +36,7 @@ class PhysicsSettingsHandler {
                 physicsSettingsService.xMovementDistance = settings.movementXDistanceRange
                 physicsSettingsService.xAccelerationRate = settings.accelerationXRateRange
                 physicsSettingsService.xDeaccelerationRate = settings.deaccelerationXRateRange
+                LOGGER.info("settings updated to $settings")
                 ok().build()
             }
     }

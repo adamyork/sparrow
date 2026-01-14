@@ -23,6 +23,12 @@ import org.springframework.web.reactive.socket.server.upgrade.ReactorNettyReques
 @Configuration
 class SocketConfig {
 
+    @Bean
+    fun webSocketMessageBuilder(): WebSocketMessageBuilder {
+        val messageBuilder = object : WebSocketMessageBuilder {}
+        return messageBuilder
+    }
+
 
     @Bean
     fun handlerMapping(
@@ -31,6 +37,7 @@ class SocketConfig {
         scoreService: ScoreService,
         audioQueue: AudioQueue,
         statusProvider: StatusProvider,
+        webSocketMessageBuilder: WebSocketMessageBuilder,
         @Value("\${player.x}") playerInitialX: Int,
         @Value("\${player.y}") playerInitialY: Int,
         @Value("\${viewport.x}") viewPortInitialX: Int,
@@ -54,11 +61,12 @@ class SocketConfig {
             fpsMax
         )
         val gameAudio = GameAudio(assetService, audioQueue)
-        handlers["/game"] = GameHandler(game, assetService, engine, scoreService, statusProvider)
+        handlers["/game"] =
+            GameHandler(game, assetService, engine, scoreService, statusProvider, webSocketMessageBuilder)
         handlers["/input"] = InputHandler(game)
-        handlers["/input-audio"] = InputAudioHandler(assetService, statusProvider)
-        handlers["/game-audio"] = EnvironmentAudioHandler(gameAudio, assetService, audioQueue)
-        handlers["/background-audio"] = BackgroundAudioHandler(assetService, statusProvider)
+        handlers["/input-audio"] = InputAudioHandler(assetService, statusProvider, webSocketMessageBuilder)
+        handlers["/game-audio"] = EnvironmentAudioHandler(gameAudio, assetService, audioQueue, webSocketMessageBuilder)
+        handlers["/background-audio"] = BackgroundAudioHandler(assetService, statusProvider, webSocketMessageBuilder)
         val mapping = SimpleUrlHandlerMapping()
         mapping.urlMap = handlers
         mapping.order = Ordered.HIGHEST_PRECEDENCE

@@ -52,4 +52,6 @@ interface AssetService {
 
     fun getTextAsset(gameMapState: GameMapState): TextAsset
 
+    fun showCollisionMap(): Boolean
+
 }

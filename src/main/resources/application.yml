@@ -21,6 +21,8 @@ map:
   mg: "game/map1-mg-full-comp.png"
   fg: "game/map1-fg-full-comp.png"
   col: "game/map1-collision.png"
+  collision:
+    visible: false
   item:
     width: 64
     height: 64

@@ -1,5 +1,6 @@
 package com.github.adamyork.sparrow.game.data.player
 
+import com.github.adamyork.sparrow.common.AnimationFrameException
 import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.data.enemy.EnemyInteractionState
 import org.slf4j.Logger
@@ -38,7 +39,7 @@ data class Player(
     }
 
     override fun getNextFrameMetadataWithState(): Pair<FrameMetadata, FrameMetadataState> {
-        var metadata = movingFrames[1] ?: throw RuntimeException("missing animation frame")
+        var metadata = movingFrames[1] ?: throw AnimationFrameException(movingFrames.toString(), 1)
         var metadataState = FrameMetadataState(
             GameElementCollisionState.FREE,
             EnemyInteractionState.ISOLATED,
@@ -47,32 +48,32 @@ data class Player(
         if (colliding == GameElementCollisionState.COLLIDING) {
             if (frameMetadata.frame >= ANIMATION_COLLISION_FRAMES) {
                 metadataState = metadataState.copy(colliding = GameElementCollisionState.FREE)
-                metadata = movingFrames[1] ?: throw RuntimeException("missing animation frame")
+                metadata = movingFrames[1] ?: throw AnimationFrameException(movingFrames.toString(), 1)
                 return Pair(metadata, metadataState)
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                metadata = collisionFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
+                metadata = collisionFrames[nextFrame] ?: throw AnimationFrameException(collisionFrames.toString(), 1)
                 return Pair(metadata, metadataState)
             }
         }
         if (jumping == PlayerJumpingState.INITIAL || jumping == PlayerJumpingState.RISING || jumping == PlayerJumpingState.HEIGHT_REACHED) {
             if (frameMetadata.frame >= ANIMATION_JUMPING_FRAMES) {
-                metadata = jumpingFrames[1] ?: throw RuntimeException("missing animation frame")
-                LOGGER.info("here 2")
+                metadata = jumpingFrames[1] ?: throw AnimationFrameException(jumpingFrames.toString(), 1)
                 return Pair(metadata, metadataState)
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                metadata = jumpingFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
+                metadata =
+                    jumpingFrames[nextFrame] ?: throw AnimationFrameException(jumpingFrames.toString(), nextFrame)
                 return Pair(metadata, metadataState)
             }
         }
         if (moving == PlayerMovingState.MOVING) {
             if (frameMetadata.frame >= ANIMATION_MOVING_FRAMES) {
-                metadata = movingFrames[1] ?: throw RuntimeException("missing animation frame")
+                metadata = movingFrames[1] ?: throw AnimationFrameException(movingFrames.toString(), 1)
                 return Pair(metadata, metadataState)
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                metadata = movingFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
+                metadata = movingFrames[nextFrame] ?: throw AnimationFrameException(movingFrames.toString(), nextFrame)
                 return Pair(metadata, metadataState)
             }
         }

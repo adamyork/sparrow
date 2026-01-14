@@ -25,11 +25,11 @@ class WebConfig : WebFluxConfigurer {
         PhysicsSettingsHandler(physicsSettingsService)
 
     @Bean
-    fun staticResources(): RouterFunction<ServerResponse> =
+    fun staticResourceRouter(): RouterFunction<ServerResponse> =
         RouterFunctions.resources("/**", ClassPathResource("static/"))
 
     @Bean
-    fun spaFallback(): RouterFunction<ServerResponse> =
+    fun rootRouter(): RouterFunction<ServerResponse> =
         router {
             GET("/") {
                 ServerResponse
@@ -47,7 +47,7 @@ class WebConfig : WebFluxConfigurer {
     @Bean
     fun physicsRouter(physicsSettingsHandler: PhysicsSettingsHandler) =
         router {
-            POST("/physics", accept(APPLICATION_JSON), physicsSettingsHandler::setPhysics)
+            POST("/physics", accept(APPLICATION_JSON), physicsSettingsHandler::updatePhysics)
         }
 
 }

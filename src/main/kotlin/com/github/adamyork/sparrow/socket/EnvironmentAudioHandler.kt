@@ -19,19 +19,24 @@ class EnvironmentAudioHandler : WebSocketHandler {
     val assetService: AssetService
     val audioQueue: AudioQueue
     val gameAudio: GameAudio
+    val webSocketMessageBuilder: WebSocketMessageBuilder
 
-    constructor(gameAudio: GameAudio, assetService: AssetService, audioQueue: AudioQueue) {
+    constructor(
+        gameAudio: GameAudio,
+        assetService: AssetService,
+        audioQueue: AudioQueue,
+        webSocketMessageBuilder: WebSocketMessageBuilder
+    ) {
         this.gameAudio = gameAudio
         this.assetService = assetService
         this.audioQueue = audioQueue
+        this.webSocketMessageBuilder = webSocketMessageBuilder
     }
 
     override fun handle(session: WebSocketSession): Mono<Void> {
         val map = session.receive()
             .flatMap { _ ->
-                gameAudio.next().map { bytes ->
-                    session.binaryMessage { session -> session.wrap(bytes) }
-                }
+                gameAudio.next().map { bytes -> webSocketMessageBuilder.build(session, bytes) }
             }
         return session.send(map)
     }

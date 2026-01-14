@@ -1,5 +1,6 @@
 package com.github.adamyork.sparrow.game.data.enemy
 
+import com.github.adamyork.sparrow.common.AnimationFrameException
 import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.data.player.Player
 import org.slf4j.Logger
@@ -64,7 +65,7 @@ data class ShooterEnemy(
     }
 
     override fun getNextFrameMetadataWithState(): Pair<FrameMetadata, FrameMetadataState> {
-        var metadata = animatingFrames[1] ?: throw RuntimeException("missing animation frame")
+        var metadata = animatingFrames[1] ?: throw AnimationFrameException(animatingFrames.toString(), 1)
         var metadataState = FrameMetadataState(this.colliding, this.interacting, state)
         if (this.interacting == EnemyInteractionState.INTERACTING) {
             if (frameMetadata.frame == ANIMATION_INTERACTING_FRAMES) {
@@ -72,7 +73,10 @@ data class ShooterEnemy(
                 return Pair(metadata, metadataState)
             } else {
                 val nextFrame = frameMetadata.frame + 1
-                metadata = interactingFrames[nextFrame] ?: throw RuntimeException("missing animation frame")
+                metadata = interactingFrames[nextFrame] ?: throw AnimationFrameException(
+                    interactingFrames.toString(),
+                    nextFrame
+                )
                 return Pair(metadata, metadataState)
             }
         }

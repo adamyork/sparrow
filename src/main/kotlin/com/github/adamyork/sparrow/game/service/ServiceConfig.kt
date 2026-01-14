@@ -55,6 +55,7 @@ class ServiceConfig {
         @Value("\${map.directive.finish.color}") mapDirectiveFinishTextColor: String,
         @Value("\${map.directive.complete.text}") mapDirectiveCompleteText: String,
         @Value("\${map.directive.complete.color}") mapDirectiveCompleteTextColor: String,
+        @Value("\${map.collision.visible}") mapCollisionVisible: Boolean
     ): AssetService {
         return DefaultAssetService(
             wavService,
@@ -89,7 +90,8 @@ class ServiceConfig {
             mapDirectiveFinishText,
             mapDirectiveFinishTextColor,
             mapDirectiveCompleteText,
-            mapDirectiveCompleteTextColor
+            mapDirectiveCompleteTextColor,
+            mapCollisionVisible
         )
     }
 

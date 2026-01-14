@@ -17,26 +17,33 @@ class BackgroundAudioHandler : WebSocketHandler {
 
     val assetService: AssetService
     val statusProvider: StatusProvider
+    val webSocketMessageBuilder: WebSocketMessageBuilder
 
-    constructor(assetService: AssetService, statusProvider: StatusProvider) {
+    constructor(
+        assetService: AssetService,
+        statusProvider: StatusProvider,
+        webSocketMessageBuilder: WebSocketMessageBuilder
+    ) {
         this.assetService = assetService
         this.statusProvider = statusProvider
+        this.webSocketMessageBuilder = webSocketMessageBuilder
     }
 
     @OptIn(ExperimentalAtomicApi::class)
     override fun handle(session: WebSocketSession): Mono<Void?> {
         val map = session.receive()
             .flatMap { _ ->
-                val currentChunk = statusProvider.backgroundMusicChunk.load()
-                val byteArray = assetService.backgroundMusicBytesMap[currentChunk] ?: ByteArray(0)
-                if (currentChunk == assetService.backgroundMusicBytesMap.size - 1) {
-                    statusProvider.backgroundMusicChunk.store(0)
+                val currentBgMusicChunkIndex = statusProvider.backgroundMusicChunkIndex.load()
+                val bgMusicChunkByteArrayMono: Mono<ByteArray> =
+                    assetService.backgroundMusicBytesMap[currentBgMusicChunkIndex]
+                        ?.let { Mono.just(it) }
+                        ?: Mono.error(RuntimeException("bg music chunk not found"))
+                if (currentBgMusicChunkIndex == assetService.backgroundMusicBytesMap.size - 1) {
+                    statusProvider.backgroundMusicChunkIndex.store(0)
                 } else {
-                    statusProvider.backgroundMusicChunk.store(currentChunk + 1)
+                    statusProvider.backgroundMusicChunkIndex.store(currentBgMusicChunkIndex + 1)
                 }
-                Mono.just(byteArray).map { bytes ->
-                    session.binaryMessage { session -> session.wrap(bytes) }
-                }
+                bgMusicChunkByteArrayMono.map { bytes -> webSocketMessageBuilder.build(session, bytes) }
             }
         return session.send(map)
     }

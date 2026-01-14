@@ -27,6 +27,7 @@ class GameHandler : WebSocketHandler {
     val engine: Engine
     val scoreService: ScoreService
     val statusProvider: StatusProvider
+    val webSocketMessageBuilder: WebSocketMessageBuilder
 
     val game: Game
 
@@ -35,13 +36,15 @@ class GameHandler : WebSocketHandler {
         assetService: AssetService,
         engine: Engine,
         scoreService: ScoreService,
-        statusProvider: StatusProvider
+        statusProvider: StatusProvider,
+        webSocketMessageBuilder: WebSocketMessageBuilder
     ) {
         this.game = game
         this.assetService = assetService
         this.engine = engine
         this.scoreService = scoreService
         this.statusProvider = statusProvider
+        this.webSocketMessageBuilder = webSocketMessageBuilder
     }
 
     @OptIn(ExperimentalAtomicApi::class)
@@ -73,20 +76,14 @@ class GameHandler : WebSocketHandler {
                     game.init().flatMap { initialized ->
                         if (initialized) {
                             statusProvider.running.store(true)
-                            game.next()
-                                .map { bytes ->
-                                    session.binaryMessage { session -> session.wrap(bytes) }
-                                }
+                            game.next().map { bytes -> webSocketMessageBuilder.build(session, bytes) }
                         } else {
                             LOGGER.error("Game not initialized")
                             Mono.error(RuntimeException("Game cannot be initialized"))
                         }
                     }
                 } else {
-                    game.next()
-                        .map { bytes ->
-                            session.binaryMessage { session -> session.wrap(bytes) }
-                        }
+                    game.next().map { bytes -> webSocketMessageBuilder.build(session, bytes) }
                 }
             }
             .doOnError { error ->
