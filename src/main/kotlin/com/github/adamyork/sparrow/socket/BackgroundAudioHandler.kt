@@ -1,5 +1,6 @@
 package com.github.adamyork.sparrow.socket
 
+import com.github.adamyork.sparrow.AudioException
 import com.github.adamyork.sparrow.common.StatusProvider
 import com.github.adamyork.sparrow.game.service.AssetService
 import org.slf4j.Logger
@@ -37,12 +38,9 @@ class BackgroundAudioHandler : WebSocketHandler {
                 val bgMusicChunkByteArrayMono: Mono<ByteArray> =
                     assetService.backgroundMusicBytesMap[currentBgMusicChunkIndex]
                         ?.let { Mono.just(it) }
-                        ?: Mono.error(RuntimeException("bg music chunk not found"))
-                if (currentBgMusicChunkIndex == assetService.backgroundMusicBytesMap.size - 1) {
-                    statusProvider.backgroundMusicChunkIndex.store(0)
-                } else {
-                    statusProvider.backgroundMusicChunkIndex.store(currentBgMusicChunkIndex + 1)
-                }
+                        ?: Mono.error(AudioException("bg music chunk not found"))
+                val nextBgMusicChunkIndex = (currentBgMusicChunkIndex + 1) % assetService.backgroundMusicBytesMap.size
+                statusProvider.backgroundMusicChunkIndex.store(nextBgMusicChunkIndex)
                 bgMusicChunkByteArrayMono.map { bytes -> webSocketMessageBuilder.build(session, bytes) }
             }
         return session.send(map)

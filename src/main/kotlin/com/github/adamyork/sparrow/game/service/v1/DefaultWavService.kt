@@ -1,5 +1,6 @@
 package com.github.adamyork.sparrow.game.service.v1
 
+import com.github.adamyork.sparrow.AudioException
 import com.github.adamyork.sparrow.game.service.AssetService
 import com.github.adamyork.sparrow.game.service.WavService
 import org.slf4j.Logger
@@ -19,7 +20,7 @@ class DefaultWavService : WavService {
     override fun chunk(file: File, chunkMs: Int): HashMap<Int, ByteArray> {
         val output = HashMap<Int, ByteArray>()
         val audioInputStream = AudioSystem.getAudioInputStream(file)
-        val audioFormat = audioInputStream?.format ?: throw RuntimeException("audio format is missing or not supported")
+        val audioFormat = audioInputStream?.format ?: throw AudioException("audio format is missing or not supported")
         val sampleBits: Int = audioFormat.getSampleSizeInBits()
         val sampleRate: Float = audioFormat.getSampleRate()
         val bytesPerMilliSecond: Float = ((sampleBits * sampleRate * audioFormat.getChannels()) / 8) / 1000

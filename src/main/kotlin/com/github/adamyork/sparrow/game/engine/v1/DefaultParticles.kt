@@ -24,7 +24,7 @@ class DefaultParticles : Particles {
     companion object {
         val LOGGER: Logger = LoggerFactory.getLogger(DefaultParticles::class.java)
         const val MAX_SQUARE_RADIAL_RADIUS: Int = 45
-        const val MAX_ACTIVE_PROJECTILES: Int = 2
+        const val MAX_ACTIVE_PROJECTILES: Int = 1
     }
 
     val dustParticleOffsets: HashMap<Int, Pair<Int, Int>> = HashMap()

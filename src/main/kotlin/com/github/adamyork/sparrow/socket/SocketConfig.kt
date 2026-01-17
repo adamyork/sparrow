@@ -29,6 +29,13 @@ class SocketConfig {
         return messageBuilder
     }
 
+    @Bean
+    fun gameAudio(
+        assetService: AssetService,
+        audioQueue: AudioQueue
+    ): GameAudio {
+        return GameAudio(assetService, audioQueue)
+    }
 
     @Bean
     fun handlerMapping(
@@ -38,6 +45,7 @@ class SocketConfig {
         audioQueue: AudioQueue,
         statusProvider: StatusProvider,
         webSocketMessageBuilder: WebSocketMessageBuilder,
+        gameAudio: GameAudio,
         @Value("\${player.x}") playerInitialX: Int,
         @Value("\${player.y}") playerInitialY: Int,
         @Value("\${viewport.x}") viewPortInitialX: Int,
@@ -60,7 +68,6 @@ class SocketConfig {
             viewPortHeight,
             fpsMax
         )
-        val gameAudio = GameAudio(assetService, audioQueue)
         handlers["/game"] =
             GameHandler(game, assetService, engine, scoreService, statusProvider, webSocketMessageBuilder)
         handlers["/input"] = InputHandler(game)

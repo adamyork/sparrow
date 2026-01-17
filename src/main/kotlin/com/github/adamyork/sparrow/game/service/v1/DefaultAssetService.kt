@@ -387,7 +387,7 @@ class DefaultAssetService : AssetService {
     }
 
     private fun urlToFile(url: URL?): File {
-        val uri: URI = url?.toURI() ?: throw RuntimeException("url is missing or not supported")
+        val uri: URI = url?.toURI() ?: throw AssetLoadException("url is missing or not supported")
         return File(uri.path)
     }
 

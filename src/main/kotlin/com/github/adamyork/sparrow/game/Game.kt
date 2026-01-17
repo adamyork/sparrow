@@ -1,8 +1,8 @@
 package com.github.adamyork.sparrow.game
 
+import com.github.adamyork.sparrow.common.StatusProvider
 import com.github.adamyork.sparrow.common.data.ControlAction
 import com.github.adamyork.sparrow.common.data.ControlType
-import com.github.adamyork.sparrow.common.StatusProvider
 import com.github.adamyork.sparrow.game.data.*
 import com.github.adamyork.sparrow.game.data.map.GameMap
 import com.github.adamyork.sparrow.game.data.player.Player
@@ -14,9 +14,7 @@ import com.github.adamyork.sparrow.game.service.ScoreService
 import com.github.adamyork.sparrow.game.service.data.ImageAsset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import java.util.function.Function
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 
@@ -124,32 +122,28 @@ class Game {
 
     @OptIn(ExperimentalAtomicApi::class)
     fun next(): Mono<ByteArray> {
-        return Flux.fromIterable(listOf(1))
-            .collectList()
-            .map(Function { _ ->
-                if (statusProvider.running.load()) {
-                    val lastPaintMs = statusProvider.lastPaintTime.load()
-                    val nextPaintTimeMs = System.currentTimeMillis()
-                    val deltaTime = nextPaintTimeMs - lastPaintMs
-                    val fpsMaxDeltaTimeMs = 1000 / fpsMax
-                    if (deltaTime < fpsMaxDeltaTimeMs) {
-                        ByteArray(0)
-                    } else {
-                        val collisionBoundaries = engine.getCollisionBoundaries(player)
-                        player = engine.managePlayer(player, collisionBoundaries)
-                        viewPort = engine.manageViewport(player, viewPort)
-                        gameMap = engine.manageMap(player, gameMap)
-                        val nextPlayerAndMap = engine.manageEnemyAndItemCollision(player, gameMap, viewPort)
-                        player = nextPlayerAndMap.first
-                        gameMap = nextPlayerAndMap.second
-                        scoreService.gameMapItem = gameMap.items
-                        statusProvider.lastPaintTime.store(nextPaintTimeMs)
-                        engine.draw(gameMap, viewPort, player)
-                    }
-                } else {
-                    ByteArray(0)
-                }
-            })
+        if (statusProvider.running.load()) {
+            val lastPaintMs = statusProvider.lastPaintTime.load()
+            val nextPaintTimeMs = System.currentTimeMillis()
+            val deltaTime = nextPaintTimeMs - lastPaintMs
+            val fpsMaxDeltaTimeMs = 1000 / fpsMax
+            if (deltaTime < fpsMaxDeltaTimeMs) {
+                return Mono.just(ByteArray(0))
+            } else {
+                val collisionBoundaries = engine.getCollisionBoundaries(player)
+                player = engine.managePlayer(player, collisionBoundaries)
+                viewPort = engine.manageViewport(player, viewPort)
+                gameMap = engine.manageMap(player, gameMap)
+                val nextPlayerAndMap = engine.manageEnemyAndItemCollision(player, gameMap, viewPort)
+                player = nextPlayerAndMap.first
+                gameMap = nextPlayerAndMap.second
+                scoreService.gameMapItem = gameMap.items
+                statusProvider.lastPaintTime.store(nextPaintTimeMs)
+                return Mono.just(engine.draw(gameMap, viewPort, player))
+            }
+        } else {
+            return Mono.just(ByteArray(0))
+        }
     }
 
     fun applyInput(controlType: ControlType, controlAction: ControlAction) {
